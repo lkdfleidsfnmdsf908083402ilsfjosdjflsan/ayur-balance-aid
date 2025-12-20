@@ -138,16 +138,24 @@ export function mapBereich(kontonummer: string, bezeichnung: string): Bereich {
   return 'Sonstiges';
 }
 
-export function mapKostenarttTyp(kontonummer: string): KostenarttTyp {
+export function mapKostenarttTyp(kontonummer: string, bereich: Bereich): KostenarttTyp {
   const num = parseInt(kontonummer.replace(/\D/g, ''));
   
-  // Kontoklasse 4 = Erlöse
+  // Kontoklasse 4 ohne Bereich-Zuordnung = Neutral
   if (num >= 4000 && num < 5000) {
+    if (bereich === 'Sonstiges') {
+      return 'Neutral';
+    }
     return 'Erlös';
   }
   
-  // Kontoklassen 5-8 = Aufwand/Einkauf
-  if (num >= 5000 && num < 9000) {
+  // Kontoklasse 5 = Aufwandskonten/Einkauf
+  if (num >= 5000 && num < 6000) {
+    return 'Einkauf';
+  }
+  
+  // Kontoklassen 6-8 = Aufwand/Einkauf
+  if (num >= 6000 && num < 9000) {
     return 'Einkauf';
   }
   
