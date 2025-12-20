@@ -5,6 +5,7 @@ import { UploadView } from '@/components/views/UploadView';
 import { KontenView } from '@/components/views/KontenView';
 import { VergleichView } from '@/components/views/VergleichView';
 import { BereicheView } from '@/components/views/BereicheView';
+import { DatenqualitaetView } from '@/components/views/DatenqualitaetView';
 
 const Index = () => {
   const [activeView, setActiveView] = useState('dashboard');
@@ -21,6 +22,8 @@ const Index = () => {
         return <VergleichView />;
       case 'bereiche':
         return <BereicheView />;
+      case 'datenqualitaet':
+        return <DatenqualitaetView />;
       default:
         return <DashboardView />;
     }
