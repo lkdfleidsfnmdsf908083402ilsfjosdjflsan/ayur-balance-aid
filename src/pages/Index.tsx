@@ -1,12 +1,37 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState } from 'react';
+import { Sidebar } from '@/components/layout/Sidebar';
+import { DashboardView } from '@/components/views/DashboardView';
+import { UploadView } from '@/components/views/UploadView';
+import { KontenView } from '@/components/views/KontenView';
+import { VergleichView } from '@/components/views/VergleichView';
+import { BereicheView } from '@/components/views/BereicheView';
 
 const Index = () => {
+  const [activeView, setActiveView] = useState('dashboard');
+
+  const renderView = () => {
+    switch (activeView) {
+      case 'dashboard':
+        return <DashboardView />;
+      case 'upload':
+        return <UploadView />;
+      case 'konten':
+        return <KontenView />;
+      case 'vergleich':
+        return <VergleichView />;
+      case 'bereiche':
+        return <BereicheView />;
+      default:
+        return <DashboardView />;
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
+    <div className="flex h-screen bg-background">
+      <Sidebar activeView={activeView} onViewChange={setActiveView} />
+      <main className="flex-1 flex flex-col overflow-hidden">
+        {renderView()}
+      </main>
     </div>
   );
 };
