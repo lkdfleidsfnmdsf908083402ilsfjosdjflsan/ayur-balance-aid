@@ -8,7 +8,8 @@ import {
   GitCompare,
   ChevronLeft,
   ChevronRight,
-  Database
+  Database,
+  ShieldCheck
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -22,6 +23,7 @@ const navItems = [
   { id: 'konten', label: 'Kontenstamm', icon: Table2 },
   { id: 'vergleich', label: 'Periodenvergleich', icon: GitCompare },
   { id: 'bereiche', label: 'Bereichsanalyse', icon: BarChart3 },
+  { id: 'datenqualitaet', label: 'Datenqualität', icon: ShieldCheck },
 ];
 
 export function Sidebar({ activeView, onViewChange }: SidebarProps) {
