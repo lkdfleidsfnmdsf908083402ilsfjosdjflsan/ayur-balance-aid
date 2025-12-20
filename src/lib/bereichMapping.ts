@@ -16,52 +16,99 @@ interface MappingRule {
   bereich: Bereich;
 }
 
-// Bereich-Mapping-Regeln nach Priorität
+// Bereich-Mapping-Regeln nach Priorität (spezifischere Regeln zuerst)
 const bereichRules: MappingRule[] = [
-  // Food & Beverage - Wareneinsatz (55xx)
+  // ═══════════════════════════════════════════════════════════════════
+  // FOOD & BEVERAGE
+  // ═══════════════════════════════════════════════════════════════════
+  // F&B Wareneinsatz - Lebensmittel (550x-554x)
   { range: { from: '5500', to: '5549' }, bereich: 'Food & Beverage' },
-  // F&B Erlöse
-  { pattern: /^440(09|1[0-9]|2[0-1])$/, bereich: 'Food & Beverage' },
-  { bezeichnungPattern: /FB|Küche|Getränke|Restaurant|Speisen|Buffet/i, bereich: 'Food & Beverage' },
-  
-  // Logis/Beherbergung
+  // F&B Getränke-Verbrauch (5541-5549)
+  { range: { from: '5541', to: '5549' }, bereich: 'Food & Beverage' },
+  // F&B Erlöse - explizite Konten
+  { pattern: /^440(09|1[0-9]|2[0-9]|3[0-9])$/, bereich: 'Food & Beverage' },
+  { pattern: /^441[0-9]{2}$/, bereich: 'Food & Beverage' }, // 441xx F&B Erlöse
+  // F&B Bezeichnungsmuster (umfassend)
+  { bezeichnungPattern: /\bFB\b|F\s*&\s*B|Food|Beverage|Küche|Getränke|Restaurant|Speisen|Buffet|Frühstück|Mittag|Abendessen|Menü|à la carte|a la carte|Catering|Bankett|Bar\b|Minibar|Kaffee|Tee|Wein|Bier|Spirituosen|Fleisch|Wurst|Brot|Gebäck|Gemüse|Obst|Milch|Molkerei|Speiseeis|Süßwaren|Konserven|Tiefkühl|Gewürz/i, bereich: 'Food & Beverage' },
+
+  // ═══════════════════════════════════════════════════════════════════
+  // LOGIS / BEHERBERGUNG
+  // ═══════════════════════════════════════════════════════════════════
   { range: { from: '4400', to: '4408' }, bereich: 'Logis' },
-  { bezeichnungPattern: /Logis|Übernachtung|Zimmer|Beherbergung|Unterkunft/i, bereich: 'Logis' },
-  
-  // Wellness/Spa
+  { range: { from: '4440', to: '4449' }, bereich: 'Logis' }, // Erweiterte Logis-Erlöse
+  { bezeichnungPattern: /Logis|Übernachtung|Zimmer|Beherbergung|Unterkunft|Aufenthalt|Nächtig|Accommodation|Room|Belegung|Buchung|Reservierung|Storno|No-?Show|Housekeeping|Wäsche|Reinigung Zimmer/i, bereich: 'Logis' },
+
+  // ═══════════════════════════════════════════════════════════════════
+  // WELLNESS / SPA / AYURVEDA
+  // ═══════════════════════════════════════════════════════════════════
   { range: { from: '4420', to: '4429' }, bereich: 'Wellness/Spa' },
+  { range: { from: '4460', to: '4469' }, bereich: 'Wellness/Spa' }, // Erweiterte Wellness-Erlöse
   { range: { from: '5560', to: '5569' }, bereich: 'Wellness/Spa' },
-  { bezeichnungPattern: /Wellness|Spa|Massage|Sauna|Pool|Ayurveda|Behandlung/i, bereich: 'Wellness/Spa' },
-  
-  // Ärztin/Medizin
+  { range: { from: '5580', to: '5589' }, bereich: 'Wellness/Spa' }, // Wellness-Material
+  { bezeichnungPattern: /Wellness|Spa\b|Massage|Sauna|Pool|Schwimmbad|Ayurveda|Behandlung|Kosmetik|Beauty|Fitness|Yoga|Meditation|Relax|Thermal|Dampfbad|Whirlpool|Jacuzzi|Kur|Packung|Peeling|Aromatherapie|Öl|Creme|Lotion/i, bereich: 'Wellness/Spa' },
+
+  // ═══════════════════════════════════════════════════════════════════
+  // ÄRZTIN / MEDIZIN
+  // ═══════════════════════════════════════════════════════════════════
   { range: { from: '4430', to: '4439' }, bereich: 'Ärztin/Medizin' },
-  { bezeichnungPattern: /Arzt|Ärztin|Medizin|Therapie|Konsultation/i, bereich: 'Ärztin/Medizin' },
-  
-  // Shop
+  { range: { from: '4470', to: '4479' }, bereich: 'Ärztin/Medizin' }, // Medizin-Erlöse
+  { range: { from: '5590', to: '5599' }, bereich: 'Ärztin/Medizin' }, // Medizin-Material
+  { bezeichnungPattern: /Arzt|Ärztin|Medizin|Therapie|Konsultation|Diagnos|Labor|Blut|Untersuchung|Rezept|Pharma|Medikament|Heilmittel|Physiotherapie|Osteopathie|Akupunktur|TCM|Naturheil|Homöopathie|Gesundheit/i, bereich: 'Ärztin/Medizin' },
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SHOP
+  // ═══════════════════════════════════════════════════════════════════
   { range: { from: '4450', to: '4459' }, bereich: 'Shop' },
+  { range: { from: '4480', to: '4489' }, bereich: 'Shop' }, // Erweiterte Shop-Erlöse
   { range: { from: '5570', to: '5579' }, bereich: 'Shop' },
-  { bezeichnungPattern: /Shop|Verkauf|Waren|Boutique/i, bereich: 'Shop' },
-  
-  // Marketing/Vertrieb
-  { range: { from: '6600', to: '6699' }, bereich: 'Marketing/Vertrieb' },
-  { bezeichnungPattern: /Marketing|Werbung|Vertrieb|Provision|Kommission/i, bereich: 'Marketing/Vertrieb' },
-  
-  // Verwaltung
-  { range: { from: '6000', to: '6599' }, bereich: 'Verwaltung' },
-  { range: { from: '6700', to: '6999' }, bereich: 'Verwaltung' },
-  { bezeichnungPattern: /Verwaltung|Büro|Beratung|Rechts|Steuer|Versicherung/i, bereich: 'Verwaltung' },
-  
-  // Technik/Instandhaltung
-  { range: { from: '7100', to: '7199' }, bereich: 'Technik/Instandhaltung' },
-  { bezeichnungPattern: /Reparatur|Instandhaltung|Wartung|Technik/i, bereich: 'Technik/Instandhaltung' },
-  
-  // Energie
-  { range: { from: '7000', to: '7099' }, bereich: 'Energie' },
-  { bezeichnungPattern: /Energie|Strom|Gas|Heizung|Wasser/i, bereich: 'Energie' },
-  
-  // Personal
+  { bezeichnungPattern: /\bShop\b|Verkauf|Waren\b|Boutique|Souvenir|Geschenk|Artikel|Handels|Einzelhandel|Produkt|Merchandise/i, bereich: 'Shop' },
+
+  // ═══════════════════════════════════════════════════════════════════
+  // PERSONAL (vor Verwaltung, da spezifischer)
+  // ═══════════════════════════════════════════════════════════════════
   { range: { from: '6200', to: '6299' }, bereich: 'Personal' },
-  { bezeichnungPattern: /Personal|Löhne|Gehälter|Sozial/i, bereich: 'Personal' },
+  { range: { from: '6300', to: '6399' }, bereich: 'Personal' }, // Erweiterte Personalkosten
+  { bezeichnungPattern: /Personal|Löhne|Gehälter|Gehalt|Lohn\b|Sozial|Arbeitgeber|Arbeitnehmer|Kranken|Renten|Arbeitslosen|Pflege|Berufsgenossen|Urlaub|Weihnacht|Prämie|Bonus|Abfindung|Fortbildung|Schulung|Recruiting|Mitarbeiter|Angestellt|Aushilf|Minijob|Praktikant|Azubi|Ausbildung/i, bereich: 'Personal' },
+
+  // ═══════════════════════════════════════════════════════════════════
+  // MARKETING / VERTRIEB
+  // ═══════════════════════════════════════════════════════════════════
+  { range: { from: '6600', to: '6699' }, bereich: 'Marketing/Vertrieb' },
+  { range: { from: '6800', to: '6849' }, bereich: 'Marketing/Vertrieb' }, // Marketing-Kosten
+  { bezeichnungPattern: /Marketing|Werbung|Vertrieb|Provision|Kommission|Agentur|Anzeige|Online|Google|Facebook|Instagram|Social Media|SEO|SEM|Newsletter|Mailing|Prospekt|Katalog|Messe|Event|PR\b|Öffentlichkeit|Presse|Influencer|Affiliate|Booking|Expedia|HRS|OTA|Channel|Buchungsportal/i, bereich: 'Marketing/Vertrieb' },
+
+  // ═══════════════════════════════════════════════════════════════════
+  // ENERGIE
+  // ═══════════════════════════════════════════════════════════════════
+  { range: { from: '7000', to: '7099' }, bereich: 'Energie' },
+  { bezeichnungPattern: /Energie|Strom|Gas\b|Heizung|Wasser|Abwasser|Elektr|Fernwärme|Öl\b|Heizöl|Pellet|Brennstoff|Verbrauch|Zähler|Netz|Grundgebühr|kWh|Kubikmeter/i, bereich: 'Energie' },
+
+  // ═══════════════════════════════════════════════════════════════════
+  // TECHNIK / INSTANDHALTUNG
+  // ═══════════════════════════════════════════════════════════════════
+  { range: { from: '7100', to: '7199' }, bereich: 'Technik/Instandhaltung' },
+  { range: { from: '7200', to: '7299' }, bereich: 'Technik/Instandhaltung' }, // Erweiterte Technik
+  { bezeichnungPattern: /Reparatur|Instandhaltung|Wartung|Technik|Handwerk|Elektrik|Sanitär|Klima|Lüftung|Aufzug|Lift|Gebäude|Facility|Hausmeister|Garten|Außenanlage|Winterdienst|Reinigung|Entsorgung|Müll|Abfall|Schädling|Desinfektion/i, bereich: 'Technik/Instandhaltung' },
+
+  // ═══════════════════════════════════════════════════════════════════
+  // VERWALTUNG (als Auffangbereich für 6xxx)
+  // ═══════════════════════════════════════════════════════════════════
+  { range: { from: '6000', to: '6199' }, bereich: 'Verwaltung' },
+  { range: { from: '6400', to: '6599' }, bereich: 'Verwaltung' },
+  { range: { from: '6700', to: '6799' }, bereich: 'Verwaltung' },
+  { range: { from: '6850', to: '6999' }, bereich: 'Verwaltung' },
+  { bezeichnungPattern: /Verwaltung|Büro|Beratung|Rechts|Steuer|Versicherung|Bank|Gebühr|Porto|Telefon|Internet|IT\b|Software|Lizenz|Miete|Pacht|Leasing|Abschreibung|AfA|Zinsen|Kredit|Darlehen|Buchhaltung|Jahresabschluss|Prüfung|Notar|Gericht|Beitrag|Verband|Kammer|Spende|Trinkgeld|Kasse|Differenz|Skonti|Rabatt|Nachlass/i, bereich: 'Verwaltung' },
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SONSTIGE ERLÖSKONTEN (44xx die noch nicht zugeordnet sind)
+  // ═══════════════════════════════════════════════════════════════════
+  { range: { from: '4490', to: '4499' }, bereich: 'Sonstiges' }, // Sonstige Erlöse explizit
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // NEUTRALE / BILANZKONTEN (0xxx-3xxx, 8xxx-9xxx)
+  // ═══════════════════════════════════════════════════════════════════
+  { range: { from: '0000', to: '3999' }, bereich: 'Sonstiges' },
+  { range: { from: '8000', to: '9999' }, bereich: 'Sonstiges' },
 ];
 
 export function mapBereich(kontonummer: string, bezeichnung: string): Bereich {
