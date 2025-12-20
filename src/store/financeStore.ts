@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { Konto, SaldoMonat, UploadedFile, SaldoVergleich, BereichAggregation } from '@/types/finance';
 import { parseCSV, extractKonten, extractSalden, parseFileName } from '@/lib/csvParser';
 import { calculateVergleich, aggregateByBereich } from '@/lib/calculations';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FinanceState {
   uploadedFiles: UploadedFile[];
@@ -10,12 +11,14 @@ interface FinanceState {
   selectedYear: number;
   selectedMonth: number;
   isLoading: boolean;
+  isInitialized: boolean;
   
   // Computed data
   vergleiche: SaldoVergleich[];
   bereichAggregationen: BereichAggregation[];
   
   // Actions
+  initialize: () => Promise<void>;
   uploadFile: (file: File) => Promise<void>;
   removeFile: (fileName: string) => void;
   setSelectedPeriod: (year: number, month: number) => void;
@@ -29,8 +32,90 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   selectedYear: new Date().getFullYear(),
   selectedMonth: new Date().getMonth() + 1,
   isLoading: false,
+  isInitialized: false,
   vergleiche: [],
   bereichAggregationen: [],
+  
+  initialize: async () => {
+    if (get().isInitialized) return;
+    
+    set({ isLoading: true });
+    
+    try {
+      // Lade Konten aus DB
+      const { data: kontenData, error: kontenError } = await supabase
+        .from('konten')
+        .select('*');
+      
+      if (kontenError) throw kontenError;
+      
+      // Lade Salden aus DB
+      const { data: saldenData, error: saldenError } = await supabase
+        .from('salden_monat')
+        .select('*');
+      
+      if (saldenError) throw saldenError;
+      
+      // Lade Import-Dateien aus DB
+      const { data: filesData, error: filesError } = await supabase
+        .from('import_files')
+        .select('*')
+        .order('jahr', { ascending: false })
+        .order('monat', { ascending: false });
+      
+      if (filesError) throw filesError;
+      
+      // Transformiere DB-Daten in App-Format
+      const konten: Konto[] = (kontenData || []).map(k => ({
+        kontonummer: k.kontonummer,
+        kontobezeichnung: k.kontobezeichnung,
+        kontoklasse: k.kontoklasse,
+        bereich: k.bereich as Konto['bereich'],
+        kostenarttTyp: k.kostenartt_typ as Konto['kostenarttTyp'],
+      }));
+      
+      const salden: SaldoMonat[] = (saldenData || []).map(s => ({
+        kontonummer: s.kontonummer,
+        jahr: s.jahr,
+        monat: s.monat,
+        saldoSollMonat: Number(s.saldo_soll_monat),
+        saldoHabenMonat: Number(s.saldo_haben_monat),
+        saldoMonat: Number(s.saldo_monat),
+      }));
+      
+      const uploadedFiles: UploadedFile[] = (filesData || []).map(f => ({
+        name: f.filename,
+        year: f.jahr,
+        month: f.monat,
+        data: [],
+        uploadedAt: new Date(f.imported_at),
+      }));
+      
+      // Bestimme aktuellste Periode
+      let selectedYear = new Date().getFullYear();
+      let selectedMonth = new Date().getMonth() + 1;
+      
+      if (uploadedFiles.length > 0) {
+        selectedYear = uploadedFiles[0].year;
+        selectedMonth = uploadedFiles[0].month;
+      }
+      
+      set({
+        konten,
+        salden,
+        uploadedFiles,
+        selectedYear,
+        selectedMonth,
+        isLoading: false,
+        isInitialized: true,
+      });
+      
+      get().recalculate();
+    } catch (error) {
+      console.error('Fehler beim Laden der Daten:', error);
+      set({ isLoading: false, isInitialized: true });
+    }
+  },
   
   uploadFile: async (file: File) => {
     set({ isLoading: true });
@@ -46,6 +131,49 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
       const rawData = parseCSV(text);
       const newKonten = extractKonten(rawData);
       const newSalden = extractSalden(rawData, parsed.year, parsed.month);
+      
+      // Speichere Konten in DB (upsert)
+      for (const konto of newKonten) {
+        const { error } = await supabase
+          .from('konten')
+          .upsert({
+            kontonummer: konto.kontonummer,
+            kontobezeichnung: konto.kontobezeichnung,
+            kontoklasse: konto.kontoklasse,
+            bereich: konto.bereich,
+            kostenartt_typ: konto.kostenarttTyp,
+          }, { onConflict: 'kontonummer' });
+        
+        if (error) console.error('Fehler beim Speichern Konto:', error);
+      }
+      
+      // Speichere Salden in DB (upsert)
+      for (const saldo of newSalden) {
+        const { error } = await supabase
+          .from('salden_monat')
+          .upsert({
+            kontonummer: saldo.kontonummer,
+            jahr: saldo.jahr,
+            monat: saldo.monat,
+            saldo_soll_monat: saldo.saldoSollMonat,
+            saldo_haben_monat: saldo.saldoHabenMonat,
+            saldo_monat: saldo.saldoMonat,
+          }, { onConflict: 'kontonummer,jahr,monat' });
+        
+        if (error) console.error('Fehler beim Speichern Saldo:', error);
+      }
+      
+      // Speichere Import-Datei in DB
+      const { error: fileError } = await supabase
+        .from('import_files')
+        .upsert({
+          filename: file.name,
+          jahr: parsed.year,
+          monat: parsed.month,
+          anzahl_konten: newKonten.length,
+        }, { onConflict: 'jahr,monat' });
+      
+      if (fileError) console.error('Fehler beim Speichern Import-File:', fileError);
       
       const uploadedFile: UploadedFile = {
         name: file.name,
@@ -70,18 +198,28 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
           saldenMap.set(`${s.kontonummer}-${s.jahr}-${s.monat}`, s);
         }
         
-        // Aktualisiere selectedPeriod auf neueste Daten
-        const allFiles = [...state.uploadedFiles, uploadedFile];
-        const latestFile = allFiles.sort((a, b) => 
-          b.year * 100 + b.month - (a.year * 100 + a.month)
-        )[0];
+        // Aktualisiere uploadedFiles
+        const existingIndex = state.uploadedFiles.findIndex(
+          f => f.year === parsed.year && f.month === parsed.month
+        );
+        
+        let allFiles: UploadedFile[];
+        if (existingIndex >= 0) {
+          allFiles = [...state.uploadedFiles];
+          allFiles[existingIndex] = uploadedFile;
+        } else {
+          allFiles = [...state.uploadedFiles, uploadedFile];
+        }
+        
+        // Sortiere nach Datum
+        allFiles.sort((a, b) => b.year * 100 + b.month - (a.year * 100 + a.month));
         
         return {
           uploadedFiles: allFiles,
           konten: Array.from(kontenMap.values()),
           salden: Array.from(saldenMap.values()),
-          selectedYear: latestFile.year,
-          selectedMonth: latestFile.month,
+          selectedYear: parsed.year,
+          selectedMonth: parsed.month,
           isLoading: false,
         };
       });
