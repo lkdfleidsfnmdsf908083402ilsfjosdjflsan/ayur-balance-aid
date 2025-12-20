@@ -71,13 +71,14 @@ export function extractKonten(data: RawSaldenliste[]): Konto[] {
     
     const bezeichnung = String(row.Kontobezeichnung || '').trim();
     const kontoklasse = String(row.Kontoklasse || '').trim();
+    const bereich = mapBereich(kontonummer, bezeichnung);
     
     kontenMap.set(kontonummer, {
       kontonummer,
       kontobezeichnung: bezeichnung,
       kontoklasse,
-      bereich: mapBereich(kontonummer, bezeichnung),
-      kostenarttTyp: mapKostenarttTyp(kontonummer),
+      bereich,
+      kostenarttTyp: mapKostenarttTyp(kontonummer, bereich),
     });
   }
   
@@ -97,35 +98,98 @@ export function extractSalden(data: RawSaldenliste[], jahr: number, monat: numbe
     
     // Versuche verschiedene Spaltenbezeichnungen
     const monatStr = monat.toString().padStart(2, '0');
+    
+    // Mögliche Soll-Spalten (erweitert für verschiedene CSV-Formate)
     const possibleSollKeys = [
       `${monatStr}-Soll`,
       `Monat-Soll`,
       `${monat}-Soll`,
       'Saldo Soll',
+      'SaldoSoll',
+      'Soll',
+      'Monat Soll',
+      'Soll Monat',
+      'saldo_soll',
+      'soll',
     ];
+    
+    // Mögliche Haben-Spalten
     const possibleHabenKeys = [
       `${monatStr}-Haben`,
       `Monat-Haben`,
       `${monat}-Haben`,
       'Saldo Haben',
+      'SaldoHaben',
+      'Haben',
+      'Monat Haben',
+      'Haben Monat',
+      'saldo_haben',
+      'haben',
     ];
     
-    for (const key of possibleSollKeys) {
-      if (key in row && typeof row[key] === 'number') {
-        saldoSollMonat = row[key] as number;
-        break;
+    // Mögliche Netto-Saldo-Spalten (falls direkt vorhanden)
+    const possibleSaldoKeys = [
+      `${monatStr}-Saldo`,
+      'Monat-Saldo',
+      `${monat}-Saldo`,
+      'Saldo',
+      'Saldo Monat',
+      'SaldoMonat',
+      'Netto',
+      'saldo',
+      'saldo_monat',
+    ];
+    
+    // Durchsuche alle Schlüssel in der Zeile nach passenden Spalten
+    for (const key of Object.keys(row)) {
+      const lowerKey = key.toLowerCase();
+      
+      // Prüfe auf Soll-Spalten
+      if (saldoSollMonat === 0) {
+        for (const sollKey of possibleSollKeys) {
+          if (lowerKey === sollKey.toLowerCase() || key === sollKey) {
+            const val = row[key];
+            if (typeof val === 'number') {
+              saldoSollMonat = val;
+              break;
+            }
+          }
+        }
+      }
+      
+      // Prüfe auf Haben-Spalten
+      if (saldoHabenMonat === 0) {
+        for (const habenKey of possibleHabenKeys) {
+          if (lowerKey === habenKey.toLowerCase() || key === habenKey) {
+            const val = row[key];
+            if (typeof val === 'number') {
+              saldoHabenMonat = val;
+              break;
+            }
+          }
+        }
       }
     }
     
-    for (const key of possibleHabenKeys) {
-      if (key in row && typeof row[key] === 'number') {
-        saldoHabenMonat = row[key] as number;
-        break;
+    // Berechne Netto-Saldo (Soll - Haben)
+    let saldoMonat = saldoSollMonat - saldoHabenMonat;
+    
+    // Falls kein Soll/Haben gefunden, prüfe auf direkten Saldo
+    if (saldoSollMonat === 0 && saldoHabenMonat === 0) {
+      for (const key of Object.keys(row)) {
+        const lowerKey = key.toLowerCase();
+        for (const saldoKey of possibleSaldoKeys) {
+          if (lowerKey === saldoKey.toLowerCase() || key === saldoKey) {
+            const val = row[key];
+            if (typeof val === 'number') {
+              saldoMonat = val;
+              break;
+            }
+          }
+        }
+        if (saldoMonat !== 0) break;
       }
     }
-    
-    // Berechne Netto-Saldo (Soll - Haben für Aufwand, Haben - Soll für Erlöse)
-    const saldoMonat = saldoSollMonat - saldoHabenMonat;
     
     salden.push({
       kontonummer,
