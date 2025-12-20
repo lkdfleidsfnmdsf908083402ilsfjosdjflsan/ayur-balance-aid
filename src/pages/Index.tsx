@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { DashboardView } from '@/components/views/DashboardView';
 import { UploadView } from '@/components/views/UploadView';
@@ -6,9 +6,15 @@ import { KontenView } from '@/components/views/KontenView';
 import { VergleichView } from '@/components/views/VergleichView';
 import { BereicheView } from '@/components/views/BereicheView';
 import { DatenqualitaetView } from '@/components/views/DatenqualitaetView';
+import { useFinanceStore } from '@/store/financeStore';
 
 const Index = () => {
   const [activeView, setActiveView] = useState('dashboard');
+  const { initialize, isInitialized, isLoading } = useFinanceStore();
+
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
 
   const renderView = () => {
     switch (activeView) {
