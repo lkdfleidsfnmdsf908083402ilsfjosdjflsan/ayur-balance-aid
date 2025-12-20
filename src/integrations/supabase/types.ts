@@ -14,7 +14,107 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      import_files: {
+        Row: {
+          anzahl_konten: number
+          filename: string
+          id: string
+          imported_at: string
+          jahr: number
+          monat: number
+        }
+        Insert: {
+          anzahl_konten?: number
+          filename: string
+          id?: string
+          imported_at?: string
+          jahr: number
+          monat: number
+        }
+        Update: {
+          anzahl_konten?: number
+          filename?: string
+          id?: string
+          imported_at?: string
+          jahr?: number
+          monat?: number
+        }
+        Relationships: []
+      }
+      konten: {
+        Row: {
+          bereich: string
+          created_at: string
+          id: string
+          kontobezeichnung: string
+          kontoklasse: string
+          kontonummer: string
+          kostenartt_typ: string
+          updated_at: string
+        }
+        Insert: {
+          bereich?: string
+          created_at?: string
+          id?: string
+          kontobezeichnung: string
+          kontoklasse: string
+          kontonummer: string
+          kostenartt_typ?: string
+          updated_at?: string
+        }
+        Update: {
+          bereich?: string
+          created_at?: string
+          id?: string
+          kontobezeichnung?: string
+          kontoklasse?: string
+          kontonummer?: string
+          kostenartt_typ?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      salden_monat: {
+        Row: {
+          created_at: string
+          id: string
+          jahr: number
+          kontonummer: string
+          monat: number
+          saldo_haben_monat: number
+          saldo_monat: number
+          saldo_soll_monat: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          jahr: number
+          kontonummer: string
+          monat: number
+          saldo_haben_monat?: number
+          saldo_monat?: number
+          saldo_soll_monat?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          jahr?: number
+          kontonummer?: string
+          monat?: number
+          saldo_haben_monat?: number
+          saldo_monat?: number
+          saldo_soll_monat?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salden_monat_kontonummer_fkey"
+            columns: ["kontonummer"]
+            isOneToOne: false
+            referencedRelation: "konten"
+            referencedColumns: ["kontonummer"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
