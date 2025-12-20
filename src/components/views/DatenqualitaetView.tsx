@@ -1,6 +1,8 @@
 import { Header } from '@/components/layout/Header';
 import { useFinanceStore } from '@/store/financeStore';
 import { analyzeDataQuality, getMonthName } from '@/lib/dataQuality';
+import { bereichColors } from '@/lib/bereichMapping';
+import { Bereich } from '@/types/finance';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -17,7 +19,8 @@ import {
   XCircle, 
   Database,
   Calendar,
-  FileWarning
+  FileWarning,
+  PieChart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -29,11 +32,35 @@ function formatCurrency(value: number): string {
   }).format(value);
 }
 
+interface BereichStats {
+  bereich: Bereich;
+  anzahl: number;
+  prozent: number;
+}
+
 export function DatenqualitaetView() {
   const { konten, salden, uploadedFiles } = useFinanceStore();
   const report = analyzeDataQuality(konten, salden, uploadedFiles);
   
   const hasData = konten.length > 0 || salden.length > 0;
+  
+  // Bereich-Statistiken berechnen
+  const bereichStats: BereichStats[] = (() => {
+    if (konten.length === 0) return [];
+    
+    const counts = konten.reduce((acc, konto) => {
+      acc[konto.bereich] = (acc[konto.bereich] || 0) + 1;
+      return acc;
+    }, {} as Record<Bereich, number>);
+    
+    return Object.entries(counts)
+      .map(([bereich, anzahl]) => ({
+        bereich: bereich as Bereich,
+        anzahl,
+        prozent: (anzahl / konten.length) * 100
+      }))
+      .sort((a, b) => b.anzahl - a.anzahl);
+  })();
   
   if (!hasData) {
     return (
@@ -140,6 +167,77 @@ export function DatenqualitaetView() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Bereich-Zuordnungs-Vorschau */}
+          <Card className="glass-card">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <PieChart className="h-5 w-5 text-accent" />
+                Bereich-Zuordnung Übersicht
+                <Badge variant="outline" className="ml-2">
+                  {konten.length} Konten
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {bereichStats.length === 0 ? (
+                <p className="text-muted-foreground">Keine Konten vorhanden.</p>
+              ) : (
+                <div className="space-y-4">
+                  {/* Visuelle Balken */}
+                  <div className="space-y-2">
+                    {bereichStats.map((stat) => (
+                      <div key={stat.bereich} className="flex items-center gap-3">
+                        <div className="w-36 text-sm truncate" title={stat.bereich}>
+                          {stat.bereich}
+                        </div>
+                        <div className="flex-1 h-6 bg-muted/30 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ 
+                              width: `${stat.prozent}%`,
+                              backgroundColor: bereichColors[stat.bereich],
+                              opacity: stat.bereich === 'Sonstiges' ? 0.5 : 1
+                            }}
+                          />
+                        </div>
+                        <div className="w-16 text-right font-mono text-sm">
+                          {stat.anzahl}
+                        </div>
+                        <div className="w-16 text-right font-mono text-sm text-muted-foreground">
+                          {stat.prozent.toFixed(1)}%
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {/* Zusammenfassung */}
+                  <div className="pt-4 border-t border-border/50 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {report.kontenOhneBereich.length === 0 ? (
+                        <>
+                          <CheckCircle2 className="h-5 w-5 text-success" />
+                          <span className="text-success font-medium">100% der Konten zugeordnet</span>
+                        </>
+                      ) : (
+                        <>
+                          <AlertTriangle className="h-5 w-5 text-amber-500" />
+                          <span className="text-amber-500 font-medium">
+                            {((1 - report.kontenOhneBereich.length / konten.length) * 100).toFixed(1)}% zugeordnet
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {report.kontenOhneBereich.length > 0 && (
+                        <span>{report.kontenOhneBereich.length} Konten in "Sonstiges"</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Perioden-Übersicht */}
           <Card className="glass-card">
