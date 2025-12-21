@@ -92,110 +92,32 @@ export function extractSalden(data: RawSaldenliste[], jahr: number, monat: numbe
     const kontonummer = String(row.KontoNr || '').trim();
     if (!kontonummer) continue;
     
-    // Suche nach Monats-Soll/Haben-Spalten
     let saldoSollMonat = 0;
     let saldoHabenMonat = 0;
     
-    // Versuche verschiedene Spaltenbezeichnungen
-    const monatStr = monat.toString().padStart(2, '0');
-    
-    // Mögliche Soll-Spalten (erweitert für verschiedene CSV-Formate)
-    const possibleSollKeys = [
-      `${monatStr}-Soll`,
-      `Monat-Soll`,
-      `${monat}-Soll`,
-      'Saldo Soll',
-      'SaldoSoll',
-      'Soll',
-      'Monat Soll',
-      'Soll Monat',
-      'saldo_soll',
-      'soll',
-    ];
-    
-    // Mögliche Haben-Spalten
-    const possibleHabenKeys = [
-      `${monatStr}-Haben`,
-      `Monat-Haben`,
-      `${monat}-Haben`,
-      'Saldo Haben',
-      'SaldoHaben',
-      'Haben',
-      'Monat Haben',
-      'Haben Monat',
-      'saldo_haben',
-      'haben',
-    ];
-    
-    // Mögliche Netto-Saldo-Spalten (falls direkt vorhanden)
-    const possibleSaldoKeys = [
-      `${monatStr}-Saldo`,
-      'Monat-Saldo',
-      `${monat}-Saldo`,
-      'Saldo',
-      'Saldo Monat',
-      'SaldoMonat',
-      'Netto',
-      'saldo',
-      'saldo_monat',
-    ];
-    
-    // Durchsuche alle Schlüssel in der Zeile nach passenden Spalten
+    // Suche ausschließlich nach "Saldo Soll" und "Saldo Haben" Spalten
     for (const key of Object.keys(row)) {
       const lowerKey = key.toLowerCase().trim();
       
-      // Prüfe auf Soll-Spalten:
-      // - "monat" und "soll" (z.B. "Monat-Soll")
-      // - "saldo soll" mit Monatsangabe (z.B. "Saldo Soll 10 - 10/25")
-      if (saldoSollMonat === 0) {
-        const isSollColumn = 
-          (lowerKey.includes('monat') && lowerKey.includes('soll') && !lowerKey.includes('haben')) ||
-          (lowerKey.includes('saldo') && lowerKey.includes('soll') && !lowerKey.includes('haben'));
-        
-        if (isSollColumn) {
-          const val = row[key];
-          if (typeof val === 'number') {
-            saldoSollMonat = val;
-          }
+      // Saldo Soll Spalte (z.B. "Saldo Soll 10 - 10/25")
+      if (saldoSollMonat === 0 && lowerKey.startsWith('saldo soll')) {
+        const val = row[key];
+        if (typeof val === 'number') {
+          saldoSollMonat = val;
         }
       }
       
-      // Prüfe auf Haben-Spalten:
-      // - "monat" und "haben" (z.B. "Monat-Haben")
-      // - "saldo haben" mit Monatsangabe (z.B. "Saldo Haben 10 - 10/25")
-      if (saldoHabenMonat === 0) {
-        const isHabenColumn = 
-          (lowerKey.includes('monat') && lowerKey.includes('haben')) ||
-          (lowerKey.includes('saldo') && lowerKey.includes('haben'));
-        
-        if (isHabenColumn) {
-          const val = row[key];
-          if (typeof val === 'number') {
-            saldoHabenMonat = val;
-          }
+      // Saldo Haben Spalte (z.B. "Saldo Haben 10 - 10/25")
+      if (saldoHabenMonat === 0 && lowerKey.startsWith('saldo haben')) {
+        const val = row[key];
+        if (typeof val === 'number') {
+          saldoHabenMonat = val;
         }
       }
     }
     
     // Berechne Netto-Saldo (Soll - Haben)
-    let saldoMonat = saldoSollMonat - saldoHabenMonat;
-    
-    // Falls kein Soll/Haben gefunden, prüfe auf direkten Saldo
-    if (saldoSollMonat === 0 && saldoHabenMonat === 0) {
-      for (const key of Object.keys(row)) {
-        const lowerKey = key.toLowerCase();
-        for (const saldoKey of possibleSaldoKeys) {
-          if (lowerKey === saldoKey.toLowerCase() || key === saldoKey) {
-            const val = row[key];
-            if (typeof val === 'number') {
-              saldoMonat = val;
-              break;
-            }
-          }
-        }
-        if (saldoMonat !== 0) break;
-      }
-    }
+    const saldoMonat = saldoSollMonat - saldoHabenMonat;
     
     salden.push({
       kontonummer,
