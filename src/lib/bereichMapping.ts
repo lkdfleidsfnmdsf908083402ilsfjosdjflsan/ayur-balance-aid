@@ -38,6 +38,7 @@ const specificAccountMappings: Record<string, Bereich> = {
   '7323': 'Verwaltung',         // BMW X5 - Versicherung
   '7325': 'Verwaltung',         // BMW X5 Rep.-u.Service
   '7340': 'Verwaltung',         // BMW iX2 eDrive
+  '7412': 'Verwaltung',         // Pachtaufwand 0%
   '3136': 'Finanzierung',       // ÖHT TIST 8/2
   '3150': 'Finanzierung',       // ÖHT TIST 8
   '3290': 'Finanzierung',       // Erhaltene Wertgutscheine 0%
