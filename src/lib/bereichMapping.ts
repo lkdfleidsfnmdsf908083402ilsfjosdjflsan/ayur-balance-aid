@@ -23,6 +23,9 @@ const specificAccountMappings: Record<string, Bereich> = {
   '4010': 'Logis',              // Erlöse Logis 10%
   '4009': 'Food & Beverage',    // Erlöse F&B 10%
   '4018': 'Food & Beverage',    // Erlöse Küche a la carte 10%
+  '4019': 'Food & Beverage',    // Erlöse Getränke a la carte 20%
+  '4020': 'Food & Beverage',    // Erlöse Küche a la carte 5%
+  '4021': 'Food & Beverage',    // Erlöse Getränke a la carte 5%
   '5312': 'Shop',               // Shopeinkauf 10+20%
   '5314': 'Shop',               // Handelswaren 20% Kosmetik
   '4900': 'Verwaltung',         // Eigenverbrauch 20%
