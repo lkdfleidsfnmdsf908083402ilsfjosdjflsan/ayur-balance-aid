@@ -34,6 +34,10 @@ const specificAccountMappings: Record<string, Bereich> = {
   '4081': 'Verwaltung',         // Erlöse Div. 10%
   '4400': 'Verwaltung',         // Skontoaufwand 20%
   '4810': 'Verwaltung',         // Sonstige betriebliche Erträge 10%
+  '4910': 'Verwaltung',         // Eigenverbrauch 10%
+  '4930': 'Verwaltung',         // Eigenverbrauch 0% (steuerfrei)
+  '4944': 'Verwaltung',         // Nutzungsentnahme 0% (steuerfrei)
+  '4996': 'Verwaltung',         // Auflösung Investitionsprämie COVID-19
   '5312': 'Shop',               // Shopeinkauf 10+20%
   '5314': 'Shop',               // Handelswaren 20% Kosmetik
   '4900': 'Verwaltung',         // Eigenverbrauch 20%
