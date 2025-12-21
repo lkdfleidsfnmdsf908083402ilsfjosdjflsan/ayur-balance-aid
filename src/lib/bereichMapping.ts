@@ -49,6 +49,7 @@ const specificAccountMappings: Record<string, Bereich> = {
   '7340': 'Verwaltung',         // BMW iX2 eDrive
   '7412': 'Verwaltung',         // Pachtaufwand 0%
   '7415': 'Verwaltung',         // Leasing BMW X5
+  '7419': 'Verwaltung',         // Leasing BMW iX2
   '7803': 'Verwaltung',         // Forderungsverluste 10%
   '9555': 'Verwaltung',         // Investitionsprämie COVID-19
   '3136': 'Finanzierung',       // ÖHT TIST 8/2
