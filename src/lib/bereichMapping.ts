@@ -160,77 +160,26 @@ export function mapKostenarttTyp(kontonummer: string, bereich: Bereich): Kostena
   return 'Neutral';
 }
 
-/**
- * Kontoklassen-Bezeichnungen nach SKR03/SKR04
- * - Kontoklasse 0: Sachanlagen (nur 0xxx)
- * - Kontoklasse 1: Warenvorräte (1xxx außer 10xx)
- * - Kontoklasse 10: Sachanlagen (10xx)
- * - Kontoklasse 2: Finanzanlagen
- * - Kontoklasse 4: Erlöse
- * - Kontoklasse 5: Wareneinsatz
- * - Kontoklasse 6: Personalkosten
- * - Kontoklasse 7: Sonstiger Aufwand
- * - Kontoklasse 8: Finanzergebnis
- */
+// Kontoklassen-Mapping: Erste Ziffer = Kontoklasse
 export function mapKontoklasse(kontonummer: string): string {
-  const num = parseInt(kontonummer.replace(/\D/g, ''));
+  if (!kontonummer || kontonummer.length === 0) return 'Sonstiges';
   
-  // Kontoklasse 10 (10xx) = Sachanlagen
-  if (num >= 1000 && num < 1100) {
-    return 'Sachanlagen';
-  }
+  const firstDigit = kontonummer.charAt(0);
   
-  // Kontoklasse 0 (0xxx) = Sachanlagen
-  if (num >= 0 && num < 1000) {
-    return 'Sachanlagen';
-  }
+  const kontoklassenMap: Record<string, string> = {
+    '0': 'Kontoklasse 0',
+    '1': 'Kontoklasse 1',
+    '2': 'Kontoklasse 2',
+    '3': 'Kontoklasse 3',
+    '4': 'Kontoklasse 4',
+    '5': 'Kontoklasse 5',
+    '6': 'Kontoklasse 6',
+    '7': 'Kontoklasse 7',
+    '8': 'Kontoklasse 8',
+    '9': 'Kontoklasse 9',
+  };
   
-  // Kontoklasse 1 (1xxx außer 10xx) = Warenvorräte
-  if (num >= 1100 && num < 2000) {
-    return 'Warenvorräte';
-  }
-  
-  // Kontoklasse 2 (2xxx) = Finanzanlagen
-  if (num >= 2000 && num < 3000) {
-    return 'Finanzanlagen';
-  }
-  
-  // Kontoklasse 3 (3xxx) = Rückstellungen/Verbindlichkeiten
-  if (num >= 3000 && num < 4000) {
-    return 'Verbindlichkeiten';
-  }
-  
-  // Kontoklasse 4 (4xxx) = Erlöse
-  if (num >= 4000 && num < 5000) {
-    return 'Erlöse';
-  }
-  
-  // Kontoklasse 5 (5xxx) = Wareneinsatz
-  if (num >= 5000 && num < 6000) {
-    return 'Wareneinsatz';
-  }
-  
-  // Kontoklasse 6 (6xxx) = Personalkosten
-  if (num >= 6000 && num < 7000) {
-    return 'Personalkosten';
-  }
-  
-  // Kontoklasse 7 (7xxx) = Sonstiger Aufwand
-  if (num >= 7000 && num < 8000) {
-    return 'Sonstiger Aufwand';
-  }
-  
-  // Kontoklasse 8 (8xxx) = Finanzergebnis
-  if (num >= 8000 && num < 9000) {
-    return 'Finanzergebnis';
-  }
-  
-  // Kontoklasse 9 (9xxx) = Vortrags-/Abschlusskonten
-  if (num >= 9000 && num < 10000) {
-    return 'Abschlusskonten';
-  }
-  
-  return 'Sonstiges';
+  return kontoklassenMap[firstDigit] || 'Sonstiges';
 }
 
 export const bereichColors: Record<Bereich, string> = {
