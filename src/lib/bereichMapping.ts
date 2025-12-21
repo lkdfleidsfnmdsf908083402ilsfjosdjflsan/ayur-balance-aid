@@ -23,6 +23,7 @@ const specificAccountMappings: Record<string, Bereich> = {
   '4009': 'Food & Beverage',    // Erlöse F&B 10%
   '5312': 'Shop',               // Shopeinkauf 10+20%
   '5314': 'Shop',               // Handelswaren 20% Kosmetik
+  '4900': 'Verwaltung',         // Eigenverbrauch 20%
   '5800': 'Verwaltung',         // Skontoerträge 20%
   '5801': 'Verwaltung',         // Skontoerträge 10%
   '5804': 'Verwaltung',         // Skontoerträge 13%
