@@ -26,16 +26,18 @@ export function KontenView() {
   const [isSaving, setIsSaving] = useState(false);
   
   const filteredKonten = useMemo(() => {
-    return konten.filter(konto => {
-      const matchesSearch = 
-        konto.kontonummer.toLowerCase().includes(search.toLowerCase()) ||
-        konto.kontobezeichnung.toLowerCase().includes(search.toLowerCase());
-      
-      const matchesBereich = bereichFilter === 'alle' || konto.bereich === bereichFilter;
-      const matchesTyp = typFilter === 'alle' || konto.kostenarttTyp === typFilter;
-      
-      return matchesSearch && matchesBereich && matchesTyp;
-    });
+    return konten
+      .filter(konto => {
+        const matchesSearch = 
+          konto.kontonummer.toLowerCase().includes(search.toLowerCase()) ||
+          konto.kontobezeichnung.toLowerCase().includes(search.toLowerCase());
+        
+        const matchesBereich = bereichFilter === 'alle' || konto.bereich === bereichFilter;
+        const matchesTyp = typFilter === 'alle' || konto.kostenarttTyp === typFilter;
+        
+        return matchesSearch && matchesBereich && matchesTyp;
+      })
+      .sort((a, b) => a.kontonummer.localeCompare(b.kontonummer, undefined, { numeric: true }));
   }, [konten, search, bereichFilter, typFilter]);
   
   // Statistik für Qualitätsprüfung
