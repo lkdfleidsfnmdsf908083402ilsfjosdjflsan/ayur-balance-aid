@@ -19,6 +19,7 @@ interface MappingRule {
 // Spezifische Kontonummern-Zuordnungen (höchste Priorität)
 const specificAccountMappings: Record<string, Bereich> = {
   '4007': 'Food & Beverage',    // Erlöse F&B 5%
+  '4008': 'Logis',              // Erlöse Logis 5%
   '3136': 'Finanzierung',       // ÖHT TIST 8/2
   '3150': 'Finanzierung',       // ÖHT TIST 8
   '3290': 'Finanzierung',       // Erhaltene Wertgutscheine 0%
