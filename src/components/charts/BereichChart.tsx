@@ -58,9 +58,13 @@ export function BereichChart({ data, title, type }: BereichChartProps) {
                   backgroundColor: 'hsl(var(--card))',
                   border: '1px solid hsl(var(--border))',
                   borderRadius: '8px',
-                  fontSize: '12px',
+                  fontSize: '13px',
+                  padding: '10px 14px',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
                 }}
-                labelStyle={{ color: 'hsl(var(--foreground))' }}
+                labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600, marginBottom: '4px' }}
+                itemStyle={{ color: 'hsl(var(--foreground))' }}
+                cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }}
               />
               <Bar dataKey="value" radius={[0, 4, 4, 0]}>
                 {chartData.map((entry, index) => (
