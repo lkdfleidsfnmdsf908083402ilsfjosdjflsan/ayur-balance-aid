@@ -45,6 +45,7 @@ const specificAccountMappings: Record<string, Bereich> = {
   '5853': 'Verwaltung',         // Umsatzboniertrag 0%
   '7323': 'Verwaltung',         // BMW X5 - Versicherung
   '7325': 'Verwaltung',         // BMW X5 Rep.-u.Service
+  '7326': 'Verwaltung',         // BMW iX2 eDrive
   '7340': 'Verwaltung',         // BMW iX2 eDrive
   '7412': 'Verwaltung',         // Pachtaufwand 0%
   '7415': 'Verwaltung',         // Leasing BMW X5
