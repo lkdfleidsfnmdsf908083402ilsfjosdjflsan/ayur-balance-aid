@@ -21,16 +21,18 @@ export function VergleichView() {
   const [typFilter, setTypFilter] = useState<string>('alle');
   
   const filteredVergleiche = useMemo(() => {
-    return vergleiche.filter(v => {
-      const matchesSearch = 
-        v.kontonummer.toLowerCase().includes(search.toLowerCase()) ||
-        v.kontobezeichnung.toLowerCase().includes(search.toLowerCase());
-      
-      const matchesBereich = bereichFilter === 'alle' || v.bereich === bereichFilter;
-      const matchesTyp = typFilter === 'alle' || v.kostenarttTyp === typFilter;
-      
-      return matchesSearch && matchesBereich && matchesTyp;
-    });
+    return vergleiche
+      .filter(v => {
+        const matchesSearch = 
+          v.kontonummer.toLowerCase().includes(search.toLowerCase()) ||
+          v.kontobezeichnung.toLowerCase().includes(search.toLowerCase());
+        
+        const matchesBereich = bereichFilter === 'alle' || v.bereich === bereichFilter;
+        const matchesTyp = typFilter === 'alle' || v.kostenarttTyp === typFilter;
+        
+        return matchesSearch && matchesBereich && matchesTyp;
+      })
+      .sort((a, b) => a.kontonummer.localeCompare(b.kontonummer, undefined, { numeric: true }));
   }, [vergleiche, search, bereichFilter, typFilter]);
   
   const months = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
