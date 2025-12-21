@@ -16,6 +16,14 @@ interface MappingRule {
   bereich: Bereich;
 }
 
+// Spezifische Kontonummern-Zuordnungen (höchste Priorität)
+const specificAccountMappings: Record<string, Bereich> = {
+  '4007': 'Food & Beverage',    // Erlöse F&B 5%
+  '3136': 'Finanzierung',       // ÖHT TIST 8/2
+  '3150': 'Finanzierung',       // ÖHT TIST 8
+  '3290': 'Finanzierung',       // Erhaltene Wertgutscheine 0%
+};
+
 // Bereich-Mapping-Regeln nach Priorität (spezifischere Regeln zuerst)
 const bereichRules: MappingRule[] = [
   // ═══════════════════════════════════════════════════════════════════
@@ -112,6 +120,11 @@ const bereichRules: MappingRule[] = [
 ];
 
 export function mapBereich(kontonummer: string, bezeichnung: string): Bereich {
+  // Prüfe zuerst spezifische Kontonummern (höchste Priorität)
+  if (specificAccountMappings[kontonummer]) {
+    return specificAccountMappings[kontonummer];
+  }
+  
   // Prüfe Regeln nach Priorität
   for (const rule of bereichRules) {
     // Prüfe exaktes Muster
@@ -193,5 +206,6 @@ export const bereichColors: Record<Bereich, string> = {
   'Technik/Instandhaltung': 'hsl(30, 60%, 50%)',
   'Energie': 'hsl(45, 90%, 55%)',
   'Personal': 'hsl(180, 60%, 45%)',
+  'Finanzierung': 'hsl(260, 60%, 55%)',
   'Sonstiges': 'hsl(0, 0%, 50%)',
 };

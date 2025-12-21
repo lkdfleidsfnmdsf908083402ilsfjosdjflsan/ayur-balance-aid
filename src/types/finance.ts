@@ -17,6 +17,7 @@ export type Bereich =
   | 'Technik/Instandhaltung'
   | 'Energie'
   | 'Personal'
+  | 'Finanzierung'
   | 'Sonstiges';
 
 export type KostenarttTyp = 'Erlös' | 'Einkauf' | 'Neutral';
