@@ -24,6 +24,15 @@ const specificAccountMappings: Record<string, Bereich> = {
   '5312': 'Shop',               // Shopeinkauf 10+20%
   '5314': 'Shop',               // Handelswaren 20% Kosmetik
   '5800': 'Verwaltung',         // Skontoerträge 20%
+  '5801': 'Verwaltung',         // Skontoerträge 10%
+  '5804': 'Verwaltung',         // Skontoerträge 13%
+  '5805': 'Verwaltung',         // Skontoerträge 0%
+  '5808': 'Verwaltung',         // Skontoertrag 5%
+  '5810': 'Verwaltung',         // Skontoertrag ig. Erwerb 0% (mit VSt)
+  '5812': 'Verwaltung',         // Skontoertrag ig. Erwerb 20% (mit VSt)
+  '5830': 'Verwaltung',         // Skontoertrag 20% bezogene Leistungen
+  '5834': 'Verwaltung',         // Skontoertrag 20% Reverse Charge Leistungen
+  '5850': 'Verwaltung',         // Umsatzboni 20% auf Materialaufwand
   '3136': 'Finanzierung',       // ÖHT TIST 8/2
   '3150': 'Finanzierung',       // ÖHT TIST 8
   '3290': 'Finanzierung',       // Erhaltene Wertgutscheine 0%
