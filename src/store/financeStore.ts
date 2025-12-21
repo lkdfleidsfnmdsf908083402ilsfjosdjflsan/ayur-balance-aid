@@ -37,24 +37,39 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
   bereichAggregationen: [],
   
   initialize: async () => {
-    if (get().isInitialized) return;
-    
+    // Immer neu laden, um aktuelle Daten zu bekommen
     set({ isLoading: true });
     
     try {
       // Lade Konten aus DB
       const { data: kontenData, error: kontenError } = await supabase
         .from('konten')
-        .select('*');
+        .select('*')
+        .limit(5000);
       
       if (kontenError) throw kontenError;
       
-      // Lade Salden aus DB
-      const { data: saldenData, error: saldenError } = await supabase
-        .from('salden_monat')
-        .select('*');
+      // Lade Salden aus DB (über 1000 Einträge, daher paginiert laden)
+      type SaldenRow = { id: string; kontonummer: string; jahr: number; monat: number; saldo_soll_monat: string | number; saldo_haben_monat: string | number; saldo_monat: string | number; created_at: string };
+      let allSalden: SaldenRow[] = [];
+      let page = 0;
+      const pageSize = 1000;
       
-      if (saldenError) throw saldenError;
+      while (true) {
+        const { data: saldenPage, error: saldenError } = await supabase
+          .from('salden_monat')
+          .select('*')
+          .range(page * pageSize, (page + 1) * pageSize - 1);
+        
+        if (saldenError) throw saldenError;
+        if (!saldenPage || saldenPage.length === 0) break;
+        
+        allSalden = [...allSalden, ...saldenPage];
+        if (saldenPage.length < pageSize) break;
+        page++;
+      }
+      
+      const saldenData = allSalden;
       
       // Lade Import-Dateien aus DB
       const { data: filesData, error: filesError } = await supabase
@@ -108,6 +123,13 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         selectedMonth,
         isLoading: false,
         isInitialized: true,
+      });
+      
+      console.log('Store initialized:', { 
+        kontenCount: konten.length, 
+        saldenCount: salden.length,
+        erlösKonten: konten.filter(k => k.kostenarttTyp === 'Erlös').length,
+        selectedPeriod: `${selectedMonth}/${selectedYear}`
       });
       
       get().recalculate();
@@ -247,6 +269,12 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
     
     const vergleiche = calculateVergleich(konten, salden, selectedYear, selectedMonth);
     const bereichAggregationen = aggregateByBereich(vergleiche);
+    
+    console.log('Recalculated:', {
+      vergleicheCount: vergleiche.length,
+      bereichAggregationenCount: bereichAggregationen.length,
+      erlösAggregationen: bereichAggregationen.filter(b => b.kostenarttTyp === 'Erlös'),
+    });
     
     set({ vergleiche, bereichAggregationen });
   },
