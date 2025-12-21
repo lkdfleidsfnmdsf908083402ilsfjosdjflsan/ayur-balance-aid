@@ -144,9 +144,15 @@ export function extractSalden(data: RawSaldenliste[], jahr: number, monat: numbe
     for (const key of Object.keys(row)) {
       const lowerKey = key.toLowerCase().trim();
       
-      // Prüfe auf Monat-Soll Spalten (enthält "monat" und "soll")
+      // Prüfe auf Soll-Spalten:
+      // - "monat" und "soll" (z.B. "Monat-Soll")
+      // - "saldo soll" mit Monatsangabe (z.B. "Saldo Soll 10 - 10/25")
       if (saldoSollMonat === 0) {
-        if (lowerKey.includes('monat') && lowerKey.includes('soll') && !lowerKey.includes('haben')) {
+        const isSollColumn = 
+          (lowerKey.includes('monat') && lowerKey.includes('soll') && !lowerKey.includes('haben')) ||
+          (lowerKey.includes('saldo') && lowerKey.includes('soll') && !lowerKey.includes('haben'));
+        
+        if (isSollColumn) {
           const val = row[key];
           if (typeof val === 'number') {
             saldoSollMonat = val;
@@ -154,9 +160,15 @@ export function extractSalden(data: RawSaldenliste[], jahr: number, monat: numbe
         }
       }
       
-      // Prüfe auf Monat-Haben Spalten (enthält "monat" und "haben")
+      // Prüfe auf Haben-Spalten:
+      // - "monat" und "haben" (z.B. "Monat-Haben")
+      // - "saldo haben" mit Monatsangabe (z.B. "Saldo Haben 10 - 10/25")
       if (saldoHabenMonat === 0) {
-        if (lowerKey.includes('monat') && lowerKey.includes('haben')) {
+        const isHabenColumn = 
+          (lowerKey.includes('monat') && lowerKey.includes('haben')) ||
+          (lowerKey.includes('saldo') && lowerKey.includes('haben'));
+        
+        if (isHabenColumn) {
           const val = row[key];
           if (typeof val === 'number') {
             saldoHabenMonat = val;
