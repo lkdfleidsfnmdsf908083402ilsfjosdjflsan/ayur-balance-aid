@@ -37,6 +37,7 @@ const specificAccountMappings: Record<string, Bereich> = {
   '4810': 'Verwaltung',         // Sonstige betriebliche Erträge 10%
   '4830': 'Verwaltung',         // Sonstige betriebliche Erlöse 0%
   '4831': 'Marketing/Vertrieb', // Provisionen 20%
+  '4868': 'Verwaltung',         // Fixkostenzuschüsse Corona-Hilfsfonds steuerfrei
   '4910': 'Verwaltung',         // Eigenverbrauch 10%
   '4930': 'Verwaltung',         // Eigenverbrauch 0% (steuerfrei)
   '4944': 'Verwaltung',         // Nutzungsentnahme 0% (steuerfrei)
