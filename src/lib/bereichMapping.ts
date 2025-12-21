@@ -41,6 +41,7 @@ const specificAccountMappings: Record<string, Bereich> = {
   '7412': 'Verwaltung',         // Pachtaufwand 0%
   '7415': 'Verwaltung',         // Leasing BMW X5
   '7803': 'Verwaltung',         // Forderungsverluste 10%
+  '9555': 'Verwaltung',         // Investitionsprämie COVID-19
   '3136': 'Finanzierung',       // ÖHT TIST 8/2
   '3150': 'Finanzierung',       // ÖHT TIST 8
   '3290': 'Finanzierung',       // Erhaltene Wertgutscheine 0%
