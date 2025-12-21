@@ -22,6 +22,7 @@ const specificAccountMappings: Record<string, Bereich> = {
   '4008': 'Logis',              // Erlöse Logis 5%
   '4010': 'Logis',              // Erlöse Logis 10%
   '4009': 'Food & Beverage',    // Erlöse F&B 10%
+  '4018': 'Food & Beverage',    // Erlöse Küche a la carte 10%
   '5312': 'Shop',               // Shopeinkauf 10+20%
   '5314': 'Shop',               // Handelswaren 20% Kosmetik
   '4900': 'Verwaltung',         // Eigenverbrauch 20%
@@ -35,6 +36,8 @@ const specificAccountMappings: Record<string, Bereich> = {
   '5830': 'Verwaltung',         // Skontoertrag 20% bezogene Leistungen
   '5834': 'Verwaltung',         // Skontoertrag 20% Reverse Charge Leistungen
   '5850': 'Verwaltung',         // Umsatzboni 20% auf Materialaufwand
+  '5851': 'Verwaltung',         // Umsatzbonus 10%
+  '5852': 'Verwaltung',         // Umsatzbonus 20%
   '5853': 'Verwaltung',         // Umsatzboniertrag 0%
   '7323': 'Verwaltung',         // BMW X5 - Versicherung
   '7325': 'Verwaltung',         // BMW X5 Rep.-u.Service
