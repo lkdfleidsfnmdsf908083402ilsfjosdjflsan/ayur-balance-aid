@@ -141,11 +141,8 @@ export function mapBereich(kontonummer: string, bezeichnung: string): Bereich {
 export function mapKostenarttTyp(kontonummer: string, bereich: Bereich): KostenarttTyp {
   const num = parseInt(kontonummer.replace(/\D/g, ''));
   
-  // Kontoklasse 4 ohne Bereich-Zuordnung = Neutral
+  // Kontoklasse 4 = Erlöskonten (immer Erlös, auch bei Bereich 'Sonstiges')
   if (num >= 4000 && num < 5000) {
-    if (bereich === 'Sonstiges') {
-      return 'Neutral';
-    }
     return 'Erlös';
   }
   
