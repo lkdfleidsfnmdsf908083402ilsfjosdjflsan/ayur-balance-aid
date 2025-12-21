@@ -29,6 +29,9 @@ const specificAccountMappings: Record<string, Bereich> = {
   '4045': 'Shop',               // Erlöse Shopverkauf 20%
   '4049': 'Shop',               // Erlöse Shopverkauf 10%
   '4068': 'Energie',            // Erlöse § 19/1c Gas/Elektrizitätsleistungen
+  '4079': 'Shop',               // Shopverkauf 10%
+  '4080': 'Shop',               // Shopverkauf 20%
+  '4081': 'Verwaltung',         // Erlöse Div. 10%
   '4400': 'Verwaltung',         // Skontoaufwand 20%
   '4810': 'Verwaltung',         // Sonstige betriebliche Erträge 10%
   '5312': 'Shop',               // Shopeinkauf 10+20%
