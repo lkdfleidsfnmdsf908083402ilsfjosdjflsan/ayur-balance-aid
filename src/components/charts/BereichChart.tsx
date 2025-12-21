@@ -1,7 +1,7 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { BereichAggregation } from '@/types/finance';
 import { bereichColors } from '@/lib/bereichMapping';
-import { formatCurrency } from '@/lib/calculations';
+import { formatCurrency, formatPercent } from '@/lib/calculations';
 
 interface BereichChartProps {
   data: BereichAggregation[];
@@ -9,13 +9,73 @@ interface BereichChartProps {
   type: 'erlös' | 'einkauf';
 }
 
+interface ChartDataItem {
+  name: string;
+  value: number;
+  color: string;
+  vormonatDiff: number | null;
+  vormonatDiffProzent: number | null;
+}
+
+const CustomTooltip = ({ active, payload, type }: any) => {
+  if (!active || !payload || !payload.length) return null;
+  
+  const data = payload[0].payload as ChartDataItem;
+  const hasDiff = data.vormonatDiff !== null;
+  const isPositive = (data.vormonatDiff ?? 0) > 0;
+  const isNegative = (data.vormonatDiff ?? 0) < 0;
+  
+  return (
+    <div 
+      className="rounded-lg p-3 shadow-lg border"
+      style={{
+        backgroundColor: 'hsl(var(--card))',
+        borderColor: 'hsl(var(--border))',
+      }}
+    >
+      <div className="font-semibold text-sm mb-2" style={{ color: 'hsl(var(--foreground))' }}>
+        {data.name}
+      </div>
+      <div className="space-y-1">
+        <div className="flex justify-between gap-4 text-sm">
+          <span style={{ color: 'hsl(var(--muted-foreground))' }}>
+            {type === 'erlös' ? 'Erlös:' : 'Aufwand:'}
+          </span>
+          <span className="font-mono font-medium" style={{ color: 'hsl(var(--foreground))' }}>
+            {formatCurrency(data.value)}
+          </span>
+        </div>
+        {hasDiff && (
+          <div className="flex justify-between gap-4 text-sm">
+            <span style={{ color: 'hsl(var(--muted-foreground))' }}>vs. Vormonat:</span>
+            <span 
+              className="font-mono font-medium"
+              style={{ 
+                color: isPositive 
+                  ? 'hsl(var(--success))' 
+                  : isNegative 
+                    ? 'hsl(var(--destructive))' 
+                    : 'hsl(var(--muted-foreground))'
+              }}
+            >
+              {isPositive ? '+' : ''}{formatPercent(data.vormonatDiffProzent)}
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export function BereichChart({ data, title, type }: BereichChartProps) {
-  const chartData = data
+  const chartData: ChartDataItem[] = data
     .filter(d => d.saldoAktuell !== 0)
     .map(d => ({
       name: d.bereich,
       value: Math.abs(d.saldoAktuell),
       color: bereichColors[d.bereich],
+      vormonatDiff: d.saldoVormonatDiff,
+      vormonatDiffProzent: d.saldoVormonatDiffProzent,
     }))
     .sort((a, b) => b.value - a.value);
 
@@ -53,17 +113,7 @@ export function BereichChart({ data, title, type }: BereichChartProps) {
                 width={95}
               />
               <Tooltip 
-                formatter={(value: number) => [formatCurrency(value), type === 'erlös' ? 'Erlös' : 'Aufwand']}
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  fontSize: '13px',
-                  padding: '10px 14px',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                }}
-                labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600, marginBottom: '4px' }}
-                itemStyle={{ color: 'hsl(var(--foreground))' }}
+                content={<CustomTooltip type={type} />}
                 cursor={{ fill: 'hsl(var(--muted))', opacity: 0.3 }}
               />
               <Bar dataKey="value" radius={[0, 4, 4, 0]}>
