@@ -22,6 +22,7 @@ const specificAccountMappings: Record<string, Bereich> = {
   '3136': 'Finanzierung',       // ÖHT TIST 8/2
   '3150': 'Finanzierung',       // ÖHT TIST 8
   '3290': 'Finanzierung',       // Erhaltene Wertgutscheine 0%
+  '3295': 'Finanzierung',       // Erhaltene Sachgutscheine 10%
 };
 
 // Bereich-Mapping-Regeln nach Priorität (spezifischere Regeln zuerst)
