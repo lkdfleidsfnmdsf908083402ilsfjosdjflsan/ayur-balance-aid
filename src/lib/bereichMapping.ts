@@ -20,6 +20,7 @@ interface MappingRule {
 const specificAccountMappings: Record<string, Bereich> = {
   '4007': 'Food & Beverage',    // Erlöse F&B 5%
   '4008': 'Logis',              // Erlöse Logis 5%
+  '4009': 'Food & Beverage',    // Erlöse F&B 10%
   '3136': 'Finanzierung',       // ÖHT TIST 8/2
   '3150': 'Finanzierung',       // ÖHT TIST 8
   '3290': 'Finanzierung',       // Erhaltene Wertgutscheine 0%
