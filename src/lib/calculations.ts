@@ -78,10 +78,14 @@ export function aggregateByBereich(vergleiche: SaldoVergleich[]): BereichAggrega
     const [bereich, kostenarttTyp] = key.split('-') as [Bereich, string];
     
     const saldoAktuell = items.reduce((sum, i) => sum + i.saldoAktuell, 0);
-    const saldoVormonat = items.every(i => i.saldoVormonat !== null)
+    // Summiere alle verfügbaren Vormonatswerte (null wird als 0 behandelt)
+    const vormonatItems = items.filter(i => i.saldoVormonat !== null);
+    const saldoVormonat = vormonatItems.length > 0
       ? items.reduce((sum, i) => sum + (i.saldoVormonat ?? 0), 0)
       : null;
-    const saldoVorjahr = items.every(i => i.saldoVorjahr !== null)
+    // Summiere alle verfügbaren Vorjahreswerte (null wird als 0 behandelt)
+    const vorjahrItems = items.filter(i => i.saldoVorjahr !== null);
+    const saldoVorjahr = vorjahrItems.length > 0
       ? items.reduce((sum, i) => sum + (i.saldoVorjahr ?? 0), 0)
       : null;
     
