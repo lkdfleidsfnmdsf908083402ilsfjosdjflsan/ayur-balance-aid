@@ -160,6 +160,79 @@ export function mapKostenarttTyp(kontonummer: string, bereich: Bereich): Kostena
   return 'Neutral';
 }
 
+/**
+ * Kontoklassen-Bezeichnungen nach SKR03/SKR04
+ * - Kontoklasse 0: Sachanlagen (nur 0xxx)
+ * - Kontoklasse 1: Warenvorräte (1xxx außer 10xx)
+ * - Kontoklasse 10: Sachanlagen (10xx)
+ * - Kontoklasse 2: Finanzanlagen
+ * - Kontoklasse 4: Erlöse
+ * - Kontoklasse 5: Wareneinsatz
+ * - Kontoklasse 6: Personalkosten
+ * - Kontoklasse 7: Sonstiger Aufwand
+ * - Kontoklasse 8: Finanzergebnis
+ */
+export function mapKontoklasse(kontonummer: string): string {
+  const num = parseInt(kontonummer.replace(/\D/g, ''));
+  
+  // Kontoklasse 10 (10xx) = Sachanlagen
+  if (num >= 1000 && num < 1100) {
+    return 'Sachanlagen';
+  }
+  
+  // Kontoklasse 0 (0xxx) = Sachanlagen
+  if (num >= 0 && num < 1000) {
+    return 'Sachanlagen';
+  }
+  
+  // Kontoklasse 1 (1xxx außer 10xx) = Warenvorräte
+  if (num >= 1100 && num < 2000) {
+    return 'Warenvorräte';
+  }
+  
+  // Kontoklasse 2 (2xxx) = Finanzanlagen
+  if (num >= 2000 && num < 3000) {
+    return 'Finanzanlagen';
+  }
+  
+  // Kontoklasse 3 (3xxx) = Rückstellungen/Verbindlichkeiten
+  if (num >= 3000 && num < 4000) {
+    return 'Verbindlichkeiten';
+  }
+  
+  // Kontoklasse 4 (4xxx) = Erlöse
+  if (num >= 4000 && num < 5000) {
+    return 'Erlöse';
+  }
+  
+  // Kontoklasse 5 (5xxx) = Wareneinsatz
+  if (num >= 5000 && num < 6000) {
+    return 'Wareneinsatz';
+  }
+  
+  // Kontoklasse 6 (6xxx) = Personalkosten
+  if (num >= 6000 && num < 7000) {
+    return 'Personalkosten';
+  }
+  
+  // Kontoklasse 7 (7xxx) = Sonstiger Aufwand
+  if (num >= 7000 && num < 8000) {
+    return 'Sonstiger Aufwand';
+  }
+  
+  // Kontoklasse 8 (8xxx) = Finanzergebnis
+  if (num >= 8000 && num < 9000) {
+    return 'Finanzergebnis';
+  }
+  
+  // Kontoklasse 9 (9xxx) = Vortrags-/Abschlusskonten
+  if (num >= 9000 && num < 10000) {
+    return 'Abschlusskonten';
+  }
+  
+  return 'Sonstiges';
+}
+
 export const bereichColors: Record<Bereich, string> = {
   'Food & Beverage': 'hsl(38, 92%, 50%)',
   'Logis': 'hsl(217, 91%, 60%)',
