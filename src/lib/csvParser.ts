@@ -142,30 +142,24 @@ export function extractSalden(data: RawSaldenliste[], jahr: number, monat: numbe
     
     // Durchsuche alle Schlüssel in der Zeile nach passenden Spalten
     for (const key of Object.keys(row)) {
-      const lowerKey = key.toLowerCase();
+      const lowerKey = key.toLowerCase().trim();
       
-      // Prüfe auf Soll-Spalten
+      // Prüfe auf Monat-Soll Spalten (enthält "monat" und "soll")
       if (saldoSollMonat === 0) {
-        for (const sollKey of possibleSollKeys) {
-          if (lowerKey === sollKey.toLowerCase() || key === sollKey) {
-            const val = row[key];
-            if (typeof val === 'number') {
-              saldoSollMonat = val;
-              break;
-            }
+        if (lowerKey.includes('monat') && lowerKey.includes('soll') && !lowerKey.includes('haben')) {
+          const val = row[key];
+          if (typeof val === 'number') {
+            saldoSollMonat = val;
           }
         }
       }
       
-      // Prüfe auf Haben-Spalten
+      // Prüfe auf Monat-Haben Spalten (enthält "monat" und "haben")
       if (saldoHabenMonat === 0) {
-        for (const habenKey of possibleHabenKeys) {
-          if (lowerKey === habenKey.toLowerCase() || key === habenKey) {
-            const val = row[key];
-            if (typeof val === 'number') {
-              saldoHabenMonat = val;
-              break;
-            }
+        if (lowerKey.includes('monat') && lowerKey.includes('haben')) {
+          const val = row[key];
+          if (typeof val === 'number') {
+            saldoHabenMonat = val;
           }
         }
       }
