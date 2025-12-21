@@ -34,6 +34,7 @@ const specificAccountMappings: Record<string, Bereich> = {
   '5830': 'Verwaltung',         // Skontoertrag 20% bezogene Leistungen
   '5834': 'Verwaltung',         // Skontoertrag 20% Reverse Charge Leistungen
   '5850': 'Verwaltung',         // Umsatzboni 20% auf Materialaufwand
+  '5853': 'Verwaltung',         // Umsatzboniertrag 0%
   '3136': 'Finanzierung',       // ÖHT TIST 8/2
   '3150': 'Finanzierung',       // ÖHT TIST 8
   '3290': 'Finanzierung',       // Erhaltene Wertgutscheine 0%
