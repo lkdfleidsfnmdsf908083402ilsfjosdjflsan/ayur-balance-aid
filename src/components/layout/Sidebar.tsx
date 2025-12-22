@@ -13,7 +13,8 @@ import {
   PieChart,
   TrendingUp,
   Target,
-  Bell
+  Bell,
+  Users
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -27,6 +28,7 @@ const navItems = [
   { id: 'kpi-trends', label: 'KPI-Trends', icon: TrendingUp },
   { id: 'budget', label: 'Budgetplanung', icon: Target },
   { id: 'alarme', label: 'KPI-Alarme', icon: Bell },
+  { id: 'abteilungsleiter', label: 'Abteilungsleiter', icon: Users },
   { id: 'upload', label: 'Datenimport', icon: Upload },
   { id: 'konten', label: 'Kontenstamm', icon: Table2 },
   { id: 'vergleich', label: 'Periodenvergleich', icon: GitCompare },

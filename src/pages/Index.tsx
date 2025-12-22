@@ -5,6 +5,7 @@ import { AbteilungKpiView } from '@/components/views/AbteilungKpiView';
 import { TrendDashboardView } from '@/components/views/TrendDashboardView';
 import { BudgetPlanungView } from '@/components/views/BudgetPlanungView';
 import { KpiAlarmeView } from '@/components/views/KpiAlarmeView';
+import { AbteilungsleiterView } from '@/components/views/AbteilungsleiterView';
 import { UploadView } from '@/components/views/UploadView';
 import { KontenView } from '@/components/views/KontenView';
 import { VergleichView } from '@/components/views/VergleichView';
@@ -32,6 +33,8 @@ const Index = () => {
         return <BudgetPlanungView />;
       case 'alarme':
         return <KpiAlarmeView />;
+      case 'abteilungsleiter':
+        return <AbteilungsleiterView />;
       case 'upload':
         return <UploadView />;
       case 'konten':

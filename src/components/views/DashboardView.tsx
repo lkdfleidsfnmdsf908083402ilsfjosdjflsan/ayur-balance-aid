@@ -1,11 +1,23 @@
+import { useState, useEffect } from 'react';
 import { useFinanceStore } from '@/store/financeStore';
 import { Header } from '@/components/layout/Header';
 import { KPICard } from '@/components/cards/KPICard';
 import { BereichChart } from '@/components/charts/BereichChart';
+import { AlarmWidget } from '@/components/widgets/AlarmWidget';
 import { Euro, TrendingUp, ShoppingCart, Wallet } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export function DashboardView() {
   const { bereichAggregationen, selectedYear, selectedMonth, uploadedFiles } = useFinanceStore();
+  const [schwellenwerte, setSchwellenwerte] = useState<any[]>([]);
+
+  useEffect(() => {
+    const loadSchwellenwerte = async () => {
+      const { data } = await supabase.from('kpi_schwellenwerte').select('*');
+      setSchwellenwerte(data || []);
+    };
+    loadSchwellenwerte();
+  }, []);
   
   // Berechne Gesamt-KPIs
   const erlöseGesamt = bereichAggregationen
@@ -90,6 +102,11 @@ export function DashboardView() {
             icon={Wallet}
             variant="default"
           />
+        </div>
+        
+        {/* Alarm Widget */}
+        <div className="mb-6">
+          <AlarmWidget schwellenwerte={schwellenwerte} />
         </div>
         
         {/* Charts */}
