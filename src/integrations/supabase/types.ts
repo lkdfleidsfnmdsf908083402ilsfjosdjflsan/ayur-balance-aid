@@ -14,6 +14,90 @@ export type Database = {
   }
   public: {
     Tables: {
+      abteilung_kpi_monat: {
+        Row: {
+          abschreibung: number
+          abteilung: string
+          betriebsaufwand: number
+          created_at: string
+          db1: number
+          db1_diff: number | null
+          db1_diff_prozent: number | null
+          db1_vorjahr: number | null
+          db2: number
+          db2_diff: number | null
+          db2_diff_prozent: number | null
+          db2_vorjahr: number | null
+          energie: number
+          id: string
+          jahr: number
+          marketing: number
+          monat: number
+          personal: number
+          umsatz: number
+          umsatz_diff: number | null
+          umsatz_diff_prozent: number | null
+          umsatz_vorjahr: number | null
+          updated_at: string
+          wareneinsatz: number
+          zins: number
+        }
+        Insert: {
+          abschreibung?: number
+          abteilung: string
+          betriebsaufwand?: number
+          created_at?: string
+          db1?: number
+          db1_diff?: number | null
+          db1_diff_prozent?: number | null
+          db1_vorjahr?: number | null
+          db2?: number
+          db2_diff?: number | null
+          db2_diff_prozent?: number | null
+          db2_vorjahr?: number | null
+          energie?: number
+          id?: string
+          jahr: number
+          marketing?: number
+          monat: number
+          personal?: number
+          umsatz?: number
+          umsatz_diff?: number | null
+          umsatz_diff_prozent?: number | null
+          umsatz_vorjahr?: number | null
+          updated_at?: string
+          wareneinsatz?: number
+          zins?: number
+        }
+        Update: {
+          abschreibung?: number
+          abteilung?: string
+          betriebsaufwand?: number
+          created_at?: string
+          db1?: number
+          db1_diff?: number | null
+          db1_diff_prozent?: number | null
+          db1_vorjahr?: number | null
+          db2?: number
+          db2_diff?: number | null
+          db2_diff_prozent?: number | null
+          db2_vorjahr?: number | null
+          energie?: number
+          id?: string
+          jahr?: number
+          marketing?: number
+          monat?: number
+          personal?: number
+          umsatz?: number
+          umsatz_diff?: number | null
+          umsatz_diff_prozent?: number | null
+          umsatz_vorjahr?: number | null
+          updated_at?: string
+          wareneinsatz?: number
+          zins?: number
+        }
+        Relationships: []
+      }
       import_files: {
         Row: {
           anzahl_konten: number
@@ -50,6 +134,7 @@ export type Database = {
           kontoklasse: string
           kontonummer: string
           kostenartt_typ: string
+          kpi_kategorie: string
           updated_at: string
         }
         Insert: {
@@ -60,6 +145,7 @@ export type Database = {
           kontoklasse: string
           kontonummer: string
           kostenartt_typ?: string
+          kpi_kategorie?: string
           updated_at?: string
         }
         Update: {
@@ -70,6 +156,7 @@ export type Database = {
           kontoklasse?: string
           kontonummer?: string
           kostenartt_typ?: string
+          kpi_kategorie?: string
           updated_at?: string
         }
         Relationships: []

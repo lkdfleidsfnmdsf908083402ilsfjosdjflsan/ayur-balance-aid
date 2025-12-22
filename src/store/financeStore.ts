@@ -87,6 +87,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
         kontoklasse: k.kontoklasse,
         bereich: k.bereich as Konto['bereich'],
         kostenarttTyp: k.kostenartt_typ as Konto['kostenarttTyp'],
+        kpiKategorie: (k as any).kpi_kategorie as Konto['kpiKategorie'] || 'Sonstiges',
       }));
       
       const salden: SaldoMonat[] = (saldenData || []).map(s => ({
@@ -164,6 +165,7 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
             kontoklasse: konto.kontoklasse,
             bereich: konto.bereich,
             kostenartt_typ: konto.kostenarttTyp,
+            kpi_kategorie: konto.kpiKategorie,
           }, { onConflict: 'kontonummer' });
         
         if (error) console.error('Fehler beim Speichern Konto:', error);

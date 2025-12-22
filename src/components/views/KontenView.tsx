@@ -13,8 +13,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const allBereiche: Bereich[] = [
-  'Food & Beverage', 'Logis', 'Wellness/Spa', 'Ärztin/Medizin', 'Shop',
-  'Marketing/Vertrieb', 'Verwaltung', 'Technik/Instandhaltung', 'Energie', 'Personal', 'Finanzierung', 'Sonstiges'
+  'Logis', 'F&B', 'Spa', 'Ärztin', 'Shop',
+  'Verwaltung', 'Technik', 'Energie', 'Marketing', 'Personal', 'Finanzierung', 'Sonstiges'
 ];
 
 export function KontenView() {

@@ -1,5 +1,5 @@
 import { RawSaldenliste, Konto, SaldoMonat, UploadedFile } from '@/types/finance';
-import { mapBereich, mapKostenarttTyp } from './bereichMapping';
+import { mapBereich, mapKostenarttTyp, mapKpiKategorie } from './bereichMapping';
 
 export function parseCSV(csvText: string): RawSaldenliste[] {
   const lines = csvText.split('\n').filter(line => line.trim());
@@ -79,6 +79,7 @@ export function extractKonten(data: RawSaldenliste[]): Konto[] {
       kontoklasse,
       bereich,
       kostenarttTyp: mapKostenarttTyp(kontonummer, bereich),
+      kpiKategorie: mapKpiKategorie(kontonummer, bezeichnung),
     });
   }
   
