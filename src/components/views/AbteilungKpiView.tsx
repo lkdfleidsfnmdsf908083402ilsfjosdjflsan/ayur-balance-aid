@@ -1,0 +1,409 @@
+import { useMemo } from 'react';
+import { useFinanceStore } from '@/store/financeStore';
+import { Header } from '@/components/layout/Header';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { calculateAbteilungKpis, calculateGesamtKpis } from '@/lib/kpiCalculations';
+import { formatCurrency } from '@/lib/calculations';
+import { bereichColors, operativeAbteilungen, serviceAbteilungen } from '@/lib/bereichMapping';
+import { AbteilungKpi, Bereich } from '@/types/finance';
+import { cn } from '@/lib/utils';
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  Minus, 
+  Building2, 
+  Utensils, 
+  Sparkles, 
+  Stethoscope, 
+  ShoppingBag,
+  Euro,
+  Users,
+  Package,
+  Zap
+} from 'lucide-react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+  Legend,
+} from 'recharts';
+
+const abteilungIcons: Record<Bereich, React.ElementType> = {
+  'Logis': Building2,
+  'F&B': Utensils,
+  'Spa': Sparkles,
+  'Ärztin': Stethoscope,
+  'Shop': ShoppingBag,
+  'Verwaltung': Building2,
+  'Technik': Building2,
+  'Energie': Zap,
+  'Marketing': Building2,
+  'Personal': Users,
+  'Finanzierung': Euro,
+  'Sonstiges': Package,
+};
+
+export function AbteilungKpiView() {
+  const { konten, salden, selectedYear, selectedMonth, uploadedFiles } = useFinanceStore();
+  
+  const abteilungKpis = useMemo(() => {
+    if (konten.length === 0 || salden.length === 0) return [];
+    return calculateAbteilungKpis(konten, salden, selectedYear, selectedMonth);
+  }, [konten, salden, selectedYear, selectedMonth]);
+  
+  const gesamtKpis = useMemo(() => {
+    return calculateGesamtKpis(abteilungKpis);
+  }, [abteilungKpis]);
+  
+  const months = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+  
+  // Daten für das Balkendiagramm
+  const chartData = useMemo(() => {
+    return abteilungKpis
+      .filter(k => operativeAbteilungen.includes(k.abteilung))
+      .filter(k => k.umsatz > 0 || k.db1 !== 0 || k.db2 !== 0)
+      .map(k => ({
+        name: k.abteilung,
+        Umsatz: k.umsatz,
+        'DB I': k.db1,
+        'DB II': k.db2,
+        color: bereichColors[k.abteilung],
+      }))
+      .sort((a, b) => b.Umsatz - a.Umsatz);
+  }, [abteilungKpis]);
+
+  if (uploadedFiles.length === 0) {
+    return (
+      <div className="flex-1 flex flex-col">
+        <Header title="Abteilungs-KPIs" description="Deckungsbeitragsrechnung nach Abteilung" />
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="text-center max-w-md animate-fade-in">
+            <div className="w-20 h-20 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-6">
+              <Euro className="h-10 w-10 text-muted-foreground" />
+            </div>
+            <h3 className="text-xl font-semibold text-foreground mb-2">
+              Keine Daten vorhanden
+            </h3>
+            <p className="text-muted-foreground">
+              Laden Sie Ihre Saldenlisten hoch, um die Abteilungs-KPIs zu berechnen.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <Header 
+        title="Abteilungs-KPIs" 
+        description={`Deckungsbeitragsrechnung ${months[selectedMonth]} ${selectedYear}`} 
+      />
+      
+      <div className="flex-1 overflow-auto p-6 space-y-6">
+        {/* Gesamt-KPIs */}
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <GesamtKpiCard 
+            title="Gesamtumsatz" 
+            value={gesamtKpis.gesamtUmsatz} 
+            icon={Euro}
+            variant="accent"
+          />
+          <GesamtKpiCard 
+            title="Wareneinsatz" 
+            value={gesamtKpis.gesamtWareneinsatz} 
+            icon={Package}
+          />
+          <GesamtKpiCard 
+            title="DB I gesamt" 
+            value={gesamtKpis.gesamtDB1} 
+            icon={TrendingUp}
+            variant={gesamtKpis.gesamtDB1 > 0 ? 'success' : 'warning'}
+          />
+          <GesamtKpiCard 
+            title="Personal" 
+            value={gesamtKpis.gesamtPersonal} 
+            icon={Users}
+          />
+          <GesamtKpiCard 
+            title="DB II gesamt" 
+            value={gesamtKpis.gesamtDB2} 
+            icon={TrendingUp}
+            variant={gesamtKpis.gesamtDB2 > 0 ? 'success' : 'warning'}
+          />
+          <GesamtKpiCard 
+            title="Energie" 
+            value={gesamtKpis.gesamtEnergie} 
+            icon={Zap}
+          />
+        </div>
+
+        {/* DB I / DB II Chart */}
+        {chartData.length > 0 && (
+          <Card className="glass-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-primary" />
+                Deckungsbeiträge nach Abteilung
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis 
+                    dataKey="name" 
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                  />
+                  <YAxis 
+                    tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+                    tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                  />
+                  <Tooltip 
+                    formatter={(value: number) => formatCurrency(value)}
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                    }}
+                  />
+                  <Legend />
+                  <Bar dataKey="Umsatz" fill="hsl(142, 76%, 36%)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="DB I" fill="hsl(200, 80%, 50%)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="DB II" fill="hsl(280, 70%, 60%)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Operative Abteilungen */}
+        <div>
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Building2 className="h-5 w-5 text-primary" />
+            Operative Abteilungen
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {abteilungKpis
+              .filter(k => operativeAbteilungen.includes(k.abteilung))
+              .filter(k => k.umsatz > 0 || k.wareneinsatz > 0 || k.personal > 0)
+              .sort((a, b) => b.umsatz - a.umsatz)
+              .map(kpi => (
+                <AbteilungKpiCard key={kpi.abteilung} kpi={kpi} />
+              ))}
+          </div>
+        </div>
+
+        {/* Service-Abteilungen */}
+        <div>
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" />
+            Service-Bereiche (Kostenübersicht)
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {abteilungKpis
+              .filter(k => serviceAbteilungen.includes(k.abteilung))
+              .filter(k => k.personal > 0 || k.betriebsaufwand > 0 || k.energie > 0)
+              .map(kpi => (
+                <ServiceKpiCard key={kpi.abteilung} kpi={kpi} />
+              ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GesamtKpiCard({ 
+  title, 
+  value, 
+  icon: Icon,
+  variant = 'default' 
+}: { 
+  title: string; 
+  value: number; 
+  icon: React.ElementType;
+  variant?: 'default' | 'accent' | 'success' | 'warning';
+}) {
+  return (
+    <Card className={cn(
+      "glass-card transition-all hover:scale-[1.02]",
+      variant === 'accent' && "border-primary/30 bg-primary/5",
+      variant === 'success' && "border-success/30 bg-success/5",
+      variant === 'warning' && "border-warning/30 bg-warning/5"
+    )}>
+      <CardContent className="p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Icon className={cn(
+            "h-4 w-4",
+            variant === 'accent' && "text-primary",
+            variant === 'success' && "text-success",
+            variant === 'warning' && "text-warning"
+          )} />
+          <span className="text-xs text-muted-foreground">{title}</span>
+        </div>
+        <p className={cn(
+          "text-lg font-bold",
+          variant === 'success' && value > 0 && "text-success",
+          variant === 'warning' && value < 0 && "text-warning"
+        )}>
+          {formatCurrency(value)}
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function AbteilungKpiCard({ kpi }: { kpi: AbteilungKpi }) {
+  const Icon = abteilungIcons[kpi.abteilung] || Building2;
+  const db1Marge = kpi.umsatz > 0 ? (kpi.db1 / kpi.umsatz) * 100 : 0;
+  const db2Marge = kpi.umsatz > 0 ? (kpi.db2 / kpi.umsatz) * 100 : 0;
+  
+  return (
+    <Card className="glass-card hover:border-primary/30 transition-all">
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div 
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: `${bereichColors[kpi.abteilung]}20` }}
+            >
+              <Icon className="h-4 w-4" style={{ color: bereichColors[kpi.abteilung] }} />
+            </div>
+            <CardTitle className="text-base">{kpi.abteilung}</CardTitle>
+          </div>
+          <DiffBadge value={kpi.umsatzDiffProzent} />
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {/* Umsatz */}
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-muted-foreground">Umsatz</span>
+          <span className="font-semibold text-success">{formatCurrency(kpi.umsatz)}</span>
+        </div>
+        
+        {/* Wareneinsatz */}
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-muted-foreground">Wareneinsatz</span>
+          <span className="font-medium text-warning">- {formatCurrency(kpi.wareneinsatz)}</span>
+        </div>
+        
+        {/* DB I */}
+        <div className="flex justify-between items-center pt-2 border-t border-border">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">DB I</span>
+            <Badge variant="outline" className="text-xs">
+              {db1Marge.toFixed(1)}%
+            </Badge>
+          </div>
+          <span className={cn(
+            "font-bold",
+            kpi.db1 > 0 ? "text-success" : "text-destructive"
+          )}>
+            {formatCurrency(kpi.db1)}
+          </span>
+        </div>
+        
+        {/* Personal */}
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-muted-foreground">Personal</span>
+          <span className="font-medium text-warning">- {formatCurrency(kpi.personal)}</span>
+        </div>
+        
+        {/* DB II */}
+        <div className="flex justify-between items-center pt-2 border-t border-border">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">DB II</span>
+            <Badge variant="outline" className="text-xs">
+              {db2Marge.toFixed(1)}%
+            </Badge>
+          </div>
+          <span className={cn(
+            "font-bold text-lg",
+            kpi.db2 > 0 ? "text-success" : "text-destructive"
+          )}>
+            {formatCurrency(kpi.db2)}
+          </span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ServiceKpiCard({ kpi }: { kpi: AbteilungKpi }) {
+  const Icon = abteilungIcons[kpi.abteilung] || Building2;
+  const totalKosten = kpi.personal + kpi.betriebsaufwand + kpi.energie + kpi.marketing;
+  
+  return (
+    <Card className="glass-card hover:border-primary/30 transition-all">
+      <CardHeader className="pb-2">
+        <div className="flex items-center gap-2">
+          <div 
+            className="w-8 h-8 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: `${bereichColors[kpi.abteilung]}20` }}
+          >
+            <Icon className="h-4 w-4" style={{ color: bereichColors[kpi.abteilung] }} />
+          </div>
+          <CardTitle className="text-base">{kpi.abteilung}</CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {kpi.personal > 0 && (
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">Personal</span>
+            <span className="font-medium">{formatCurrency(kpi.personal)}</span>
+          </div>
+        )}
+        {kpi.betriebsaufwand > 0 && (
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">Betriebsaufwand</span>
+            <span className="font-medium">{formatCurrency(kpi.betriebsaufwand)}</span>
+          </div>
+        )}
+        {kpi.energie > 0 && (
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">Energie</span>
+            <span className="font-medium">{formatCurrency(kpi.energie)}</span>
+          </div>
+        )}
+        {kpi.marketing > 0 && (
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">Marketing</span>
+            <span className="font-medium">{formatCurrency(kpi.marketing)}</span>
+          </div>
+        )}
+        <div className="flex justify-between items-center pt-2 border-t border-border">
+          <span className="text-sm font-medium">Gesamt</span>
+          <span className="font-bold">{formatCurrency(totalKosten)}</span>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function DiffBadge({ value }: { value: number | null }) {
+  if (value === null) return null;
+  
+  const isPositive = value > 0;
+  const Icon = isPositive ? TrendingUp : value < 0 ? TrendingDown : Minus;
+  
+  return (
+    <Badge 
+      variant="outline" 
+      className={cn(
+        "text-xs",
+        isPositive && "border-success/50 text-success bg-success/10",
+        value < 0 && "border-destructive/50 text-destructive bg-destructive/10"
+      )}
+    >
+      <Icon className="h-3 w-3 mr-1" />
+      {isPositive ? '+' : ''}{value.toFixed(1)}%
+    </Badge>
+  );
+}

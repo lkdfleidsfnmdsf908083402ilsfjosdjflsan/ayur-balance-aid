@@ -9,7 +9,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Database,
-  ShieldCheck
+  ShieldCheck,
+  PieChart
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -19,6 +20,7 @@ interface SidebarProps {
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'abteilung-kpi', label: 'Abteilungs-KPIs', icon: PieChart },
   { id: 'upload', label: 'Datenimport', icon: Upload },
   { id: 'konten', label: 'Kontenstamm', icon: Table2 },
   { id: 'vergleich', label: 'Periodenvergleich', icon: GitCompare },
