@@ -11,7 +11,9 @@ import {
   Database,
   ShieldCheck,
   PieChart,
-  TrendingUp
+  TrendingUp,
+  Target,
+  Bell
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -23,6 +25,8 @@ const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'abteilung-kpi', label: 'Abteilungs-KPIs', icon: PieChart },
   { id: 'kpi-trends', label: 'KPI-Trends', icon: TrendingUp },
+  { id: 'budget', label: 'Budgetplanung', icon: Target },
+  { id: 'alarme', label: 'KPI-Alarme', icon: Bell },
   { id: 'upload', label: 'Datenimport', icon: Upload },
   { id: 'konten', label: 'Kontenstamm', icon: Table2 },
   { id: 'vergleich', label: 'Periodenvergleich', icon: GitCompare },
