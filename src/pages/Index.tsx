@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { DashboardView } from '@/components/views/DashboardView';
+import { AbteilungKpiView } from '@/components/views/AbteilungKpiView';
 import { UploadView } from '@/components/views/UploadView';
 import { KontenView } from '@/components/views/KontenView';
 import { VergleichView } from '@/components/views/VergleichView';
@@ -20,6 +21,8 @@ const Index = () => {
     switch (activeView) {
       case 'dashboard':
         return <DashboardView />;
+      case 'abteilung-kpi':
+        return <AbteilungKpiView />;
       case 'upload':
         return <UploadView />;
       case 'konten':
