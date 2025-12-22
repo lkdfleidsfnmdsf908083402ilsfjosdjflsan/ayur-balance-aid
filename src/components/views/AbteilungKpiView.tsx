@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { PeriodSelector } from '@/components/PeriodSelector';
 import { calculateAbteilungKpis, calculateGesamtKpis } from '@/lib/kpiCalculations';
 import { formatCurrency } from '@/lib/calculations';
 import { bereichColors, operativeAbteilungen, serviceAbteilungen, kpiKategorieColors } from '@/lib/bereichMapping';
@@ -250,10 +251,13 @@ export function AbteilungKpiView() {
               </Badge>
             )}
           </div>
-          <Button onClick={exportToCSV} variant="outline" className="gap-2">
-            <Download className="h-4 w-4" />
-            CSV Export
-          </Button>
+          <div className="flex items-center gap-4">
+            <PeriodSelector />
+            <Button onClick={exportToCSV} variant="outline" className="gap-2">
+              <Download className="h-4 w-4" />
+              CSV Export
+            </Button>
+          </div>
         </div>
 
         {/* Gesamt-KPIs mit Vorjahresvergleich */}

@@ -10,7 +10,8 @@ import {
   ChevronRight,
   Database,
   ShieldCheck,
-  PieChart
+  PieChart,
+  TrendingUp
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -21,6 +22,7 @@ interface SidebarProps {
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'abteilung-kpi', label: 'Abteilungs-KPIs', icon: PieChart },
+  { id: 'kpi-trends', label: 'KPI-Trends', icon: TrendingUp },
   { id: 'upload', label: 'Datenimport', icon: Upload },
   { id: 'konten', label: 'Kontenstamm', icon: Table2 },
   { id: 'vergleich', label: 'Periodenvergleich', icon: GitCompare },
