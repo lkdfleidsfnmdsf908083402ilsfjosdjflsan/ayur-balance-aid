@@ -98,6 +98,36 @@ export type Database = {
         }
         Relationships: []
       }
+      abteilungsleiter: {
+        Row: {
+          abteilung: string
+          aktiv: boolean
+          created_at: string
+          email: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          abteilung: string
+          aktiv?: boolean
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          abteilung?: string
+          aktiv?: boolean
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       budget_planung: {
         Row: {
           abteilung: string
