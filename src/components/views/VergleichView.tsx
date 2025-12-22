@@ -10,8 +10,8 @@ import { Bereich } from '@/types/finance';
 import { bereichColors } from '@/lib/bereichMapping';
 
 const allBereiche: Bereich[] = [
-  'Food & Beverage', 'Logis', 'Wellness/Spa', 'Ärztin/Medizin', 'Shop',
-  'Marketing/Vertrieb', 'Verwaltung', 'Technik/Instandhaltung', 'Energie', 'Personal', 'Sonstiges'
+  'Logis', 'F&B', 'Spa', 'Ärztin', 'Shop',
+  'Verwaltung', 'Technik', 'Energie', 'Marketing', 'Personal', 'Finanzierung', 'Sonstiges'
 ];
 
 export function VergleichView() {

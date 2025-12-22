@@ -42,6 +42,7 @@ export function calculateVergleich(
       kontobezeichnung: konto.kontobezeichnung,
       bereich: konto.bereich,
       kostenarttTyp: konto.kostenarttTyp,
+      kpiKategorie: konto.kpiKategorie,
       jahr,
       monat,
       saldoAktuell,
