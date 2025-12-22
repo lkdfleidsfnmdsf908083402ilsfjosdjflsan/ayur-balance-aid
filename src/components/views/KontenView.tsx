@@ -7,8 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Search, Filter, Save, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Bereich, KostenarttTyp } from '@/types/finance';
-import { bereichColors } from '@/lib/bereichMapping';
+import { Bereich, KostenarttTyp, KpiKategorie } from '@/types/finance';
+import { bereichColors, kpiKategorieColors } from '@/lib/bereichMapping';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -17,12 +17,23 @@ const allBereiche: Bereich[] = [
   'Verwaltung', 'Technik', 'Energie', 'Marketing', 'Personal', 'Finanzierung', 'Sonstiges'
 ];
 
+const allKpiKategorien: KpiKategorie[] = [
+  'Erlös', 'Wareneinsatz', 'Personal', 'Betriebsaufwand', 
+  'Energie', 'Marketing', 'Abschreibung', 'Zins', 'Sonstiges'
+];
+
+interface EditedKonto {
+  bereich?: Bereich;
+  kpiKategorie?: KpiKategorie;
+}
+
 export function KontenView() {
   const { konten, initialize } = useFinanceStore();
   const [search, setSearch] = useState('');
   const [bereichFilter, setBereichFilter] = useState<string>('alle');
   const [typFilter, setTypFilter] = useState<string>('alle');
-  const [editedKonten, setEditedKonten] = useState<Record<string, Bereich>>({});
+  const [kpiFilter, setKpiFilter] = useState<string>('alle');
+  const [editedKonten, setEditedKonten] = useState<Record<string, EditedKonto>>({});
   const [isSaving, setIsSaving] = useState(false);
   
   const filteredKonten = useMemo(() => {
@@ -34,32 +45,58 @@ export function KontenView() {
         
         const matchesBereich = bereichFilter === 'alle' || konto.bereich === bereichFilter;
         const matchesTyp = typFilter === 'alle' || konto.kostenarttTyp === typFilter;
+        const matchesKpi = kpiFilter === 'alle' || konto.kpiKategorie === kpiFilter;
         
-        return matchesSearch && matchesBereich && matchesTyp;
+        return matchesSearch && matchesBereich && matchesTyp && matchesKpi;
       })
       .sort((a, b) => a.kontonummer.localeCompare(b.kontonummer, undefined, { numeric: true }));
-  }, [konten, search, bereichFilter, typFilter]);
+  }, [konten, search, bereichFilter, typFilter, kpiFilter]);
   
   // Statistik für Qualitätsprüfung
   const sonstigeKonten = konten.filter(k => k.bereich === 'Sonstiges');
   const hasChanges = Object.keys(editedKonten).length > 0;
+  const changesCount = Object.values(editedKonten).reduce((sum, e) => 
+    sum + (e.bereich ? 1 : 0) + (e.kpiKategorie ? 1 : 0), 0
+  );
 
   const handleBereichChange = (kontonummer: string, newBereich: Bereich) => {
     const originalKonto = konten.find(k => k.kontonummer === kontonummer);
     
-    if (originalKonto?.bereich === newBereich) {
-      // Wenn auf Original zurückgesetzt, entferne aus editedKonten
-      setEditedKonten(prev => {
-        const next = { ...prev };
-        delete next[kontonummer];
-        return next;
-      });
-    } else {
-      setEditedKonten(prev => ({
-        ...prev,
-        [kontonummer]: newBereich
-      }));
-    }
+    setEditedKonten(prev => {
+      const existing = prev[kontonummer] || {};
+      
+      // Prüfe ob auf Original zurückgesetzt
+      if (originalKonto?.bereich === newBereich) {
+        const { bereich, ...rest } = existing;
+        if (Object.keys(rest).length === 0) {
+          const { [kontonummer]: removed, ...others } = prev;
+          return others;
+        }
+        return { ...prev, [kontonummer]: rest };
+      }
+      
+      return { ...prev, [kontonummer]: { ...existing, bereich: newBereich } };
+    });
+  };
+
+  const handleKpiKategorieChange = (kontonummer: string, newKpiKategorie: KpiKategorie) => {
+    const originalKonto = konten.find(k => k.kontonummer === kontonummer);
+    
+    setEditedKonten(prev => {
+      const existing = prev[kontonummer] || {};
+      
+      // Prüfe ob auf Original zurückgesetzt
+      if (originalKonto?.kpiKategorie === newKpiKategorie) {
+        const { kpiKategorie, ...rest } = existing;
+        if (Object.keys(rest).length === 0) {
+          const { [kontonummer]: removed, ...others } = prev;
+          return others;
+        }
+        return { ...prev, [kontonummer]: rest };
+      }
+      
+      return { ...prev, [kontonummer]: { ...existing, kpiKategorie: newKpiKategorie } };
+    });
   };
 
   const saveChanges = async () => {
@@ -67,13 +104,18 @@ export function KontenView() {
     
     setIsSaving(true);
     try {
-      const updates = Object.entries(editedKonten);
       let successCount = 0;
       
-      for (const [kontonummer, bereich] of updates) {
+      for (const [kontonummer, changes] of Object.entries(editedKonten)) {
+        const updateData: { bereich?: string; kpi_kategorie?: string } = {};
+        if (changes.bereich) updateData.bereich = changes.bereich;
+        if (changes.kpiKategorie) updateData.kpi_kategorie = changes.kpiKategorie;
+        
+        if (Object.keys(updateData).length === 0) continue;
+        
         const { error } = await supabase
           .from('konten')
-          .update({ bereich })
+          .update(updateData)
           .eq('kontonummer', kontonummer);
         
         if (error) {
@@ -87,7 +129,6 @@ export function KontenView() {
       if (successCount > 0) {
         toast.success(`${successCount} Kontozuordnung${successCount > 1 ? 'en' : ''} gespeichert`);
         setEditedKonten({});
-        // Daten neu laden
         await initialize();
       }
     } catch (error) {
@@ -99,7 +140,11 @@ export function KontenView() {
   };
 
   const getDisplayBereich = (kontonummer: string, originalBereich: Bereich): Bereich => {
-    return editedKonten[kontonummer] ?? originalBereich;
+    return editedKonten[kontonummer]?.bereich ?? originalBereich;
+  };
+
+  const getDisplayKpiKategorie = (kontonummer: string, original: KpiKategorie): KpiKategorie => {
+    return editedKonten[kontonummer]?.kpiKategorie ?? original;
   };
 
   const isEdited = (kontonummer: string): boolean => {
@@ -110,7 +155,7 @@ export function KontenView() {
     <div className="flex-1 flex flex-col overflow-hidden">
       <Header 
         title="Kontenstamm" 
-        description={`${konten.length} Konten mit Bereich-Zuordnung`} 
+        description={`${konten.length} Konten mit Bereich- und KPI-Zuordnung`} 
       />
       
       <div className="flex-1 flex flex-col overflow-hidden p-6">
@@ -127,7 +172,7 @@ export function KontenView() {
           </div>
           
           <Select value={bereichFilter} onValueChange={setBereichFilter}>
-            <SelectTrigger className="w-48 bg-muted border-border">
+            <SelectTrigger className="w-44 bg-muted border-border">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue placeholder="Bereich" />
             </SelectTrigger>
@@ -138,9 +183,21 @@ export function KontenView() {
               ))}
             </SelectContent>
           </Select>
+
+          <Select value={kpiFilter} onValueChange={setKpiFilter}>
+            <SelectTrigger className="w-44 bg-muted border-border">
+              <SelectValue placeholder="KPI-Kategorie" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="alle">Alle KPI-Kategorien</SelectItem>
+              {allKpiKategorien.map(k => (
+                <SelectItem key={k} value={k}>{k}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           
           <Select value={typFilter} onValueChange={setTypFilter}>
-            <SelectTrigger className="w-40 bg-muted border-border">
+            <SelectTrigger className="w-36 bg-muted border-border">
               <SelectValue placeholder="Typ" />
             </SelectTrigger>
             <SelectContent>
@@ -158,7 +215,7 @@ export function KontenView() {
               className="gap-2"
             >
               <Save className="h-4 w-4" />
-              {isSaving ? 'Speichern...' : `${Object.keys(editedKonten).length} Änderung${Object.keys(editedKonten).length > 1 ? 'en' : ''} speichern`}
+              {isSaving ? 'Speichern...' : `${changesCount} Änderung${changesCount > 1 ? 'en' : ''} speichern`}
             </Button>
           )}
         </div>
@@ -169,7 +226,7 @@ export function KontenView() {
             <span className="font-medium text-warning">Qualitätshinweis:</span>
             <span className="text-muted-foreground ml-2">
               {sonstigeKonten.length} Konten ohne spezifische Bereichszuordnung (Sonstiges) - 
-              Klicken Sie auf den Bereich, um ihn manuell zu ändern.
+              Klicken Sie auf den Bereich oder die KPI-Kategorie, um sie manuell zu ändern.
             </span>
           </div>
         )}
@@ -178,7 +235,7 @@ export function KontenView() {
         <div className="mb-4 p-4 rounded-lg bg-primary/5 border border-primary/20 text-sm">
           <span className="font-medium text-primary">Tipp:</span>
           <span className="text-muted-foreground ml-2">
-            Wählen Sie in der Spalte "Bereich" einen neuen Bereich aus dem Dropdown, um die Zuordnung zu ändern. 
+            Wählen Sie in den Spalten "Bereich" oder "KPI-Kategorie" einen neuen Wert aus dem Dropdown. 
             Änderungen werden erst gespeichert, wenn Sie auf "Änderungen speichern" klicken.
           </span>
         </div>
@@ -191,14 +248,15 @@ export function KontenView() {
                 <th className="p-4 font-medium">Konto-Nr</th>
                 <th className="p-4 font-medium">Bezeichnung</th>
                 <th className="p-4 font-medium">Klasse</th>
-                <th className="p-4 font-medium">Bereich (klicken zum Ändern)</th>
+                <th className="p-4 font-medium">Bereich</th>
+                <th className="p-4 font-medium">KPI-Kategorie</th>
                 <th className="p-4 font-medium">Typ</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {filteredKonten.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-8 text-center text-muted-foreground">
+                  <td colSpan={6} className="p-8 text-center text-muted-foreground">
                     {konten.length === 0 
                       ? 'Keine Konten vorhanden. Bitte Saldenlisten hochladen.'
                       : 'Keine Konten gefunden mit diesen Filterkriterien.'}
@@ -207,6 +265,7 @@ export function KontenView() {
               ) : (
                 filteredKonten.map((konto) => {
                   const displayBereich = getDisplayBereich(konto.kontonummer, konto.bereich);
+                  const displayKpi = getDisplayKpiKategorie(konto.kontonummer, konto.kpiKategorie);
                   const edited = isEdited(konto.kontonummer);
                   
                   return (
@@ -223,7 +282,7 @@ export function KontenView() {
                           <Check className="inline-block ml-2 h-4 w-4 text-primary" />
                         )}
                       </td>
-                      <td className="p-4 text-sm text-foreground">
+                      <td className="p-4 text-sm text-foreground max-w-xs truncate" title={konto.kontobezeichnung}>
                         {konto.kontobezeichnung}
                       </td>
                       <td className="p-4 text-sm text-muted-foreground">
@@ -236,8 +295,8 @@ export function KontenView() {
                         >
                           <SelectTrigger 
                             className={cn(
-                              "w-48 h-8 text-xs border",
-                              edited && "ring-2 ring-primary ring-offset-1"
+                              "w-36 h-8 text-xs border",
+                              editedKonten[konto.kontonummer]?.bereich && "ring-2 ring-primary ring-offset-1"
                             )}
                             style={{ 
                               backgroundColor: `${bereichColors[displayBereich]}15`,
@@ -256,6 +315,39 @@ export function KontenView() {
                                     style={{ backgroundColor: bereichColors[b] }}
                                   />
                                   {b}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </td>
+                      <td className="p-4">
+                        <Select 
+                          value={displayKpi} 
+                          onValueChange={(value) => handleKpiKategorieChange(konto.kontonummer, value as KpiKategorie)}
+                        >
+                          <SelectTrigger 
+                            className={cn(
+                              "w-36 h-8 text-xs border",
+                              editedKonten[konto.kontonummer]?.kpiKategorie && "ring-2 ring-primary ring-offset-1"
+                            )}
+                            style={{ 
+                              backgroundColor: `${kpiKategorieColors[displayKpi]}15`,
+                              borderColor: `${kpiKategorieColors[displayKpi]}40`,
+                              color: kpiKategorieColors[displayKpi]
+                            }}
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {allKpiKategorien.map(k => (
+                              <SelectItem key={k} value={k}>
+                                <div className="flex items-center gap-2">
+                                  <div 
+                                    className="w-2 h-2 rounded-full"
+                                    style={{ backgroundColor: kpiKategorieColors[k] }}
+                                  />
+                                  {k}
                                 </div>
                               </SelectItem>
                             ))}
@@ -288,7 +380,7 @@ export function KontenView() {
             <span>{filteredKonten.length} von {konten.length} Konten angezeigt</span>
             {hasChanges && (
               <span className="text-primary font-medium">
-                {Object.keys(editedKonten).length} ungespeicherte Änderung{Object.keys(editedKonten).length > 1 ? 'en' : ''}
+                {changesCount} ungespeicherte Änderung{changesCount > 1 ? 'en' : ''}
               </span>
             )}
           </div>

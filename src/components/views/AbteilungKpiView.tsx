@@ -1,13 +1,17 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useFinanceStore } from '@/store/financeStore';
 import { Header } from '@/components/layout/Header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { calculateAbteilungKpis, calculateGesamtKpis } from '@/lib/kpiCalculations';
 import { formatCurrency } from '@/lib/calculations';
-import { bereichColors, operativeAbteilungen, serviceAbteilungen } from '@/lib/bereichMapping';
-import { AbteilungKpi, Bereich } from '@/types/finance';
+import { bereichColors, operativeAbteilungen, serviceAbteilungen, kpiKategorieColors } from '@/lib/bereichMapping';
+import { AbteilungKpi, Bereich, Konto, SaldoMonat } from '@/types/finance';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -20,7 +24,11 @@ import {
   Euro,
   Users,
   Package,
-  Zap
+  Zap,
+  Download,
+  Calendar,
+  ArrowRight,
+  ChevronRight
 } from 'lucide-react';
 import {
   BarChart,
@@ -30,8 +38,9 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Cell,
   Legend,
+  LineChart,
+  Line,
 } from 'recharts';
 
 const abteilungIcons: Record<Bereich, React.ElementType> = {
@@ -51,32 +60,153 @@ const abteilungIcons: Record<Bereich, React.ElementType> = {
 
 export function AbteilungKpiView() {
   const { konten, salden, selectedYear, selectedMonth, uploadedFiles } = useFinanceStore();
+  const [selectedAbteilung, setSelectedAbteilung] = useState<Bereich | null>(null);
+  const [showDrillDown, setShowDrillDown] = useState(false);
   
+  // Aktuelle KPIs
   const abteilungKpis = useMemo(() => {
     if (konten.length === 0 || salden.length === 0) return [];
     return calculateAbteilungKpis(konten, salden, selectedYear, selectedMonth);
+  }, [konten, salden, selectedYear, selectedMonth]);
+  
+  // Vorjahres-KPIs für Jahresvergleich
+  const vorjahrKpis = useMemo(() => {
+    if (konten.length === 0 || salden.length === 0) return [];
+    return calculateAbteilungKpis(konten, salden, selectedYear - 1, selectedMonth);
   }, [konten, salden, selectedYear, selectedMonth]);
   
   const gesamtKpis = useMemo(() => {
     return calculateGesamtKpis(abteilungKpis);
   }, [abteilungKpis]);
   
+  const gesamtKpisVorjahr = useMemo(() => {
+    return calculateGesamtKpis(vorjahrKpis);
+  }, [vorjahrKpis]);
+  
   const months = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
   
-  // Daten für das Balkendiagramm
+  // Daten für das Balkendiagramm mit Vorjahresvergleich
   const chartData = useMemo(() => {
     return abteilungKpis
       .filter(k => operativeAbteilungen.includes(k.abteilung))
       .filter(k => k.umsatz > 0 || k.db1 !== 0 || k.db2 !== 0)
-      .map(k => ({
-        name: k.abteilung,
-        Umsatz: k.umsatz,
-        'DB I': k.db1,
-        'DB II': k.db2,
-        color: bereichColors[k.abteilung],
-      }))
-      .sort((a, b) => b.Umsatz - a.Umsatz);
-  }, [abteilungKpis]);
+      .map(k => {
+        const vorjahr = vorjahrKpis.find(v => v.abteilung === k.abteilung);
+        return {
+          name: k.abteilung,
+          'Umsatz aktuell': k.umsatz,
+          'Umsatz Vorjahr': vorjahr?.umsatz || 0,
+          'DB I aktuell': k.db1,
+          'DB I Vorjahr': vorjahr?.db1 || 0,
+          'DB II aktuell': k.db2,
+          'DB II Vorjahr': vorjahr?.db2 || 0,
+          color: bereichColors[k.abteilung],
+        };
+      })
+      .sort((a, b) => b['Umsatz aktuell'] - a['Umsatz aktuell']);
+  }, [abteilungKpis, vorjahrKpis]);
+
+  // Daten für Drill-Down
+  const drillDownData = useMemo(() => {
+    if (!selectedAbteilung) return { konten: [], salden: [] };
+    
+    const abteilungKonten = konten.filter(k => k.bereich === selectedAbteilung);
+    const abteilungSalden = salden.filter(s => 
+      s.jahr === selectedYear && 
+      s.monat === selectedMonth &&
+      abteilungKonten.some(k => k.kontonummer === s.kontonummer)
+    );
+    
+    return {
+      konten: abteilungKonten,
+      salden: abteilungSalden.map(s => {
+        const konto = abteilungKonten.find(k => k.kontonummer === s.kontonummer);
+        return { ...s, konto };
+      }).sort((a, b) => Math.abs(b.saldoMonat) - Math.abs(a.saldoMonat))
+    };
+  }, [selectedAbteilung, konten, salden, selectedYear, selectedMonth]);
+
+  // CSV Export Funktion
+  const exportToCSV = () => {
+    const headers = [
+      'Abteilung',
+      'Umsatz',
+      'Wareneinsatz', 
+      'DB I',
+      'DB I Marge %',
+      'Personal',
+      'DB II',
+      'DB II Marge %',
+      'Energie',
+      'Marketing',
+      'Betriebsaufwand',
+      'Umsatz Vorjahr',
+      'Umsatz Δ',
+      'Umsatz Δ %'
+    ];
+
+    const rows = abteilungKpis
+      .filter(k => k.umsatz > 0 || k.wareneinsatz > 0 || k.personal > 0)
+      .map(kpi => {
+        const db1Marge = kpi.umsatz > 0 ? (kpi.db1 / kpi.umsatz) * 100 : 0;
+        const db2Marge = kpi.umsatz > 0 ? (kpi.db2 / kpi.umsatz) * 100 : 0;
+        
+        return [
+          kpi.abteilung,
+          kpi.umsatz.toFixed(2),
+          kpi.wareneinsatz.toFixed(2),
+          kpi.db1.toFixed(2),
+          db1Marge.toFixed(1),
+          kpi.personal.toFixed(2),
+          kpi.db2.toFixed(2),
+          db2Marge.toFixed(1),
+          kpi.energie.toFixed(2),
+          kpi.marketing.toFixed(2),
+          kpi.betriebsaufwand.toFixed(2),
+          kpi.umsatzVorjahr?.toFixed(2) || '',
+          kpi.umsatzDiff?.toFixed(2) || '',
+          kpi.umsatzDiffProzent?.toFixed(1) || ''
+        ];
+      });
+
+    // Gesamtzeile hinzufügen
+    rows.push([
+      'GESAMT',
+      gesamtKpis.gesamtUmsatz.toFixed(2),
+      gesamtKpis.gesamtWareneinsatz.toFixed(2),
+      gesamtKpis.gesamtDB1.toFixed(2),
+      gesamtKpis.gesamtUmsatz > 0 ? ((gesamtKpis.gesamtDB1 / gesamtKpis.gesamtUmsatz) * 100).toFixed(1) : '0',
+      gesamtKpis.gesamtPersonal.toFixed(2),
+      gesamtKpis.gesamtDB2.toFixed(2),
+      gesamtKpis.gesamtUmsatz > 0 ? ((gesamtKpis.gesamtDB2 / gesamtKpis.gesamtUmsatz) * 100).toFixed(1) : '0',
+      gesamtKpis.gesamtEnergie.toFixed(2),
+      gesamtKpis.gesamtMarketing.toFixed(2),
+      '',
+      '',
+      '',
+      ''
+    ]);
+
+    const csvContent = [
+      `Abteilungs-KPIs ${months[selectedMonth]} ${selectedYear}`,
+      '',
+      headers.join(';'),
+      ...rows.map(row => row.join(';'))
+    ].join('\n');
+
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Abteilungs-KPIs_${selectedYear}-${String(selectedMonth).padStart(2, '0')}.csv`;
+    link.click();
+    
+    toast.success('KPI-Export erfolgreich erstellt');
+  };
+
+  const handleAbteilungClick = (abteilung: Bereich) => {
+    setSelectedAbteilung(abteilung);
+    setShowDrillDown(true);
+  };
 
   if (uploadedFiles.length === 0) {
     return (
@@ -103,54 +233,79 @@ export function AbteilungKpiView() {
     <div className="flex-1 flex flex-col overflow-hidden">
       <Header 
         title="Abteilungs-KPIs" 
-        description={`Deckungsbeitragsrechnung ${months[selectedMonth]} ${selectedYear}`} 
+        description={`Deckungsbeitragsrechnung ${months[selectedMonth]} ${selectedYear}`}
       />
       
       <div className="flex-1 overflow-auto p-6 space-y-6">
-        {/* Gesamt-KPIs */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+        {/* Header mit Export-Button */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Badge variant="outline" className="gap-2">
+              <Calendar className="h-3 w-3" />
+              {months[selectedMonth]} {selectedYear}
+            </Badge>
+            {vorjahrKpis.length > 0 && (
+              <Badge variant="secondary" className="gap-2">
+                vs. {selectedYear - 1}
+              </Badge>
+            )}
+          </div>
+          <Button onClick={exportToCSV} variant="outline" className="gap-2">
+            <Download className="h-4 w-4" />
+            CSV Export
+          </Button>
+        </div>
+
+        {/* Gesamt-KPIs mit Vorjahresvergleich */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <GesamtKpiCard 
             title="Gesamtumsatz" 
-            value={gesamtKpis.gesamtUmsatz} 
+            value={gesamtKpis.gesamtUmsatz}
+            vorjahr={gesamtKpisVorjahr.gesamtUmsatz}
             icon={Euro}
             variant="accent"
           />
           <GesamtKpiCard 
             title="Wareneinsatz" 
-            value={gesamtKpis.gesamtWareneinsatz} 
+            value={gesamtKpis.gesamtWareneinsatz}
+            vorjahr={gesamtKpisVorjahr.gesamtWareneinsatz}
             icon={Package}
           />
           <GesamtKpiCard 
             title="DB I gesamt" 
-            value={gesamtKpis.gesamtDB1} 
+            value={gesamtKpis.gesamtDB1}
+            vorjahr={gesamtKpisVorjahr.gesamtDB1}
             icon={TrendingUp}
             variant={gesamtKpis.gesamtDB1 > 0 ? 'success' : 'warning'}
           />
           <GesamtKpiCard 
             title="Personal" 
-            value={gesamtKpis.gesamtPersonal} 
+            value={gesamtKpis.gesamtPersonal}
+            vorjahr={gesamtKpisVorjahr.gesamtPersonal}
             icon={Users}
           />
           <GesamtKpiCard 
             title="DB II gesamt" 
-            value={gesamtKpis.gesamtDB2} 
+            value={gesamtKpis.gesamtDB2}
+            vorjahr={gesamtKpisVorjahr.gesamtDB2}
             icon={TrendingUp}
             variant={gesamtKpis.gesamtDB2 > 0 ? 'success' : 'warning'}
           />
           <GesamtKpiCard 
             title="Energie" 
-            value={gesamtKpis.gesamtEnergie} 
+            value={gesamtKpis.gesamtEnergie}
+            vorjahr={gesamtKpisVorjahr.gesamtEnergie}
             icon={Zap}
           />
         </div>
 
-        {/* DB I / DB II Chart */}
+        {/* Jahresvergleich Chart */}
         {chartData.length > 0 && (
           <Card className="glass-card">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-primary" />
-                Deckungsbeiträge nach Abteilung
+                <Calendar className="h-5 w-5 text-primary" />
+                Jahresvergleich: {selectedYear} vs. {selectedYear - 1}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -174,9 +329,10 @@ export function AbteilungKpiView() {
                     }}
                   />
                   <Legend />
-                  <Bar dataKey="Umsatz" fill="hsl(142, 76%, 36%)" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="DB I" fill="hsl(200, 80%, 50%)" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="DB II" fill="hsl(280, 70%, 60%)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Umsatz aktuell" fill="hsl(142, 76%, 36%)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Umsatz Vorjahr" fill="hsl(142, 76%, 36%, 0.3)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="DB II aktuell" fill="hsl(280, 70%, 60%)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="DB II Vorjahr" fill="hsl(280, 70%, 60%, 0.3)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -188,15 +344,26 @@ export function AbteilungKpiView() {
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Building2 className="h-5 w-5 text-primary" />
             Operative Abteilungen
+            <span className="text-sm font-normal text-muted-foreground ml-2">
+              (klicken für Kontendetails)
+            </span>
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {abteilungKpis
               .filter(k => operativeAbteilungen.includes(k.abteilung))
               .filter(k => k.umsatz > 0 || k.wareneinsatz > 0 || k.personal > 0)
               .sort((a, b) => b.umsatz - a.umsatz)
-              .map(kpi => (
-                <AbteilungKpiCard key={kpi.abteilung} kpi={kpi} />
-              ))}
+              .map(kpi => {
+                const vorjahr = vorjahrKpis.find(v => v.abteilung === kpi.abteilung);
+                return (
+                  <AbteilungKpiCard 
+                    key={kpi.abteilung} 
+                    kpi={kpi} 
+                    vorjahr={vorjahr}
+                    onClick={() => handleAbteilungClick(kpi.abteilung)}
+                  />
+                );
+              })}
           </div>
         </div>
 
@@ -211,26 +378,103 @@ export function AbteilungKpiView() {
               .filter(k => serviceAbteilungen.includes(k.abteilung))
               .filter(k => k.personal > 0 || k.betriebsaufwand > 0 || k.energie > 0)
               .map(kpi => (
-                <ServiceKpiCard key={kpi.abteilung} kpi={kpi} />
+                <ServiceKpiCard 
+                  key={kpi.abteilung} 
+                  kpi={kpi}
+                  onClick={() => handleAbteilungClick(kpi.abteilung)}
+                />
               ))}
           </div>
         </div>
       </div>
+
+      {/* Drill-Down Sheet */}
+      <Sheet open={showDrillDown} onOpenChange={setShowDrillDown}>
+        <SheetContent className="w-full sm:max-w-2xl">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              {selectedAbteilung && (
+                <>
+                  <div 
+                    className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: `${bereichColors[selectedAbteilung]}20` }}
+                  >
+                    {(() => {
+                      const Icon = abteilungIcons[selectedAbteilung] || Building2;
+                      return <Icon className="h-4 w-4" style={{ color: bereichColors[selectedAbteilung] }} />;
+                    })()}
+                  </div>
+                  {selectedAbteilung} - Kontendetails
+                </>
+              )}
+            </SheetTitle>
+            <SheetDescription>
+              {months[selectedMonth]} {selectedYear} · {drillDownData.salden.length} Konten mit Saldo
+            </SheetDescription>
+          </SheetHeader>
+          
+          <ScrollArea className="h-[calc(100vh-150px)] mt-6">
+            <div className="space-y-2 pr-4">
+              {drillDownData.salden.map((saldo: any) => (
+                <div 
+                  key={saldo.kontonummer}
+                  className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-sm">{saldo.kontonummer}</span>
+                      <Badge 
+                        variant="outline" 
+                        className="text-xs"
+                        style={{ 
+                          borderColor: kpiKategorieColors[saldo.konto?.kpiKategorie as keyof typeof kpiKategorieColors] || 'hsl(var(--border))',
+                          color: kpiKategorieColors[saldo.konto?.kpiKategorie as keyof typeof kpiKategorieColors] || 'inherit'
+                        }}
+                      >
+                        {saldo.konto?.kpiKategorie || 'Sonstiges'}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {saldo.konto?.kontobezeichnung || 'Unbekannt'}
+                    </p>
+                  </div>
+                  <span className={cn(
+                    "font-semibold tabular-nums",
+                    saldo.saldoMonat < 0 ? "text-success" : "text-foreground"
+                  )}>
+                    {formatCurrency(Math.abs(saldo.saldoMonat))}
+                  </span>
+                </div>
+              ))}
+              
+              {drillDownData.salden.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  Keine Kontensalden für diesen Zeitraum
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
 
 function GesamtKpiCard({ 
   title, 
-  value, 
+  value,
+  vorjahr,
   icon: Icon,
   variant = 'default' 
 }: { 
   title: string; 
-  value: number; 
+  value: number;
+  vorjahr?: number;
   icon: React.ElementType;
   variant?: 'default' | 'accent' | 'success' | 'warning';
 }) {
+  const diff = vorjahr && vorjahr !== 0 ? ((value - vorjahr) / vorjahr) * 100 : null;
+  
   return (
     <Card className={cn(
       "glass-card transition-all hover:scale-[1.02]",
@@ -255,18 +499,33 @@ function GesamtKpiCard({
         )}>
           {formatCurrency(value)}
         </p>
+        {diff !== null && (
+          <div className={cn(
+            "flex items-center gap-1 text-xs mt-1",
+            diff > 0 ? "text-success" : diff < 0 ? "text-destructive" : "text-muted-foreground"
+          )}>
+            {diff > 0 ? <TrendingUp className="h-3 w-3" /> : diff < 0 ? <TrendingDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
+            <span>{diff > 0 ? '+' : ''}{diff.toFixed(1)}% vs. Vorjahr</span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
 }
 
-function AbteilungKpiCard({ kpi }: { kpi: AbteilungKpi }) {
+function AbteilungKpiCard({ kpi, vorjahr, onClick }: { kpi: AbteilungKpi; vorjahr?: AbteilungKpi; onClick: () => void }) {
   const Icon = abteilungIcons[kpi.abteilung] || Building2;
   const db1Marge = kpi.umsatz > 0 ? (kpi.db1 / kpi.umsatz) * 100 : 0;
   const db2Marge = kpi.umsatz > 0 ? (kpi.db2 / kpi.umsatz) * 100 : 0;
   
+  const umsatzDiff = vorjahr && vorjahr.umsatz > 0 ? ((kpi.umsatz - vorjahr.umsatz) / vorjahr.umsatz) * 100 : null;
+  const db2Diff = vorjahr && vorjahr.db2 !== 0 ? kpi.db2 - vorjahr.db2 : null;
+  
   return (
-    <Card className="glass-card hover:border-primary/30 transition-all">
+    <Card 
+      className="glass-card hover:border-primary/30 transition-all cursor-pointer group"
+      onClick={onClick}
+    >
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -278,13 +537,23 @@ function AbteilungKpiCard({ kpi }: { kpi: AbteilungKpi }) {
             </div>
             <CardTitle className="text-base">{kpi.abteilung}</CardTitle>
           </div>
-          <DiffBadge value={kpi.umsatzDiffProzent} />
+          <div className="flex items-center gap-2">
+            {umsatzDiff !== null && <DiffBadge value={umsatzDiff} />}
+            <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
-        {/* Umsatz */}
+        {/* Umsatz mit Vorjahr */}
         <div className="flex justify-between items-center">
-          <span className="text-sm text-muted-foreground">Umsatz</span>
+          <div>
+            <span className="text-sm text-muted-foreground">Umsatz</span>
+            {vorjahr && vorjahr.umsatz > 0 && (
+              <span className="text-xs text-muted-foreground/70 ml-2">
+                (VJ: {formatCurrency(vorjahr.umsatz)})
+              </span>
+            )}
+          </div>
           <span className="font-semibold text-success">{formatCurrency(kpi.umsatz)}</span>
         </div>
         
@@ -316,7 +585,7 @@ function AbteilungKpiCard({ kpi }: { kpi: AbteilungKpi }) {
           <span className="font-medium text-warning">- {formatCurrency(kpi.personal)}</span>
         </div>
         
-        {/* DB II */}
+        {/* DB II mit Vorjahresvergleich */}
         <div className="flex justify-between items-center pt-2 border-t border-border">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">DB II</span>
@@ -324,33 +593,50 @@ function AbteilungKpiCard({ kpi }: { kpi: AbteilungKpi }) {
               {db2Marge.toFixed(1)}%
             </Badge>
           </div>
-          <span className={cn(
-            "font-bold text-lg",
-            kpi.db2 > 0 ? "text-success" : "text-destructive"
-          )}>
-            {formatCurrency(kpi.db2)}
-          </span>
+          <div className="text-right">
+            <span className={cn(
+              "font-bold text-lg",
+              kpi.db2 > 0 ? "text-success" : "text-destructive"
+            )}>
+              {formatCurrency(kpi.db2)}
+            </span>
+            {db2Diff !== null && (
+              <div className={cn(
+                "text-xs flex items-center justify-end gap-1",
+                db2Diff > 0 ? "text-success" : db2Diff < 0 ? "text-destructive" : "text-muted-foreground"
+              )}>
+                {db2Diff > 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                {db2Diff > 0 ? '+' : ''}{formatCurrency(db2Diff)}
+              </div>
+            )}
+          </div>
         </div>
       </CardContent>
     </Card>
   );
 }
 
-function ServiceKpiCard({ kpi }: { kpi: AbteilungKpi }) {
+function ServiceKpiCard({ kpi, onClick }: { kpi: AbteilungKpi; onClick: () => void }) {
   const Icon = abteilungIcons[kpi.abteilung] || Building2;
   const totalKosten = kpi.personal + kpi.betriebsaufwand + kpi.energie + kpi.marketing;
   
   return (
-    <Card className="glass-card hover:border-primary/30 transition-all">
+    <Card 
+      className="glass-card hover:border-primary/30 transition-all cursor-pointer group"
+      onClick={onClick}
+    >
       <CardHeader className="pb-2">
-        <div className="flex items-center gap-2">
-          <div 
-            className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: `${bereichColors[kpi.abteilung]}20` }}
-          >
-            <Icon className="h-4 w-4" style={{ color: bereichColors[kpi.abteilung] }} />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div 
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: `${bereichColors[kpi.abteilung]}20` }}
+            >
+              <Icon className="h-4 w-4" style={{ color: bereichColors[kpi.abteilung] }} />
+            </div>
+            <CardTitle className="text-base">{kpi.abteilung}</CardTitle>
           </div>
-          <CardTitle className="text-base">{kpi.abteilung}</CardTitle>
+          <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
       </CardHeader>
       <CardContent className="space-y-2">
