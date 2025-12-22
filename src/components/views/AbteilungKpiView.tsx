@@ -13,6 +13,7 @@ import { bereichColors, operativeAbteilungen, serviceAbteilungen, kpiKategorieCo
 import { AbteilungKpi, Bereich, Konto, SaldoMonat } from '@/types/finance';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { exportKpiToPdf } from '@/lib/pdfExport';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -29,7 +30,8 @@ import {
   Download,
   Calendar,
   ArrowRight,
-  ChevronRight
+  ChevronRight,
+  FileText
 } from 'lucide-react';
 import {
   BarChart,
@@ -251,11 +253,15 @@ export function AbteilungKpiView() {
               </Badge>
             )}
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <PeriodSelector />
+            <Button onClick={() => exportKpiToPdf(abteilungKpis, gesamtKpis, selectedYear, selectedMonth)} variant="outline" className="gap-2">
+              <FileText className="h-4 w-4" />
+              PDF
+            </Button>
             <Button onClick={exportToCSV} variant="outline" className="gap-2">
               <Download className="h-4 w-4" />
-              CSV Export
+              CSV
             </Button>
           </div>
         </div>

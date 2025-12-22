@@ -3,6 +3,8 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { DashboardView } from '@/components/views/DashboardView';
 import { AbteilungKpiView } from '@/components/views/AbteilungKpiView';
 import { TrendDashboardView } from '@/components/views/TrendDashboardView';
+import { BudgetPlanungView } from '@/components/views/BudgetPlanungView';
+import { KpiAlarmeView } from '@/components/views/KpiAlarmeView';
 import { UploadView } from '@/components/views/UploadView';
 import { KontenView } from '@/components/views/KontenView';
 import { VergleichView } from '@/components/views/VergleichView';
@@ -26,6 +28,10 @@ const Index = () => {
         return <AbteilungKpiView />;
       case 'kpi-trends':
         return <TrendDashboardView />;
+      case 'budget':
+        return <BudgetPlanungView />;
+      case 'alarme':
+        return <KpiAlarmeView />;
       case 'upload':
         return <UploadView />;
       case 'konten':

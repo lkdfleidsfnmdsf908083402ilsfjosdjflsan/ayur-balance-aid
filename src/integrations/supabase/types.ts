@@ -98,6 +98,54 @@ export type Database = {
         }
         Relationships: []
       }
+      budget_planung: {
+        Row: {
+          abteilung: string
+          created_at: string
+          db1_budget: number
+          db2_budget: number
+          energie_budget: number
+          id: string
+          jahr: number
+          marketing_budget: number
+          monat: number
+          personal_budget: number
+          umsatz_budget: number
+          updated_at: string
+          wareneinsatz_budget: number
+        }
+        Insert: {
+          abteilung: string
+          created_at?: string
+          db1_budget?: number
+          db2_budget?: number
+          energie_budget?: number
+          id?: string
+          jahr: number
+          marketing_budget?: number
+          monat: number
+          personal_budget?: number
+          umsatz_budget?: number
+          updated_at?: string
+          wareneinsatz_budget?: number
+        }
+        Update: {
+          abteilung?: string
+          created_at?: string
+          db1_budget?: number
+          db2_budget?: number
+          energie_budget?: number
+          id?: string
+          jahr?: number
+          marketing_budget?: number
+          monat?: number
+          personal_budget?: number
+          umsatz_budget?: number
+          updated_at?: string
+          wareneinsatz_budget?: number
+        }
+        Relationships: []
+      }
       import_files: {
         Row: {
           anzahl_konten: number
@@ -157,6 +205,39 @@ export type Database = {
           kontonummer?: string
           kostenartt_typ?: string
           kpi_kategorie?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      kpi_schwellenwerte: {
+        Row: {
+          abteilung: string
+          alarm_aktiv: boolean
+          created_at: string
+          id: string
+          kpi_typ: string
+          schwellenwert_max: number | null
+          schwellenwert_min: number | null
+          updated_at: string
+        }
+        Insert: {
+          abteilung: string
+          alarm_aktiv?: boolean
+          created_at?: string
+          id?: string
+          kpi_typ: string
+          schwellenwert_max?: number | null
+          schwellenwert_min?: number | null
+          updated_at?: string
+        }
+        Update: {
+          abteilung?: string
+          alarm_aktiv?: boolean
+          created_at?: string
+          id?: string
+          kpi_typ?: string
+          schwellenwert_max?: number | null
+          schwellenwert_min?: number | null
           updated_at?: string
         }
         Relationships: []
