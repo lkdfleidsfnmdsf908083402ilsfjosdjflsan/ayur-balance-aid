@@ -13,6 +13,7 @@ import { AdminKpiView } from '@/components/views/AdminKpiView';
 import { MitarbeiterStammdatenView } from '@/components/views/MitarbeiterStammdatenView';
 import { SchichtplanungView } from '@/components/views/SchichtplanungView';
 import { ZeitkontenView } from '@/components/views/ZeitkontenView';
+import { PersonalKpiUebersichtView } from '@/components/views/PersonalKpiUebersichtView';
 import { BudgetPlanungView } from '@/components/views/BudgetPlanungView';
 import { KpiAlarmeView } from '@/components/views/KpiAlarmeView';
 import { AbteilungsleiterView } from '@/components/views/AbteilungsleiterView';
@@ -59,6 +60,8 @@ const Index = () => {
         return <SchichtplanungView />;
       case 'zeitkonten':
         return <ZeitkontenView />;
+      case 'personal-kpis':
+        return <PersonalKpiUebersichtView />;
       case 'budget':
         return <BudgetPlanungView />;
       case 'alarme':

@@ -46,6 +46,7 @@ const navItems = [
   { id: 'mitarbeiter', label: 'Mitarbeiter', icon: UserCircle },
   { id: 'schichtplanung', label: 'Schichtplanung', icon: CalendarDays },
   { id: 'zeitkonten', label: 'Zeitkonten', icon: Clock },
+  { id: 'personal-kpis', label: 'Personal-KPIs', icon: Users },
   { id: 'budget', label: 'Budgetplanung', icon: Target },
   { id: 'alarme', label: 'KPI-Alarme', icon: Bell },
   { id: 'abteilungsleiter', label: 'Abteilungsleiter', icon: Users },

@@ -1146,6 +1146,44 @@ export type Database = {
         }
         Relationships: []
       }
+      v_department_monthly_staff_kpis: {
+        Row: {
+          abteilung: string | null
+          anwesenheitsquote_pct: number | null
+          arbeitstage: number | null
+          fortbildungstage: number | null
+          ist_stunden_monat: number | null
+          jahr: number | null
+          krankenquote_pct: number | null
+          krankheitstage: number | null
+          mitarbeiter_gesamt: number | null
+          monat: number | null
+          personalkosten_monat: number | null
+          soll_stunden_monat: number | null
+          ueberstunden_monat: number | null
+          urlaubstage: number | null
+        }
+        Relationships: []
+      }
+      v_department_staff_kpis: {
+        Row: {
+          abteilung: string | null
+          anwesenheitsquote_pct: number | null
+          datum: string | null
+          durchschnitt_stunden_pro_ma: number | null
+          durchschnitt_stundenlohn: number | null
+          ist_stunden: number | null
+          krankenquote_pct: number | null
+          mitarbeiter_anwesend: number | null
+          mitarbeiter_geplant: number | null
+          mitarbeiter_krank: number | null
+          mitarbeiter_urlaub: number | null
+          personalkosten: number | null
+          soll_stunden: number | null
+          ueberstunden: number | null
+        }
+        Relationships: []
+      }
       v_employee_department_stats: {
         Row: {
           abteilung: string | null
@@ -1162,7 +1200,19 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      get_department_staff_stats: {
+        Args: { p_abteilung: string; p_datum: string }
+        Returns: {
+          anwesenheitsquote_pct: number
+          ist_stunden: number
+          mitarbeiter_anwesend: number
+          mitarbeiter_krank: number
+          mitarbeiter_urlaub: number
+          personalkosten: number
+          soll_stunden: number
+          ueberstunden: number
+        }[]
+      }
     }
     Enums: {
       absence_reason:
