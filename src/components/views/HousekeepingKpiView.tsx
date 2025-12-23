@@ -12,8 +12,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { format, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear } from 'date-fns';
 import { de } from 'date-fns/locale';
-import { CalendarIcon, Save, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { CalendarIcon, Save, TrendingUp, TrendingDown, Minus, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { HousekeepingTrendCharts } from '@/components/charts/HousekeepingTrendCharts';
 
 type TrafficColor = 'green' | 'yellow' | 'red';
 
@@ -501,19 +502,32 @@ export function HousekeepingKpiView() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="trends" className="space-y-4">
-          <div className="flex items-center gap-4 mb-4">
-            <Select value={periodView} onValueChange={(v) => setPeriodView(v as typeof periodView)}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Zeitraum wählen" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="day">Tag</SelectItem>
-                <SelectItem value="week">Woche</SelectItem>
-                <SelectItem value="month">Monat</SelectItem>
-                <SelectItem value="year">Jahr</SelectItem>
-              </SelectContent>
-            </Select>
+        <TabsContent value="trends" className="space-y-6">
+          {/* Trend Charts */}
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              <h3 className="text-lg font-semibold">KPI-Trends (letzte 30 Tage)</h3>
+            </div>
+            <HousekeepingTrendCharts reports={reports} daysToShow={30} />
+          </div>
+
+          {/* Aggregierte Ansicht */}
+          <div className="pt-4 border-t">
+            <div className="flex items-center gap-4 mb-4">
+              <h3 className="text-lg font-semibold">Aggregierte Kennzahlen</h3>
+              <Select value={periodView} onValueChange={(v) => setPeriodView(v as typeof periodView)}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Zeitraum wählen" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="day">Tag</SelectItem>
+                  <SelectItem value="week">Woche</SelectItem>
+                  <SelectItem value="month">Monat</SelectItem>
+                  <SelectItem value="year">Jahr</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {aggregatedKpis ? (
