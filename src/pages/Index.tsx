@@ -10,6 +10,9 @@ import { FrontOfficeKpiView } from '@/components/views/FrontOfficeKpiView';
 import { SpaKpiView } from '@/components/views/SpaKpiView';
 import { TechnicalKpiView } from '@/components/views/TechnicalKpiView';
 import { AdminKpiView } from '@/components/views/AdminKpiView';
+import { MitarbeiterStammdatenView } from '@/components/views/MitarbeiterStammdatenView';
+import { SchichtplanungView } from '@/components/views/SchichtplanungView';
+import { ZeitkontenView } from '@/components/views/ZeitkontenView';
 import { BudgetPlanungView } from '@/components/views/BudgetPlanungView';
 import { KpiAlarmeView } from '@/components/views/KpiAlarmeView';
 import { AbteilungsleiterView } from '@/components/views/AbteilungsleiterView';
@@ -50,6 +53,12 @@ const Index = () => {
         return <TechnicalKpiView />;
       case 'admin':
         return <AdminKpiView />;
+      case 'mitarbeiter':
+        return <MitarbeiterStammdatenView />;
+      case 'schichtplanung':
+        return <SchichtplanungView />;
+      case 'zeitkonten':
+        return <ZeitkontenView />;
       case 'budget':
         return <BudgetPlanungView />;
       case 'alarme':
