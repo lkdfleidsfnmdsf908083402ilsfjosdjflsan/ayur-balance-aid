@@ -128,6 +128,126 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_daily_reports: {
+        Row: {
+          admin_hours_total: number
+          admin_staff_on_duty: number
+          applications_received: number
+          attendance_rate: number | null
+          created_at: string
+          daily_expenses: number
+          daily_revenue: number
+          deliveries_received: number
+          dpo_days: number | null
+          dso_days: number | null
+          id: string
+          it_availability_pct: number | null
+          it_resolution_rate_pct: number | null
+          it_tickets_open: number
+          it_tickets_resolved: number
+          monthly_turnover_rate_pct: number | null
+          new_hires: number
+          open_invoices_count: number
+          open_invoices_value: number
+          open_positions: number
+          open_positions_rate_pct: number | null
+          open_receivables: number
+          orders_placed: number
+          paid_invoices_count: number
+          payment_compliance_pct: number | null
+          planned_employees: number
+          reminders_sent: number
+          report_date: string
+          sick_days: number
+          sick_rate_pct: number | null
+          supplier_complaint_rate_pct: number | null
+          supplier_complaints: number
+          system_downtime_min: number
+          terminations: number
+          total_employees: number
+          turnover_rate: number | null
+          updated_at: string
+        }
+        Insert: {
+          admin_hours_total?: number
+          admin_staff_on_duty?: number
+          applications_received?: number
+          attendance_rate?: number | null
+          created_at?: string
+          daily_expenses?: number
+          daily_revenue?: number
+          deliveries_received?: number
+          dpo_days?: number | null
+          dso_days?: number | null
+          id?: string
+          it_availability_pct?: number | null
+          it_resolution_rate_pct?: number | null
+          it_tickets_open?: number
+          it_tickets_resolved?: number
+          monthly_turnover_rate_pct?: number | null
+          new_hires?: number
+          open_invoices_count?: number
+          open_invoices_value?: number
+          open_positions?: number
+          open_positions_rate_pct?: number | null
+          open_receivables?: number
+          orders_placed?: number
+          paid_invoices_count?: number
+          payment_compliance_pct?: number | null
+          planned_employees?: number
+          reminders_sent?: number
+          report_date: string
+          sick_days?: number
+          sick_rate_pct?: number | null
+          supplier_complaint_rate_pct?: number | null
+          supplier_complaints?: number
+          system_downtime_min?: number
+          terminations?: number
+          total_employees?: number
+          turnover_rate?: number | null
+          updated_at?: string
+        }
+        Update: {
+          admin_hours_total?: number
+          admin_staff_on_duty?: number
+          applications_received?: number
+          attendance_rate?: number | null
+          created_at?: string
+          daily_expenses?: number
+          daily_revenue?: number
+          deliveries_received?: number
+          dpo_days?: number | null
+          dso_days?: number | null
+          id?: string
+          it_availability_pct?: number | null
+          it_resolution_rate_pct?: number | null
+          it_tickets_open?: number
+          it_tickets_resolved?: number
+          monthly_turnover_rate_pct?: number | null
+          new_hires?: number
+          open_invoices_count?: number
+          open_invoices_value?: number
+          open_positions?: number
+          open_positions_rate_pct?: number | null
+          open_receivables?: number
+          orders_placed?: number
+          paid_invoices_count?: number
+          payment_compliance_pct?: number | null
+          planned_employees?: number
+          reminders_sent?: number
+          report_date?: string
+          sick_days?: number
+          sick_rate_pct?: number | null
+          supplier_complaint_rate_pct?: number | null
+          supplier_complaints?: number
+          system_downtime_min?: number
+          terminations?: number
+          total_employees?: number
+          turnover_rate?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       budget_planung: {
         Row: {
           abteilung: string
