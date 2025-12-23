@@ -1,6 +1,7 @@
 import { useFinanceStore } from '@/store/financeStore';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from 'lucide-react';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const months = [
   'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
@@ -62,6 +63,10 @@ export function Header({ title, description }: HeaderProps) {
             ))}
           </SelectContent>
         </Select>
+
+        <div className="w-px h-6 bg-border mx-1" />
+        
+        <ThemeToggle />
       </div>
     </header>
   );
