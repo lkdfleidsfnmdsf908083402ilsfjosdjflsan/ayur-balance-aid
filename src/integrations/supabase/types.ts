@@ -748,6 +748,93 @@ export type Database = {
         }
         Relationships: []
       }
+      technical_daily_reports: {
+        Row: {
+          attendance_rate: number | null
+          avg_resolution_time_min: number
+          cost_per_ticket: number | null
+          created_at: string
+          emergency_rate_pct: number | null
+          emergency_repairs: number
+          energy_consumption_kwh: number
+          energy_per_room: number | null
+          external_costs: number
+          id: string
+          material_costs: number
+          new_tickets: number
+          occupied_rooms: number
+          open_tickets: number
+          preventive_maintenance_done: number
+          preventive_maintenance_pct: number | null
+          preventive_maintenance_planned: number
+          report_date: string
+          resolved_tickets: number
+          same_day_resolution_pct: number | null
+          technician_hours_total: number
+          technicians_on_duty: number
+          ticket_backlog_rate_pct: number | null
+          tickets_per_technician: number | null
+          turnover_rate: number | null
+          updated_at: string
+        }
+        Insert: {
+          attendance_rate?: number | null
+          avg_resolution_time_min?: number
+          cost_per_ticket?: number | null
+          created_at?: string
+          emergency_rate_pct?: number | null
+          emergency_repairs?: number
+          energy_consumption_kwh?: number
+          energy_per_room?: number | null
+          external_costs?: number
+          id?: string
+          material_costs?: number
+          new_tickets?: number
+          occupied_rooms?: number
+          open_tickets?: number
+          preventive_maintenance_done?: number
+          preventive_maintenance_pct?: number | null
+          preventive_maintenance_planned?: number
+          report_date: string
+          resolved_tickets?: number
+          same_day_resolution_pct?: number | null
+          technician_hours_total?: number
+          technicians_on_duty?: number
+          ticket_backlog_rate_pct?: number | null
+          tickets_per_technician?: number | null
+          turnover_rate?: number | null
+          updated_at?: string
+        }
+        Update: {
+          attendance_rate?: number | null
+          avg_resolution_time_min?: number
+          cost_per_ticket?: number | null
+          created_at?: string
+          emergency_rate_pct?: number | null
+          emergency_repairs?: number
+          energy_consumption_kwh?: number
+          energy_per_room?: number | null
+          external_costs?: number
+          id?: string
+          material_costs?: number
+          new_tickets?: number
+          occupied_rooms?: number
+          open_tickets?: number
+          preventive_maintenance_done?: number
+          preventive_maintenance_pct?: number | null
+          preventive_maintenance_planned?: number
+          report_date?: string
+          resolved_tickets?: number
+          same_day_resolution_pct?: number | null
+          technician_hours_total?: number
+          technicians_on_duty?: number
+          ticket_backlog_rate_pct?: number | null
+          tickets_per_technician?: number | null
+          turnover_rate?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
