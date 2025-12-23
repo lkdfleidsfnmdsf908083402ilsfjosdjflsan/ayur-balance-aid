@@ -652,6 +652,102 @@ export type Database = {
         }
         Relationships: []
       }
+      spa_daily_reports: {
+        Row: {
+          attendance_rate: number | null
+          available_treatment_hours: number
+          avg_spa_rating: number | null
+          booked_treatment_hours: number
+          bookings_total: number
+          cancellations: number
+          complaint_rate_pct: number | null
+          created_at: string
+          guests_total: number
+          id: string
+          no_show_rate_pct: number | null
+          no_shows: number
+          report_date: string
+          retail_ratio_pct: number | null
+          retail_revenue: number
+          revenue_per_guest: number | null
+          revpath: number | null
+          room_utilization_pct: number | null
+          spa_complaints: number
+          spa_ratings_count: number
+          spa_ratings_sum: number
+          spa_revenue: number
+          therapist_hours_total: number
+          therapist_utilization_pct: number | null
+          therapists_on_duty: number
+          treatments_per_therapist: number | null
+          treatments_total: number
+          turnover_rate: number | null
+          updated_at: string
+        }
+        Insert: {
+          attendance_rate?: number | null
+          available_treatment_hours?: number
+          avg_spa_rating?: number | null
+          booked_treatment_hours?: number
+          bookings_total?: number
+          cancellations?: number
+          complaint_rate_pct?: number | null
+          created_at?: string
+          guests_total?: number
+          id?: string
+          no_show_rate_pct?: number | null
+          no_shows?: number
+          report_date: string
+          retail_ratio_pct?: number | null
+          retail_revenue?: number
+          revenue_per_guest?: number | null
+          revpath?: number | null
+          room_utilization_pct?: number | null
+          spa_complaints?: number
+          spa_ratings_count?: number
+          spa_ratings_sum?: number
+          spa_revenue?: number
+          therapist_hours_total?: number
+          therapist_utilization_pct?: number | null
+          therapists_on_duty?: number
+          treatments_per_therapist?: number | null
+          treatments_total?: number
+          turnover_rate?: number | null
+          updated_at?: string
+        }
+        Update: {
+          attendance_rate?: number | null
+          available_treatment_hours?: number
+          avg_spa_rating?: number | null
+          booked_treatment_hours?: number
+          bookings_total?: number
+          cancellations?: number
+          complaint_rate_pct?: number | null
+          created_at?: string
+          guests_total?: number
+          id?: string
+          no_show_rate_pct?: number | null
+          no_shows?: number
+          report_date?: string
+          retail_ratio_pct?: number | null
+          retail_revenue?: number
+          revenue_per_guest?: number | null
+          revpath?: number | null
+          room_utilization_pct?: number | null
+          spa_complaints?: number
+          spa_ratings_count?: number
+          spa_ratings_sum?: number
+          spa_revenue?: number
+          therapist_hours_total?: number
+          therapist_utilization_pct?: number | null
+          therapists_on_duty?: number
+          treatments_per_therapist?: number | null
+          treatments_total?: number
+          turnover_rate?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
