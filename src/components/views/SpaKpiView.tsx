@@ -208,10 +208,10 @@ export function SpaKpiView() {
         <h2 className="text-2xl font-bold">Spa & Wellness KPIs</h2>
       </div>
 
-      <Tabs defaultValue="overview">
+      <Tabs defaultValue="input">
         <TabsList>
-          <TabsTrigger value="overview">Übersicht</TabsTrigger>
           <TabsTrigger value="input">Tageseingabe</TabsTrigger>
+          <TabsTrigger value="overview">Übersicht</TabsTrigger>
           <TabsTrigger value="trends">Trends</TabsTrigger>
         </TabsList>
 
