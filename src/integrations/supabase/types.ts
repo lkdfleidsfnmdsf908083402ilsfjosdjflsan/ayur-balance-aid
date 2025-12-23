@@ -176,6 +176,75 @@ export type Database = {
         }
         Relationships: []
       }
+      hk_daily_reports: {
+        Row: {
+          attendance_rate: number | null
+          avg_minutes_per_room: number | null
+          cleaned_rooms: number
+          complaint_rate: number | null
+          complaints_cleanliness: number
+          created_at: string
+          hk_employees_on_duty: number
+          hk_hours_total: number | null
+          id: string
+          inspected_rooms: number
+          inspection_pass_rate: number | null
+          occupied_rooms: number
+          passed_rooms: number
+          report_date: string
+          rooms_in_sale: number
+          rooms_per_attendant: number | null
+          shift_minutes: number | null
+          total_cleaning_minutes: number | null
+          turnover_rate: number | null
+          updated_at: string
+        }
+        Insert: {
+          attendance_rate?: number | null
+          avg_minutes_per_room?: number | null
+          cleaned_rooms?: number
+          complaint_rate?: number | null
+          complaints_cleanliness?: number
+          created_at?: string
+          hk_employees_on_duty?: number
+          hk_hours_total?: number | null
+          id?: string
+          inspected_rooms?: number
+          inspection_pass_rate?: number | null
+          occupied_rooms?: number
+          passed_rooms?: number
+          report_date: string
+          rooms_in_sale?: number
+          rooms_per_attendant?: number | null
+          shift_minutes?: number | null
+          total_cleaning_minutes?: number | null
+          turnover_rate?: number | null
+          updated_at?: string
+        }
+        Update: {
+          attendance_rate?: number | null
+          avg_minutes_per_room?: number | null
+          cleaned_rooms?: number
+          complaint_rate?: number | null
+          complaints_cleanliness?: number
+          created_at?: string
+          hk_employees_on_duty?: number
+          hk_hours_total?: number | null
+          id?: string
+          inspected_rooms?: number
+          inspection_pass_rate?: number | null
+          occupied_rooms?: number
+          passed_rooms?: number
+          report_date?: string
+          rooms_in_sale?: number
+          rooms_per_attendant?: number | null
+          shift_minutes?: number | null
+          total_cleaning_minutes?: number | null
+          turnover_rate?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       import_files: {
         Row: {
           anzahl_konten: number
