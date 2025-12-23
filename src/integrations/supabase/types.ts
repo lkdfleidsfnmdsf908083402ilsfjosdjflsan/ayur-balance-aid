@@ -272,6 +272,93 @@ export type Database = {
         }
         Relationships: []
       }
+      kitchen_daily_reports: {
+        Row: {
+          attendance_rate: number | null
+          complaint_rate_pct: number | null
+          correct_orders: number
+          covers_total: number
+          created_at: string
+          food_complaints: number
+          food_cost: number
+          food_cost_pct: number | null
+          food_cost_per_cover: number | null
+          food_revenue: number
+          food_waste_pct: number | null
+          food_waste_value: number | null
+          id: string
+          kitchen_hours_total: number
+          kitchen_labour_cost: number | null
+          kitchen_labour_pct: number | null
+          kitchen_staff_on_duty: number
+          meals_per_employee: number | null
+          order_accuracy_pct: number | null
+          orders_total: number
+          plates_per_hour: number | null
+          plates_total: number
+          prime_cost_pct: number | null
+          report_date: string
+          turnover_rate: number | null
+          updated_at: string
+        }
+        Insert: {
+          attendance_rate?: number | null
+          complaint_rate_pct?: number | null
+          correct_orders?: number
+          covers_total?: number
+          created_at?: string
+          food_complaints?: number
+          food_cost?: number
+          food_cost_pct?: number | null
+          food_cost_per_cover?: number | null
+          food_revenue?: number
+          food_waste_pct?: number | null
+          food_waste_value?: number | null
+          id?: string
+          kitchen_hours_total?: number
+          kitchen_labour_cost?: number | null
+          kitchen_labour_pct?: number | null
+          kitchen_staff_on_duty?: number
+          meals_per_employee?: number | null
+          order_accuracy_pct?: number | null
+          orders_total?: number
+          plates_per_hour?: number | null
+          plates_total?: number
+          prime_cost_pct?: number | null
+          report_date: string
+          turnover_rate?: number | null
+          updated_at?: string
+        }
+        Update: {
+          attendance_rate?: number | null
+          complaint_rate_pct?: number | null
+          correct_orders?: number
+          covers_total?: number
+          created_at?: string
+          food_complaints?: number
+          food_cost?: number
+          food_cost_pct?: number | null
+          food_cost_per_cover?: number | null
+          food_revenue?: number
+          food_waste_pct?: number | null
+          food_waste_value?: number | null
+          id?: string
+          kitchen_hours_total?: number
+          kitchen_labour_cost?: number | null
+          kitchen_labour_pct?: number | null
+          kitchen_staff_on_duty?: number
+          meals_per_employee?: number | null
+          order_accuracy_pct?: number | null
+          orders_total?: number
+          plates_per_hour?: number | null
+          plates_total?: number
+          prime_cost_pct?: number | null
+          report_date?: string
+          turnover_rate?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       konten: {
         Row: {
           bereich: string
