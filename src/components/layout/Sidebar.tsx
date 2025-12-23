@@ -15,7 +15,8 @@ import {
   Bell,
   Users,
   Sparkles,
-  ChefHat
+  ChefHat,
+  UtensilsCrossed
 } from 'lucide-react';
 import { MandiraLogo } from '@/components/MandiraLogo';
 
@@ -30,6 +31,7 @@ const navItems = [
   { id: 'kpi-trends', label: 'KPI-Trends', icon: TrendingUp },
   { id: 'housekeeping', label: 'Housekeeping KPIs', icon: Sparkles },
   { id: 'kitchen', label: 'Küchen-KPIs', icon: ChefHat },
+  { id: 'service', label: 'Service-KPIs', icon: UtensilsCrossed },
   { id: 'budget', label: 'Budgetplanung', icon: Target },
   { id: 'alarme', label: 'KPI-Alarme', icon: Bell },
   { id: 'abteilungsleiter', label: 'Abteilungsleiter', icon: Users },
