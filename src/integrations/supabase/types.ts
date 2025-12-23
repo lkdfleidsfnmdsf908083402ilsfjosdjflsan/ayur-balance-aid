@@ -469,6 +469,96 @@ export type Database = {
           },
         ]
       }
+      service_daily_reports: {
+        Row: {
+          attendance_rate: number | null
+          avg_service_rating: number | null
+          covers_per_server_per_hour: number | null
+          covers_total: number
+          created_at: string
+          csat_pct: number | null
+          csat_positive_count: number | null
+          csat_total_respondents: number | null
+          id: string
+          items_total: number
+          report_date: string
+          sales_per_cover: number | null
+          sales_per_server: number | null
+          service_complaint_rate_pct: number | null
+          service_complaints: number
+          service_error_rate_pct: number | null
+          service_errors: number
+          service_hours_total: number
+          service_ratings_count: number
+          service_ratings_sum: number
+          service_revenue: number
+          service_staff_on_duty: number
+          table_turnover_rate: number | null
+          tables_available: number | null
+          tables_served: number
+          turnover_rate: number | null
+          updated_at: string
+        }
+        Insert: {
+          attendance_rate?: number | null
+          avg_service_rating?: number | null
+          covers_per_server_per_hour?: number | null
+          covers_total?: number
+          created_at?: string
+          csat_pct?: number | null
+          csat_positive_count?: number | null
+          csat_total_respondents?: number | null
+          id?: string
+          items_total?: number
+          report_date: string
+          sales_per_cover?: number | null
+          sales_per_server?: number | null
+          service_complaint_rate_pct?: number | null
+          service_complaints?: number
+          service_error_rate_pct?: number | null
+          service_errors?: number
+          service_hours_total?: number
+          service_ratings_count?: number
+          service_ratings_sum?: number
+          service_revenue?: number
+          service_staff_on_duty?: number
+          table_turnover_rate?: number | null
+          tables_available?: number | null
+          tables_served?: number
+          turnover_rate?: number | null
+          updated_at?: string
+        }
+        Update: {
+          attendance_rate?: number | null
+          avg_service_rating?: number | null
+          covers_per_server_per_hour?: number | null
+          covers_total?: number
+          created_at?: string
+          csat_pct?: number | null
+          csat_positive_count?: number | null
+          csat_total_respondents?: number | null
+          id?: string
+          items_total?: number
+          report_date?: string
+          sales_per_cover?: number | null
+          sales_per_server?: number | null
+          service_complaint_rate_pct?: number | null
+          service_complaints?: number
+          service_error_rate_pct?: number | null
+          service_errors?: number
+          service_hours_total?: number
+          service_ratings_count?: number
+          service_ratings_sum?: number
+          service_revenue?: number
+          service_staff_on_duty?: number
+          table_turnover_rate?: number | null
+          tables_available?: number | null
+          tables_served?: number
+          turnover_rate?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
