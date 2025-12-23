@@ -8,7 +8,6 @@ import {
   GitCompare,
   ChevronLeft,
   ChevronRight,
-  Database,
   ShieldCheck,
   PieChart,
   TrendingUp,
@@ -16,6 +15,7 @@ import {
   Bell,
   Users
 } from 'lucide-react';
+import { MandiraLogo } from '@/components/MandiraLogo';
 
 interface SidebarProps {
   activeView: string;
@@ -48,7 +48,7 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
     >
       {/* Logo */}
       <div className="h-16 flex items-center px-4 border-b border-sidebar-border">
-        <Database className="h-8 w-8 text-secondary shrink-0" />
+        <MandiraLogo className="h-8 w-8 text-primary shrink-0" />
         {!collapsed && (
           <div className="ml-3 animate-fade-in">
             <h1 className="text-lg font-semibold text-sidebar-foreground">FinanzAnalyse</h1>
