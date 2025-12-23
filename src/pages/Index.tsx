@@ -9,6 +9,7 @@ import { ServiceKpiView } from '@/components/views/ServiceKpiView';
 import { FrontOfficeKpiView } from '@/components/views/FrontOfficeKpiView';
 import { SpaKpiView } from '@/components/views/SpaKpiView';
 import { TechnicalKpiView } from '@/components/views/TechnicalKpiView';
+import { AdminKpiView } from '@/components/views/AdminKpiView';
 import { BudgetPlanungView } from '@/components/views/BudgetPlanungView';
 import { KpiAlarmeView } from '@/components/views/KpiAlarmeView';
 import { AbteilungsleiterView } from '@/components/views/AbteilungsleiterView';
@@ -47,6 +48,8 @@ const Index = () => {
         return <SpaKpiView />;
       case 'technical':
         return <TechnicalKpiView />;
+      case 'admin':
+        return <AdminKpiView />;
       case 'budget':
         return <BudgetPlanungView />;
       case 'alarme':

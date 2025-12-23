@@ -19,7 +19,8 @@ import {
   UtensilsCrossed,
   ConciergeBell,
   Flower2,
-  Wrench
+  Wrench,
+  Building2
 } from 'lucide-react';
 import { MandiraLogo } from '@/components/MandiraLogo';
 
@@ -38,6 +39,7 @@ const navItems = [
   { id: 'frontoffice', label: 'Rezeption-KPIs', icon: ConciergeBell },
   { id: 'spa', label: 'Spa-KPIs', icon: Flower2 },
   { id: 'technical', label: 'Technik-KPIs', icon: Wrench },
+  { id: 'admin', label: 'Verwaltungs-KPIs', icon: Building2 },
   { id: 'budget', label: 'Budgetplanung', icon: Target },
   { id: 'alarme', label: 'KPI-Alarme', icon: Bell },
   { id: 'abteilungsleiter', label: 'Abteilungsleiter', icon: Users },
