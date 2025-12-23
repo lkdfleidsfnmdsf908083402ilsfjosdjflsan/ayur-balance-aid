@@ -13,7 +13,8 @@ import {
   TrendingUp,
   Target,
   Bell,
-  Users
+  Users,
+  Sparkles
 } from 'lucide-react';
 import { MandiraLogo } from '@/components/MandiraLogo';
 
@@ -26,6 +27,7 @@ const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'abteilung-kpi', label: 'Abteilungs-KPIs', icon: PieChart },
   { id: 'kpi-trends', label: 'KPI-Trends', icon: TrendingUp },
+  { id: 'housekeeping', label: 'Housekeeping KPIs', icon: Sparkles },
   { id: 'budget', label: 'Budgetplanung', icon: Target },
   { id: 'alarme', label: 'KPI-Alarme', icon: Bell },
   { id: 'abteilungsleiter', label: 'Abteilungsleiter', icon: Users },
