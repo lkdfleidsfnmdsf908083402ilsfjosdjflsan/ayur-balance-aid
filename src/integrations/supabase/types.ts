@@ -176,6 +176,99 @@ export type Database = {
         }
         Relationships: []
       }
+      frontoffice_daily_reports: {
+        Row: {
+          arrivals_total: number
+          attendance_rate: number | null
+          avg_checkin_time_sec: number
+          avg_checkout_time_sec: number
+          avg_fo_rating: number | null
+          avg_queue_time_sec: number | null
+          created_at: string
+          departures_total: number
+          fcr_pct: number | null
+          fo_complaint_rate_pct: number | null
+          fo_complaints: number
+          fo_hours_total: number
+          fo_ratings_count: number
+          fo_ratings_sum: number
+          fo_staff_on_duty: number
+          guests_per_fo_employee: number | null
+          id: string
+          report_date: string
+          requests_per_hour: number | null
+          requests_resolved_first_contact: number
+          requests_total: number
+          turnover_rate: number | null
+          updated_at: string
+          upsell_attempts: number
+          upsell_conversion_pct: number | null
+          upsell_rev_per_arrival: number | null
+          upsell_revenue: number
+          upsell_successes: number
+        }
+        Insert: {
+          arrivals_total?: number
+          attendance_rate?: number | null
+          avg_checkin_time_sec?: number
+          avg_checkout_time_sec?: number
+          avg_fo_rating?: number | null
+          avg_queue_time_sec?: number | null
+          created_at?: string
+          departures_total?: number
+          fcr_pct?: number | null
+          fo_complaint_rate_pct?: number | null
+          fo_complaints?: number
+          fo_hours_total?: number
+          fo_ratings_count?: number
+          fo_ratings_sum?: number
+          fo_staff_on_duty?: number
+          guests_per_fo_employee?: number | null
+          id?: string
+          report_date: string
+          requests_per_hour?: number | null
+          requests_resolved_first_contact?: number
+          requests_total?: number
+          turnover_rate?: number | null
+          updated_at?: string
+          upsell_attempts?: number
+          upsell_conversion_pct?: number | null
+          upsell_rev_per_arrival?: number | null
+          upsell_revenue?: number
+          upsell_successes?: number
+        }
+        Update: {
+          arrivals_total?: number
+          attendance_rate?: number | null
+          avg_checkin_time_sec?: number
+          avg_checkout_time_sec?: number
+          avg_fo_rating?: number | null
+          avg_queue_time_sec?: number | null
+          created_at?: string
+          departures_total?: number
+          fcr_pct?: number | null
+          fo_complaint_rate_pct?: number | null
+          fo_complaints?: number
+          fo_hours_total?: number
+          fo_ratings_count?: number
+          fo_ratings_sum?: number
+          fo_staff_on_duty?: number
+          guests_per_fo_employee?: number | null
+          id?: string
+          report_date?: string
+          requests_per_hour?: number | null
+          requests_resolved_first_contact?: number
+          requests_total?: number
+          turnover_rate?: number | null
+          updated_at?: string
+          upsell_attempts?: number
+          upsell_conversion_pct?: number | null
+          upsell_rev_per_arrival?: number | null
+          upsell_revenue?: number
+          upsell_successes?: number
+        }
+        Relationships: []
+      }
       hk_daily_reports: {
         Row: {
           attendance_rate: number | null

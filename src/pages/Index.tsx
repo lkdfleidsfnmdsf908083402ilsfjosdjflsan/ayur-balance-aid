@@ -6,6 +6,7 @@ import { TrendDashboardView } from '@/components/views/TrendDashboardView';
 import { HousekeepingKpiView } from '@/components/views/HousekeepingKpiView';
 import { KitchenKpiView } from '@/components/views/KitchenKpiView';
 import { ServiceKpiView } from '@/components/views/ServiceKpiView';
+import { FrontOfficeKpiView } from '@/components/views/FrontOfficeKpiView';
 import { BudgetPlanungView } from '@/components/views/BudgetPlanungView';
 import { KpiAlarmeView } from '@/components/views/KpiAlarmeView';
 import { AbteilungsleiterView } from '@/components/views/AbteilungsleiterView';
@@ -38,6 +39,8 @@ const Index = () => {
         return <KitchenKpiView />;
       case 'service':
         return <ServiceKpiView />;
+      case 'frontoffice':
+        return <FrontOfficeKpiView />;
       case 'budget':
         return <BudgetPlanungView />;
       case 'alarme':
