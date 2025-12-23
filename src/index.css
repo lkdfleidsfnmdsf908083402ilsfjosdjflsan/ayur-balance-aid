@@ -6,30 +6,30 @@
 
 @layer base {
   :root {
-    /* Hintergrundfarben – warmes, dunkles Braun-Grau */
-    --background: 24 15% 9%;
+    /* Hintergrundfarben – dunkles Mandira-Grün statt Schwarz */
+    --background: 150 25% 12%;
     --foreground: 40 30% 98%;
 
-    --card: 24 15% 12%;
+    --card: 150 22% 15%;
     --card-foreground: 40 30% 98%;
 
-    --popover: 24 15% 12%;
+    --popover: 150 22% 15%;
     --popover-foreground: 40 30% 98%;
 
     /* Primärfarbe – warmes Mandira-Gold/Ocker */
     --primary: 38 70% 52%;
-    --primary-foreground: 24 20% 8%;
+    --primary-foreground: 150 25% 10%;
 
     /* Sekundär – softeres Gold */
     --secondary: 38 60% 60%;
-    --secondary-foreground: 24 20% 8%;
+    --secondary-foreground: 150 25% 10%;
 
-    /* Gedämpfte Töne */
-    --muted: 24 15% 18%;
+    /* Gedämpfte Töne – dunkles Grün */
+    --muted: 150 20% 20%;
     --muted-foreground: 35 15% 70%;
 
     /* Akzent – gedecktes, natürliches Grün */
-    --accent: 120 20% 32%;
+    --accent: 150 30% 28%;
     --accent-foreground: 40 30% 98%;
 
     /* Status-Farben */
@@ -40,39 +40,85 @@
     --success-foreground: 40 30% 98%;
 
     --warning: 38 70% 52%;
-    --warning-foreground: 24 20% 8%;
+    --warning-foreground: 150 25% 10%;
 
-    --border: 24 15% 22%;
-    --input: 24 15% 18%;
+    --border: 150 20% 22%;
+    --input: 150 20% 18%;
     --ring: 38 70% 52%;
 
     --radius: 0.5rem;
 
     /* Custom tokens */
-    --gradient-card: linear-gradient(135deg, hsl(24 15% 14%) 0%, hsl(24 15% 10%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(150 22% 17%) 0%, hsl(150 25% 13%) 100%);
     --gradient-primary: linear-gradient(135deg, hsl(38 70% 55%) 0%, hsl(38 70% 42%) 100%);
     --gradient-gold: linear-gradient(135deg, hsl(38 70% 58%) 0%, hsl(38 70% 45%) 100%);
-    --gradient-surface: linear-gradient(180deg, hsl(24 15% 14%) 0%, hsl(24 15% 10%) 100%);
+    --gradient-surface: linear-gradient(180deg, hsl(150 22% 17%) 0%, hsl(150 25% 13%) 100%);
     
-    --shadow-sm: 0 1px 2px 0 hsl(24 15% 4% / 0.3);
-    --shadow-md: 0 4px 6px -1px hsl(24 15% 4% / 0.4), 0 2px 4px -2px hsl(24 15% 4% / 0.3);
-    --shadow-lg: 0 10px 15px -3px hsl(24 15% 4% / 0.5), 0 4px 6px -4px hsl(24 15% 4% / 0.4);
+    --shadow-sm: 0 1px 2px 0 hsl(150 25% 4% / 0.3);
+    --shadow-md: 0 4px 6px -1px hsl(150 25% 4% / 0.4), 0 2px 4px -2px hsl(150 25% 4% / 0.3);
+    --shadow-lg: 0 10px 15px -3px hsl(150 25% 4% / 0.5), 0 4px 6px -4px hsl(150 25% 4% / 0.4);
     --shadow-glow: 0 0 25px hsl(38 70% 52% / 0.18);
-    --shadow-gold: 0 0 28px hsl(120 20% 32% / 0.22);
+    --shadow-gold: 0 0 28px hsl(150 30% 28% / 0.22);
 
-    --sidebar-background: 24 15% 7%;
+    --sidebar-background: 150 25% 9%;
     --sidebar-foreground: 35 15% 85%;
     --sidebar-primary: 38 70% 52%;
-    --sidebar-primary-foreground: 24 20% 8%;
-    --sidebar-accent: 24 15% 15%;
+    --sidebar-primary-foreground: 150 25% 10%;
+    --sidebar-accent: 150 22% 18%;
     --sidebar-accent-foreground: 40 30% 98%;
-    --sidebar-border: 24 15% 20%;
+    --sidebar-border: 150 20% 20%;
     --sidebar-ring: 38 70% 52%;
   }
 
+  /* Light Mode – invertierte Mandira-Farben */
+  .light {
+    --background: 40 30% 96%;
+    --foreground: 150 25% 12%;
+
+    --card: 40 25% 99%;
+    --card-foreground: 150 25% 12%;
+
+    --popover: 40 25% 99%;
+    --popover-foreground: 150 25% 12%;
+
+    --primary: 38 70% 45%;
+    --primary-foreground: 40 30% 98%;
+
+    --secondary: 38 50% 55%;
+    --secondary-foreground: 150 25% 10%;
+
+    --muted: 40 20% 90%;
+    --muted-foreground: 150 15% 40%;
+
+    --accent: 150 25% 35%;
+    --accent-foreground: 40 30% 98%;
+
+    --destructive: 2 65% 50%;
+    --destructive-foreground: 40 30% 98%;
+
+    --success: 130 35% 35%;
+    --success-foreground: 40 30% 98%;
+
+    --warning: 38 70% 45%;
+    --warning-foreground: 150 25% 10%;
+
+    --border: 150 15% 80%;
+    --input: 40 20% 92%;
+    --ring: 38 70% 45%;
+
+    --sidebar-background: 40 25% 97%;
+    --sidebar-foreground: 150 25% 15%;
+    --sidebar-primary: 38 70% 45%;
+    --sidebar-primary-foreground: 40 30% 98%;
+    --sidebar-accent: 40 20% 92%;
+    --sidebar-accent-foreground: 150 25% 12%;
+    --sidebar-border: 150 15% 85%;
+    --sidebar-ring: 38 70% 45%;
+  }
+
   .dark {
-    --background: 222 47% 8%;
-    --foreground: 210 20% 95%;
+    --background: 150 25% 12%;
+    --foreground: 40 30% 98%;
   }
 }
 
@@ -121,6 +167,12 @@
 
   .data-neutral {
     @apply text-muted-foreground;
+  }
+
+  /* Logo-Styling im Mandira Gold-Farbton */
+  .logo-mark {
+    color: hsl(38 70% 52%);
+    fill: hsl(38 70% 52%);
   }
 }
 
