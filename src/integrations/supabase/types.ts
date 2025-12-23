@@ -296,6 +296,181 @@ export type Database = {
         }
         Relationships: []
       }
+      employee_shifts: {
+        Row: {
+          abwesenheit: Database["public"]["Enums"]["absence_reason"]
+          abwesenheit_notiz: string | null
+          created_at: string
+          datum: string
+          employee_id: string
+          id: string
+          ist_beginn: string | null
+          ist_ende: string | null
+          ist_stunden: number | null
+          pause_minuten: number | null
+          schicht_beginn: string | null
+          schicht_ende: string | null
+          soll_stunden: number
+          ueberstunden: number | null
+          updated_at: string
+        }
+        Insert: {
+          abwesenheit?: Database["public"]["Enums"]["absence_reason"]
+          abwesenheit_notiz?: string | null
+          created_at?: string
+          datum: string
+          employee_id: string
+          id?: string
+          ist_beginn?: string | null
+          ist_ende?: string | null
+          ist_stunden?: number | null
+          pause_minuten?: number | null
+          schicht_beginn?: string | null
+          schicht_ende?: string | null
+          soll_stunden?: number
+          ueberstunden?: number | null
+          updated_at?: string
+        }
+        Update: {
+          abwesenheit?: Database["public"]["Enums"]["absence_reason"]
+          abwesenheit_notiz?: string | null
+          created_at?: string
+          datum?: string
+          employee_id?: string
+          id?: string
+          ist_beginn?: string | null
+          ist_ende?: string | null
+          ist_stunden?: number | null
+          pause_minuten?: number | null
+          schicht_beginn?: string | null
+          schicht_ende?: string | null
+          soll_stunden?: number
+          ueberstunden?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_shifts_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_time_balances: {
+        Row: {
+          created_at: string
+          employee_id: string
+          id: string
+          jahr: number
+          krankheitstage: number
+          monat: number
+          ueberstunden_abgebaut: number
+          ueberstunden_neu: number
+          ueberstunden_saldo: number
+          updated_at: string
+          urlaub_anspruch_tage: number
+          urlaub_genommen_tage: number
+          urlaub_rest_tage: number
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          id?: string
+          jahr: number
+          krankheitstage?: number
+          monat: number
+          ueberstunden_abgebaut?: number
+          ueberstunden_neu?: number
+          ueberstunden_saldo?: number
+          updated_at?: string
+          urlaub_anspruch_tage?: number
+          urlaub_genommen_tage?: number
+          urlaub_rest_tage?: number
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          id?: string
+          jahr?: number
+          krankheitstage?: number
+          monat?: number
+          ueberstunden_abgebaut?: number
+          ueberstunden_neu?: number
+          ueberstunden_saldo?: number
+          updated_at?: string
+          urlaub_anspruch_tage?: number
+          urlaub_genommen_tage?: number
+          urlaub_rest_tage?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_time_balances_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          abteilung: string
+          aktiv: boolean
+          anstellungsart: Database["public"]["Enums"]["employment_type"]
+          austrittsdatum: string | null
+          created_at: string
+          eintrittsdatum: string
+          email: string | null
+          id: string
+          nachname: string
+          personalnummer: string
+          position: string | null
+          stundenlohn: number
+          telefon: string | null
+          updated_at: string
+          vorname: string
+          wochenstunden_soll: number
+        }
+        Insert: {
+          abteilung: string
+          aktiv?: boolean
+          anstellungsart?: Database["public"]["Enums"]["employment_type"]
+          austrittsdatum?: string | null
+          created_at?: string
+          eintrittsdatum: string
+          email?: string | null
+          id?: string
+          nachname: string
+          personalnummer: string
+          position?: string | null
+          stundenlohn?: number
+          telefon?: string | null
+          updated_at?: string
+          vorname: string
+          wochenstunden_soll?: number
+        }
+        Update: {
+          abteilung?: string
+          aktiv?: boolean
+          anstellungsart?: Database["public"]["Enums"]["employment_type"]
+          austrittsdatum?: string | null
+          created_at?: string
+          eintrittsdatum?: string
+          email?: string | null
+          id?: string
+          nachname?: string
+          personalnummer?: string
+          position?: string | null
+          stundenlohn?: number
+          telefon?: string | null
+          updated_at?: string
+          vorname?: string
+          wochenstunden_soll?: number
+        }
+        Relationships: []
+      }
       frontoffice_daily_reports: {
         Row: {
           arrivals_total: number
@@ -957,13 +1132,55 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      v_daily_department_hours: {
+        Row: {
+          abteilung: string | null
+          datum: string | null
+          gesamt_ist_stunden: number | null
+          gesamt_personalkosten: number | null
+          gesamt_soll_stunden: number | null
+          gesamt_ueberstunden: number | null
+          mitarbeiter_anwesend: number | null
+          mitarbeiter_krank: number | null
+          mitarbeiter_urlaub: number | null
+        }
+        Relationships: []
+      }
+      v_employee_department_stats: {
+        Row: {
+          abteilung: string | null
+          aktive_mitarbeiter: number | null
+          aushilfe_count: number | null
+          durchschnitt_stundenlohn: number | null
+          gesamt_wochenstunden_soll: number | null
+          inaktive_mitarbeiter: number | null
+          minijob_count: number | null
+          teilzeit_count: number | null
+          vollzeit_count: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      absence_reason:
+        | "Arbeit"
+        | "Urlaub"
+        | "Krank"
+        | "Fortbildung"
+        | "Frei"
+        | "Überstundenabbau"
+        | "Elternzeit"
+        | "Sonstiges"
+      employment_type:
+        | "Vollzeit"
+        | "Teilzeit"
+        | "Mini-Job"
+        | "Aushilfe"
+        | "Praktikant"
+        | "Azubi"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1090,6 +1307,25 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      absence_reason: [
+        "Arbeit",
+        "Urlaub",
+        "Krank",
+        "Fortbildung",
+        "Frei",
+        "Überstundenabbau",
+        "Elternzeit",
+        "Sonstiges",
+      ],
+      employment_type: [
+        "Vollzeit",
+        "Teilzeit",
+        "Mini-Job",
+        "Aushilfe",
+        "Praktikant",
+        "Azubi",
+      ],
+    },
   },
 } as const
