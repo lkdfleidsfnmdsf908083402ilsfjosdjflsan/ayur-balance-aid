@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { 
   LayoutDashboard, 
@@ -25,6 +25,7 @@ import {
   UserCircle,
   CalendarDays,
   Clock,
+  ClipboardList,
   LucideIcon
 } from 'lucide-react';
 import { MandiraLogo } from '@/components/MandiraLogo';
@@ -54,6 +55,8 @@ const isNavGroup = (entry: NavEntry): entry is NavGroup => {
   return 'items' in entry;
 };
 
+const SIDEBAR_STORAGE_KEY = 'sidebar-open-groups';
+
 const navStructure: NavEntry[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { 
@@ -78,7 +81,8 @@ const navStructure: NavEntry[] = [
     icon: Users,
     items: [
       { id: 'mitarbeiter', label: 'Mitarbeiter', icon: UserCircle },
-      { id: 'schichtplanung', label: 'Schichtplanung', icon: CalendarDays },
+      { id: 'schichtplanung', label: 'Schichtplanung (Alle)', icon: CalendarDays },
+      { id: 'abteilung-schichtplanung', label: 'Abteilungs-Schichtplan', icon: ClipboardList },
       { id: 'zeitkonten', label: 'Zeitkonten', icon: Clock },
       { id: 'personal-kpis', label: 'Personal-KPIs', icon: Users },
     ]
@@ -109,7 +113,28 @@ const navStructure: NavEntry[] = [
 
 export function Sidebar({ activeView, onViewChange }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
-  const [openGroups, setOpenGroups] = useState<string[]>(['abteilung-kpis', 'personal-gruppe']);
+  
+  // Load saved state from LocalStorage
+  const [openGroups, setOpenGroups] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(SIDEBAR_STORAGE_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error('Error loading sidebar state:', e);
+    }
+    return ['abteilung-kpis', 'personal-gruppe'];
+  });
+
+  // Save state to LocalStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(SIDEBAR_STORAGE_KEY, JSON.stringify(openGroups));
+    } catch (e) {
+      console.error('Error saving sidebar state:', e);
+    }
+  }, [openGroups]);
 
   const toggleGroup = (groupId: string) => {
     setOpenGroups(prev => 
