@@ -601,6 +601,20 @@ export function MitarbeiterStammdatenView() {
                       </TableCell>
                     </TableRow>
                   )}
+                  {/* Summenzeile */}
+                  {filteredEmployees.length > 0 && (
+                    <TableRow className="bg-muted/50 font-semibold border-t-2">
+                      <TableCell colSpan={5} className="text-right">Summe ({filteredEmployees.length} Mitarbeiter)</TableCell>
+                      <TableCell className="text-right">
+                        {filteredEmployees.reduce((sum, e) => sum + e.wochenstunden_soll, 0).toFixed(1)}h
+                      </TableCell>
+                      <TableCell className="text-right">-</TableCell>
+                      <TableCell className="text-right text-primary">
+                        {filteredEmployees.reduce((sum, e) => sum + (e.stundenlohn * e.wochenstunden_soll * 52) / 14, 0).toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
+                      </TableCell>
+                      <TableCell colSpan={3}></TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>
