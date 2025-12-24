@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Users, Building2, Clock, Euro, Info } from 'lucide-react';
+import { Plus, Pencil, Trash2, Users, Building2, Clock, Euro, Info, Search } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
@@ -65,7 +65,7 @@ export function MitarbeiterStammdatenView() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [formData, setFormData] = useState<Omit<Employee, 'id'>>(initialFormData);
-  const [filter, setFilter] = useState({ abteilung: 'alle', aktiv: 'alle' });
+  const [filter, setFilter] = useState({ abteilung: 'alle', aktiv: 'alle', suche: '' });
   const [lohnaufwandMonat, setLohnaufwandMonat] = useState<number>(0);
 
   // Berechne Stundenlohn aus monatlichem Lohnaufwand (Österreich: 14 Monatsgehälter)
@@ -202,6 +202,14 @@ export function MitarbeiterStammdatenView() {
     if (filter.abteilung !== 'alle' && e.abteilung !== filter.abteilung) return false;
     if (filter.aktiv === 'aktiv' && !e.aktiv) return false;
     if (filter.aktiv === 'inaktiv' && e.aktiv) return false;
+    if (filter.suche) {
+      const suchbegriff = filter.suche.toLowerCase();
+      const vollName = `${e.vorname} ${e.nachname}`.toLowerCase();
+      const matchName = vollName.includes(suchbegriff);
+      const matchNummer = e.personalnummer.toLowerCase().includes(suchbegriff);
+      const matchEmail = e.email?.toLowerCase().includes(suchbegriff);
+      if (!matchName && !matchNummer && !matchEmail) return false;
+    }
     return true;
   });
 
@@ -482,7 +490,19 @@ export function MitarbeiterStammdatenView() {
           <CardTitle className="text-lg">Filter</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4 flex-wrap">
+          <div className="flex gap-4 flex-wrap items-end">
+            <div className="min-w-[250px] flex-1 max-w-md">
+              <Label>Suche</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Name, Personalnummer oder E-Mail..."
+                  value={filter.suche}
+                  onChange={(e) => setFilter({ ...filter, suche: e.target.value })}
+                  className="pl-9"
+                />
+              </div>
+            </div>
             <div className="min-w-[200px]">
               <Label>Abteilung</Label>
               <Select value={filter.abteilung} onValueChange={(v) => setFilter({ ...filter, abteilung: v })}>
