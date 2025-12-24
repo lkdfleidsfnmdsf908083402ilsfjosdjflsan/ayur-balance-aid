@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Plus, Calendar, Clock, Users, TrendingUp, TrendingDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Calendar, Clock, Users, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, addDays, addWeeks, subWeeks, eachDayOfInterval, isSameDay } from 'date-fns';
 import { de } from 'date-fns/locale';
 
@@ -58,6 +58,7 @@ export function SchichtplanungView() {
   const [loading, setLoading] = useState(true);
   const [currentWeek, setCurrentWeek] = useState(new Date());
   const [filterAbteilung, setFilterAbteilung] = useState('alle');
+  const [searchTerm, setSearchTerm] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -105,9 +106,18 @@ export function SchichtplanungView() {
   };
 
   const filteredEmployees = useMemo(() => {
-    if (filterAbteilung === 'alle') return employees;
-    return employees.filter(e => e.abteilung === filterAbteilung);
-  }, [employees, filterAbteilung]);
+    return employees.filter(e => {
+      if (filterAbteilung !== 'alle' && e.abteilung !== filterAbteilung) return false;
+      if (searchTerm) {
+        const suchbegriff = searchTerm.toLowerCase();
+        const vollName = `${e.vorname} ${e.nachname}`.toLowerCase();
+        const matchName = vollName.includes(suchbegriff);
+        const matchNummer = e.personalnummer.toLowerCase().includes(suchbegriff);
+        if (!matchName && !matchNummer) return false;
+      }
+      return true;
+    });
+  }, [employees, filterAbteilung, searchTerm]);
 
   const getShiftForDay = (employeeId: string, date: Date): Shift | undefined => {
     return shifts.find(s => 
@@ -320,7 +330,19 @@ export function SchichtplanungView() {
       {/* Filter */}
       <Card>
         <CardContent className="pt-4">
-          <div className="flex gap-4 items-end">
+          <div className="flex gap-4 items-end flex-wrap">
+            <div className="min-w-[250px] flex-1 max-w-md">
+              <Label>Suche</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Name oder Personalnummer..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            </div>
             <div className="min-w-[200px]">
               <Label>Abteilung</Label>
               <Select value={filterAbteilung} onValueChange={setFilterAbteilung}>
@@ -345,16 +367,16 @@ export function SchichtplanungView() {
         <CardHeader>
           <CardTitle className="text-lg">Wochenplan</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {loading ? (
-            <p className="text-muted-foreground">Laden...</p>
+            <p className="text-muted-foreground p-6">Laden...</p>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-auto max-h-[500px]">
               <Table>
-                <TableHeader>
+                <TableHeader className="sticky top-0 bg-background z-20">
                   <TableRow>
-                    <TableHead className="sticky left-0 bg-background z-10 min-w-[150px]">Mitarbeiter</TableHead>
-                    <TableHead className="sticky left-[150px] bg-background z-10">Abteilung</TableHead>
+                    <TableHead className="sticky left-0 bg-background z-30 min-w-[150px]">Mitarbeiter</TableHead>
+                    <TableHead className="sticky left-[150px] bg-background z-30">Abteilung</TableHead>
                     {weekDays.map((day) => (
                       <TableHead key={day.toISOString()} className="text-center min-w-[100px]">
                         <div>{format(day, 'EEE', { locale: de })}</div>
