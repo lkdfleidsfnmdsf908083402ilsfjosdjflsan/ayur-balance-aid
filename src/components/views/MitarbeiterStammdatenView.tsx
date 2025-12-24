@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Users, Building2, Clock, Euro } from 'lucide-react';
+import { Plus, Pencil, Trash2, Users, Building2, Clock, Euro, Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
 
@@ -332,7 +333,19 @@ export function MitarbeiterStammdatenView() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lohnaufwand">Gesamter Lohnaufwand p.m. (€) *</Label>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="lohnaufwand">Gesamter Lohnaufwand p.m. (€) *</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p>Österreichisches System: Berechnung basiert auf 14 Monatsgehältern (inkl. Urlaubs- und Weihnachtsgeld im Juni und November).</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
                 <Input
                   id="lohnaufwand"
                   type="number"
@@ -348,6 +361,16 @@ export function MitarbeiterStammdatenView() {
                       stundenlohn: Math.round(neuerStundenlohn * 100) / 100
                     });
                   }}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="jahresbrutto">Jahresbrutto (€) - berechnet</Label>
+                <Input
+                  id="jahresbrutto"
+                  type="text"
+                  value={(lohnaufwandMonat * 14).toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  disabled
+                  className="bg-muted"
                 />
               </div>
               <div className="space-y-2">
