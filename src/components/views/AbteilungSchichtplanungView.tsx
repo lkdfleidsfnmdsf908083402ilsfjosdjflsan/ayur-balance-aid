@@ -40,7 +40,10 @@ import {
   Sun,
   Calendar,
   BarChart3,
+  FileDown,
 } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import { Database } from "@/integrations/supabase/types";
 
 type AbsenceReason = Database["public"]["Enums"]["absence_reason"];
@@ -262,6 +265,75 @@ export function AbteilungSchichtplanungView() {
     };
   }, [shifts, employees, weekDays]);
 
+  // PDF Export Function
+  const exportToPDF = () => {
+    const doc = new jsPDF({ orientation: "landscape" });
+    
+    const kwNumber = format(currentWeekStart, "ww", { locale: de });
+    const yearNumber = format(currentWeekStart, "yyyy");
+    const weekStartStr = format(currentWeekStart, "dd.MM.yyyy", { locale: de });
+    const weekEndStr = format(addDays(currentWeekStart, 6), "dd.MM.yyyy", { locale: de });
+
+    // Header
+    doc.setFontSize(18);
+    doc.text(`Schichtplan ${selectedAbteilung}`, 14, 20);
+    doc.setFontSize(12);
+    doc.text(`KW ${kwNumber}/${yearNumber} (${weekStartStr} - ${weekEndStr})`, 14, 28);
+    doc.setFontSize(10);
+    doc.text(`Erstellt am: ${format(new Date(), "dd.MM.yyyy HH:mm", { locale: de })}`, 14, 35);
+
+    // Table data
+    const headers = [
+      "Mitarbeiter",
+      ...weekDays.map((day) => format(day, "EEE dd.MM", { locale: de })),
+      "Woche",
+    ];
+
+    const rows = filteredEmployees.map((employee) => {
+      const employeeShifts = weekDays.map((day) => getShiftForDay(employee.id, day));
+      const weekTotal = employeeShifts.reduce(
+        (sum, shift) => sum + (shift?.soll_stunden || 0),
+        0
+      );
+
+      return [
+        `${employee.vorname} ${employee.nachname}`,
+        ...employeeShifts.map((shift) => {
+          if (!shift) return "-";
+          if (shift.abwesenheit === "Arbeit") {
+            return `${shift.schicht_beginn?.slice(0, 5) || "?"}-${shift.schicht_ende?.slice(0, 5) || "?"}\n(${shift.soll_stunden}h)`;
+          }
+          return shift.abwesenheit;
+        }),
+        `${weekTotal}h / ${employee.wochenstunden_soll}h`,
+      ];
+    });
+
+    autoTable(doc, {
+      head: [headers],
+      body: rows,
+      startY: 42,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [59, 130, 246] },
+      columnStyles: {
+        0: { cellWidth: 45 },
+      },
+      theme: "grid",
+    });
+
+    // Summary
+    const finalY = (doc as any).lastAutoTable?.finalY || 150;
+    doc.setFontSize(10);
+    doc.text(`Zusammenfassung:`, 14, finalY + 10);
+    doc.text(`• Mitarbeiter: ${weekStats.mitarbeiterAnzahl}`, 14, finalY + 18);
+    doc.text(`• Soll-Stunden gesamt: ${weekStats.totalSollStunden.toFixed(1)}h`, 14, finalY + 24);
+    doc.text(`• Arbeitstage: ${weekStats.arbeitsTage} | Urlaub: ${weekStats.urlaubTage} | Krank: ${weekStats.krankTage}`, 14, finalY + 30);
+    doc.text(`• Planungsquote: ${weekStats.planungsquote.toFixed(0)}%`, 14, finalY + 36);
+
+    doc.save(`Schichtplan_${selectedAbteilung}_KW${kwNumber}_${yearNumber}.pdf`);
+    toast.success("PDF erfolgreich erstellt");
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -274,6 +346,10 @@ export function AbteilungSchichtplanungView() {
         </div>
 
         <div className="flex items-center gap-4">
+          <Button variant="outline" onClick={exportToPDF} disabled={filteredEmployees.length === 0}>
+            <FileDown className="h-4 w-4 mr-2" />
+            PDF Export
+          </Button>
           <Select value={selectedAbteilung} onValueChange={setSelectedAbteilung}>
             <SelectTrigger className="w-48">
               <SelectValue placeholder="Abteilung wählen" />

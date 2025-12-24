@@ -530,13 +530,16 @@ export function MitarbeiterStammdatenView() {
                     <TableHead>Art</TableHead>
                     <TableHead className="text-right">Std/Woche</TableHead>
                     <TableHead className="text-right">€/Std</TableHead>
+                    <TableHead className="text-right">Lohnaufwand p.m.</TableHead>
                     <TableHead>Eintritt</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Aktionen</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredEmployees.map((e) => (
+                  {filteredEmployees.map((e) => {
+                    const lohnaufwandPM = (e.stundenlohn * e.wochenstunden_soll * 52) / 14;
+                    return (
                     <TableRow key={e.id} className={!e.aktiv ? 'opacity-50' : ''}>
                       <TableCell className="font-mono">{e.personalnummer}</TableCell>
                       <TableCell className="font-medium">{e.nachname}, {e.vorname}</TableCell>
@@ -549,6 +552,9 @@ export function MitarbeiterStammdatenView() {
                       </TableCell>
                       <TableCell className="text-right">{e.wochenstunden_soll}h</TableCell>
                       <TableCell className="text-right">{e.stundenlohn.toFixed(2)}€</TableCell>
+                      <TableCell className="text-right font-medium">
+                        {lohnaufwandPM.toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
+                      </TableCell>
                       <TableCell>{format(new Date(e.eintrittsdatum), 'dd.MM.yyyy', { locale: de })}</TableCell>
                       <TableCell>
                         <Badge variant={e.aktiv ? 'default' : 'destructive'}>
@@ -566,10 +572,11 @@ export function MitarbeiterStammdatenView() {
                         </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                    );
+                  })}
                   {filteredEmployees.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
                         Keine Mitarbeiter gefunden
                       </TableCell>
                     </TableRow>
