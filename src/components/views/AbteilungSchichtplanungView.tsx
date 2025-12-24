@@ -274,13 +274,45 @@ export function AbteilungSchichtplanungView() {
     const weekStartStr = format(currentWeekStart, "dd.MM.yyyy", { locale: de });
     const weekEndStr = format(addDays(currentWeekStart, 6), "dd.MM.yyyy", { locale: de });
 
+    // Logo (Mandira SVG Path as text representation)
+    doc.setFontSize(24);
+    doc.setTextColor(59, 130, 246);
+    doc.text("MANDIRA", 14, 18);
+    doc.setTextColor(0, 0, 0);
+
     // Header
-    doc.setFontSize(18);
-    doc.text(`Schichtplan ${selectedAbteilung}`, 14, 20);
-    doc.setFontSize(12);
-    doc.text(`KW ${kwNumber}/${yearNumber} (${weekStartStr} - ${weekEndStr})`, 14, 28);
-    doc.setFontSize(10);
-    doc.text(`Erstellt am: ${format(new Date(), "dd.MM.yyyy HH:mm", { locale: de })}`, 14, 35);
+    doc.setFontSize(16);
+    doc.text(`Schichtplan ${selectedAbteilung}`, 14, 30);
+    doc.setFontSize(11);
+    doc.text(`KW ${kwNumber}/${yearNumber} (${weekStartStr} - ${weekEndStr})`, 14, 38);
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Erstellt am: ${format(new Date(), "dd.MM.yyyy HH:mm", { locale: de })}`, 14, 45);
+    doc.setTextColor(0, 0, 0);
+
+    // Legend
+    const legendY = 18;
+    const legendX = 200;
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.text("Legende:", legendX, legendY);
+    doc.setFont("helvetica", "normal");
+    
+    const legendItems = [
+      { label: "Arbeit", color: [34, 197, 94] },      // green
+      { label: "Urlaub", color: [59, 130, 246] },     // blue
+      { label: "Krank", color: [239, 68, 68] },       // red
+      { label: "Fortbildung", color: [168, 85, 247] }, // purple
+      { label: "Frei", color: [156, 163, 175] },      // gray
+      { label: "Überstundenabbau", color: [249, 115, 22] }, // orange
+    ];
+
+    legendItems.forEach((item, index) => {
+      const y = legendY + 6 + (index * 5);
+      doc.setFillColor(item.color[0], item.color[1], item.color[2]);
+      doc.rect(legendX, y - 3, 8, 4, "F");
+      doc.text(item.label, legendX + 10, y);
+    });
 
     // Table data
     const headers = [
@@ -309,26 +341,56 @@ export function AbteilungSchichtplanungView() {
       ];
     });
 
+    // Cell coloring based on absence type
     autoTable(doc, {
       head: [headers],
       body: rows,
-      startY: 42,
+      startY: 52,
       styles: { fontSize: 8, cellPadding: 2 },
       headStyles: { fillColor: [59, 130, 246] },
       columnStyles: {
         0: { cellWidth: 45 },
       },
       theme: "grid",
+      didParseCell: (data) => {
+        if (data.section === "body" && data.column.index > 0 && data.column.index < 8) {
+          const cellText = String(data.cell.raw);
+          if (cellText.includes("Urlaub")) {
+            data.cell.styles.fillColor = [219, 234, 254]; // blue-100
+          } else if (cellText.includes("Krank")) {
+            data.cell.styles.fillColor = [254, 226, 226]; // red-100
+          } else if (cellText.includes("Fortbildung")) {
+            data.cell.styles.fillColor = [243, 232, 255]; // purple-100
+          } else if (cellText.includes("Frei")) {
+            data.cell.styles.fillColor = [243, 244, 246]; // gray-100
+          } else if (cellText.includes("Überstunden")) {
+            data.cell.styles.fillColor = [255, 237, 213]; // orange-100
+          } else if (cellText.includes("-") && cellText.length < 3) {
+            data.cell.styles.fillColor = [249, 250, 251]; // gray-50
+          } else if (cellText.includes(":")) {
+            data.cell.styles.fillColor = [220, 252, 231]; // green-100
+          }
+        }
+      },
     });
 
     // Summary
     const finalY = (doc as any).lastAutoTable?.finalY || 150;
     doc.setFontSize(10);
-    doc.text(`Zusammenfassung:`, 14, finalY + 10);
+    doc.setFont("helvetica", "bold");
+    doc.text("Zusammenfassung:", 14, finalY + 10);
+    doc.setFont("helvetica", "normal");
     doc.text(`• Mitarbeiter: ${weekStats.mitarbeiterAnzahl}`, 14, finalY + 18);
     doc.text(`• Soll-Stunden gesamt: ${weekStats.totalSollStunden.toFixed(1)}h`, 14, finalY + 24);
     doc.text(`• Arbeitstage: ${weekStats.arbeitsTage} | Urlaub: ${weekStats.urlaubTage} | Krank: ${weekStats.krankTage}`, 14, finalY + 30);
     doc.text(`• Planungsquote: ${weekStats.planungsquote.toFixed(0)}%`, 14, finalY + 36);
+
+    // Footer
+    const pageHeight = doc.internal.pageSize.height;
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text("MANDIRA Hotel Management System", 14, pageHeight - 10);
+    doc.text(`Seite 1`, doc.internal.pageSize.width - 25, pageHeight - 10);
 
     doc.save(`Schichtplan_${selectedAbteilung}_KW${kwNumber}_${yearNumber}.pdf`);
     toast.success("PDF erfolgreich erstellt");
