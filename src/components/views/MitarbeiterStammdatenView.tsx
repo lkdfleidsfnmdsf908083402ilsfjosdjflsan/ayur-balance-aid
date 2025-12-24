@@ -515,13 +515,13 @@ export function MitarbeiterStammdatenView() {
         <CardHeader>
           <CardTitle className="text-lg">Mitarbeiterliste ({filteredEmployees.length})</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {loading ? (
-            <p className="text-muted-foreground">Laden...</p>
+            <p className="text-muted-foreground p-6">Laden...</p>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-auto max-h-[500px]">
               <Table>
-                <TableHeader>
+                <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
                     <TableHead>Nr.</TableHead>
                     <TableHead>Name</TableHead>
