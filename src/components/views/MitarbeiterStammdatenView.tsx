@@ -67,17 +67,20 @@ export function MitarbeiterStammdatenView() {
   const [filter, setFilter] = useState({ abteilung: 'alle', aktiv: 'alle' });
   const [lohnaufwandMonat, setLohnaufwandMonat] = useState<number>(0);
 
-  // Berechne Stundenlohn aus monatlichem Lohnaufwand
-  // Formel: Monatslohn / (Wochenstunden * 4.33 Wochen/Monat)
+  // Berechne Stundenlohn aus monatlichem Lohnaufwand (Österreich: 14 Monatsgehälter)
+  // Formel: (Monatslohn * 14) / (Wochenstunden * 52 Wochen/Jahr)
   const berechneStundenlohn = (monatslohn: number, wochenstunden: number): number => {
     if (wochenstunden <= 0) return 0;
-    const monatsStunden = wochenstunden * 4.33; // Durchschnittliche Wochen pro Monat
-    return monatslohn / monatsStunden;
+    const jahresbrutto = monatslohn * 14; // 14 Monatsgehälter in Österreich
+    const jahresstunden = wochenstunden * 52; // 52 Wochen pro Jahr
+    return jahresbrutto / jahresstunden;
   };
 
   // Berechne Lohnaufwand aus Stundenlohn (für Bearbeitung)
   const berechneLohnaufwand = (stundenlohn: number, wochenstunden: number): number => {
-    return stundenlohn * wochenstunden * 4.33;
+    const jahresstunden = wochenstunden * 52;
+    const jahresbrutto = stundenlohn * jahresstunden;
+    return jahresbrutto / 14; // Zurück auf Monatslohn
   };
 
   useEffect(() => {
