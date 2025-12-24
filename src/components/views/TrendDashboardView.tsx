@@ -15,7 +15,14 @@ import {
   Users,
   Zap,
   BarChart3,
+  Info,
 } from 'lucide-react';
+import {
+  Tooltip as TooltipUI,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import {
   LineChart,
   Line,
@@ -181,6 +188,7 @@ export function TrendDashboardView() {
             vorjahr={ytdSummary.db1Vorjahr}
             icon={TrendingUp}
             variant={ytdSummary.db1 > 0 ? 'success' : 'warning'}
+            tooltip="DB I (Deckungsbeitrag I) = Umsatz − Wareneinsatz. Zeigt den Rohertrag nach Abzug der direkten Warenkosten."
           />
           <YtdCard 
             title="DB II YTD"
@@ -188,6 +196,7 @@ export function TrendDashboardView() {
             vorjahr={ytdSummary.db2Vorjahr}
             icon={TrendingUp}
             variant={ytdSummary.db2 > 0 ? 'success' : 'warning'}
+            tooltip="DB II (Deckungsbeitrag II) = DB I − Personalkosten. Zeigt den Ertrag nach Abzug der Personalkosten."
           />
           <YtdCard 
             title="Personal YTD"
@@ -528,13 +537,15 @@ function YtdCard({
   value,
   vorjahr,
   icon: Icon,
-  variant = 'default' 
+  variant = 'default',
+  tooltip
 }: { 
   title: string; 
   value: number;
   vorjahr?: number;
   icon: React.ElementType;
   variant?: 'default' | 'success' | 'warning';
+  tooltip?: string;
 }) {
   const diff = vorjahr && vorjahr !== 0 ? ((value - vorjahr) / Math.abs(vorjahr)) * 100 : null;
   
@@ -542,7 +553,21 @@ function YtdCard({
     <Card className="glass-card hover:scale-[1.02] transition-all">
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-muted-foreground">{title}</span>
+          <div className="flex items-center gap-1">
+            <span className="text-sm text-muted-foreground">{title}</span>
+            {tooltip && (
+              <TooltipProvider>
+                <TooltipUI>
+                  <TooltipTrigger asChild>
+                    <Info className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p className="text-sm">{tooltip}</p>
+                  </TooltipContent>
+                </TooltipUI>
+              </TooltipProvider>
+            )}
+          </div>
           <Icon className={`h-4 w-4 ${
             variant === 'success' ? 'text-success' : 
             variant === 'warning' ? 'text-warning' : 
