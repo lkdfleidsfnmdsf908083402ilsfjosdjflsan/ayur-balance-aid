@@ -65,6 +65,20 @@ export function MitarbeiterStammdatenView() {
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [formData, setFormData] = useState<Omit<Employee, 'id'>>(initialFormData);
   const [filter, setFilter] = useState({ abteilung: 'alle', aktiv: 'alle' });
+  const [lohnaufwandMonat, setLohnaufwandMonat] = useState<number>(0);
+
+  // Berechne Stundenlohn aus monatlichem Lohnaufwand
+  // Formel: Monatslohn / (Wochenstunden * 4.33 Wochen/Monat)
+  const berechneStundenlohn = (monatslohn: number, wochenstunden: number): number => {
+    if (wochenstunden <= 0) return 0;
+    const monatsStunden = wochenstunden * 4.33; // Durchschnittliche Wochen pro Monat
+    return monatslohn / monatsStunden;
+  };
+
+  // Berechne Lohnaufwand aus Stundenlohn (für Bearbeitung)
+  const berechneLohnaufwand = (stundenlohn: number, wochenstunden: number): number => {
+    return stundenlohn * wochenstunden * 4.33;
+  };
 
   useEffect(() => {
     loadEmployees();
@@ -162,6 +176,8 @@ export function MitarbeiterStammdatenView() {
       austrittsdatum: employee.austrittsdatum,
       aktiv: employee.aktiv,
     });
+    // Berechne Lohnaufwand aus bestehendem Stundenlohn
+    setLohnaufwandMonat(berechneLohnaufwand(employee.stundenlohn, employee.wochenstunden_soll));
     setDialogOpen(true);
   };
 
@@ -206,6 +222,7 @@ export function MitarbeiterStammdatenView() {
           if (!open) {
             setEditingEmployee(null);
             setFormData(initialFormData);
+            setLohnaufwandMonat(0);
           }
         }}>
           <DialogTrigger asChild>
@@ -300,18 +317,44 @@ export function MitarbeiterStammdatenView() {
                   min={0}
                   max={60}
                   value={formData.wochenstunden_soll}
-                  onChange={(e) => setFormData({ ...formData, wochenstunden_soll: parseFloat(e.target.value) || 0 })}
+                  onChange={(e) => {
+                    const neueStunden = parseFloat(e.target.value) || 0;
+                    const neuerStundenlohn = berechneStundenlohn(lohnaufwandMonat, neueStunden);
+                    setFormData({ 
+                      ...formData, 
+                      wochenstunden_soll: neueStunden,
+                      stundenlohn: Math.round(neuerStundenlohn * 100) / 100
+                    });
+                  }}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="stundenlohn">Stundenlohn (€) *</Label>
+                <Label htmlFor="lohnaufwand">Gesamter Lohnaufwand p.m. (€) *</Label>
                 <Input
-                  id="stundenlohn"
+                  id="lohnaufwand"
                   type="number"
                   min={0}
                   step={0.01}
-                  value={formData.stundenlohn}
-                  onChange={(e) => setFormData({ ...formData, stundenlohn: parseFloat(e.target.value) || 0 })}
+                  value={lohnaufwandMonat}
+                  onChange={(e) => {
+                    const neuerLohnaufwand = parseFloat(e.target.value) || 0;
+                    setLohnaufwandMonat(neuerLohnaufwand);
+                    const neuerStundenlohn = berechneStundenlohn(neuerLohnaufwand, formData.wochenstunden_soll);
+                    setFormData({ 
+                      ...formData, 
+                      stundenlohn: Math.round(neuerStundenlohn * 100) / 100
+                    });
+                  }}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="stundenlohn">Stundenlohn (€) - berechnet</Label>
+                <Input
+                  id="stundenlohn"
+                  type="number"
+                  value={formData.stundenlohn.toFixed(2)}
+                  disabled
+                  className="bg-muted"
                 />
               </div>
               <div className="space-y-2">
