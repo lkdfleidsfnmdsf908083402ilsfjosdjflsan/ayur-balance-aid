@@ -828,6 +828,33 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          abteilung: string | null
+          created_at: string
+          email: string
+          id: string
+          name: string | null
+          updated_at: string
+        }
+        Insert: {
+          abteilung?: string | null
+          created_at?: string
+          email: string
+          id: string
+          name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          abteilung?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       salden_monat: {
         Row: {
           created_at: string
@@ -1142,6 +1169,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       v_daily_department_hours: {
@@ -1225,6 +1273,13 @@ export type Database = {
           ueberstunden: number
         }[]
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       absence_reason:
@@ -1236,6 +1291,7 @@ export type Database = {
         | "Überstundenabbau"
         | "Elternzeit"
         | "Sonstiges"
+      app_role: "admin" | "abteilungsleiter" | "mitarbeiter"
       employment_type:
         | "Vollzeit"
         | "Teilzeit"
@@ -1380,6 +1436,7 @@ export const Constants = {
         "Elternzeit",
         "Sonstiges",
       ],
+      app_role: ["admin", "abteilungsleiter", "mitarbeiter"],
       employment_type: [
         "Vollzeit",
         "Teilzeit",
