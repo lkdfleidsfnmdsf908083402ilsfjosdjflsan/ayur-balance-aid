@@ -11,6 +11,7 @@ export interface Konto {
 export type Bereich = 
   | 'Logis'
   | 'F&B'
+  | 'Rezeption'
   | 'Spa'
   | 'Ärztin'
   | 'Shop'

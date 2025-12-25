@@ -13,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const allBereiche: Bereich[] = [
-  'Logis', 'F&B', 'Spa', 'Ärztin', 'Shop',
+  'Logis', 'F&B', 'Rezeption', 'Spa', 'Ärztin', 'Shop',
   'Verwaltung', 'Technik', 'Energie', 'Marketing', 'Personal', 'Finanzierung', 'Sonstiges'
 ];
 

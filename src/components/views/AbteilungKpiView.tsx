@@ -49,6 +49,7 @@ import {
 const abteilungIcons: Record<Bereich, React.ElementType> = {
   'Logis': Building2,
   'F&B': Utensils,
+  'Rezeption': Building2,
   'Spa': Sparkles,
   'Ärztin': Stethoscope,
   'Shop': ShoppingBag,

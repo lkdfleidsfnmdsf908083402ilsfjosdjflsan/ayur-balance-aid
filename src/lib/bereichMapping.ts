@@ -322,6 +322,7 @@ export function mapKontoklasse(kontonummer: string): string {
 export const bereichColors: Record<Bereich, string> = {
   'Logis': 'hsl(217, 91%, 60%)',
   'F&B': 'hsl(38, 92%, 50%)',
+  'Rezeption': 'hsl(190, 80%, 50%)',
   'Spa': 'hsl(142, 71%, 45%)',
   'Ärztin': 'hsl(280, 70%, 60%)',
   'Shop': 'hsl(340, 75%, 55%)',

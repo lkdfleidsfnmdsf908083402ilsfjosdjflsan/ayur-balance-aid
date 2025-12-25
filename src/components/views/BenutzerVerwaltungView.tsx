@@ -64,6 +64,7 @@ const ROLE_LABELS: Record<AppRole, { label: string; icon: React.ReactNode; color
 const ABTEILUNGEN = [
   'Logis',
   'F&B',
+  'Rezeption',
   'Spa',
   'Ärztin',
   'Shop',
