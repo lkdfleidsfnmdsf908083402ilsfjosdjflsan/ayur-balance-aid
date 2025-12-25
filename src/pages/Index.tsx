@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { DashboardView } from '@/components/views/DashboardView';
 import { AbteilungKpiView } from '@/components/views/AbteilungKpiView';
@@ -28,9 +28,10 @@ import { MobileSchichtplanungView } from '@/components/views/MobileSchichtplanun
 import { useFinanceStore } from '@/store/financeStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useNavigation } from '@/contexts/NavigationContext';
 
 const Index = () => {
-  const [activeView, setActiveView] = useState('dashboard');
+  const { activeView, setActiveView } = useNavigation();
   const { initialize, isInitialized, isLoading } = useFinanceStore();
   const { isAdmin, isAbteilungsleiter } = useAuth();
   const isMobile = useIsMobile();
@@ -106,7 +107,7 @@ const Index = () => {
   return (
     <div className="flex h-screen bg-background">
       <Sidebar activeView={activeView} onViewChange={setActiveView} />
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 flex flex-col overflow-hidden w-full">
         {renderView()}
       </main>
     </div>

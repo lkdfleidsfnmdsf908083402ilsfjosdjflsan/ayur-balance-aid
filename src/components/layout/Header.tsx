@@ -3,6 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { UserMenu } from '@/components/auth/UserMenu';
+import { MobileNav } from '@/components/layout/MobileNav';
 
 const months = [
   'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
@@ -22,22 +23,25 @@ export function Header({ title, description }: HeaderProps) {
   const years = availableYears.length > 0 ? availableYears : [2024, 2025];
 
   return (
-    <header className="h-16 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-6">
-      <div>
-        <h2 className="text-xl font-semibold text-foreground">{title}</h2>
-        {description && (
-          <p className="text-sm text-muted-foreground">{description}</p>
-        )}
+    <header className="h-16 border-b border-border bg-card/50 backdrop-blur-sm flex items-center justify-between px-4 md:px-6">
+      <div className="flex items-center gap-3">
+        <MobileNav />
+        <div>
+          <h2 className="text-lg md:text-xl font-semibold text-foreground">{title}</h2>
+          {description && (
+            <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">{description}</p>
+          )}
+        </div>
       </div>
       
-      <div className="flex items-center gap-3">
-        <Calendar className="h-4 w-4 text-muted-foreground" />
+      <div className="flex items-center gap-2 md:gap-3">
+        <Calendar className="h-4 w-4 text-muted-foreground hidden sm:block" />
         
         <Select 
           value={selectedMonth.toString()} 
           onValueChange={(v) => setSelectedPeriod(selectedYear, parseInt(v))}
         >
-          <SelectTrigger className="w-32 bg-muted border-border">
+          <SelectTrigger className="w-24 md:w-32 bg-muted border-border text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -53,7 +57,7 @@ export function Header({ title, description }: HeaderProps) {
           value={selectedYear.toString()} 
           onValueChange={(v) => setSelectedPeriod(parseInt(v), selectedMonth)}
         >
-          <SelectTrigger className="w-24 bg-muted border-border">
+          <SelectTrigger className="w-20 md:w-24 bg-muted border-border text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -65,11 +69,11 @@ export function Header({ title, description }: HeaderProps) {
           </SelectContent>
         </Select>
 
-        <div className="w-px h-6 bg-border mx-1" />
+        <div className="w-px h-6 bg-border mx-1 hidden md:block" />
         
         <ThemeToggle />
         
-        <div className="w-px h-6 bg-border mx-1" />
+        <div className="w-px h-6 bg-border mx-1 hidden md:block" />
         
         <UserMenu />
       </div>
