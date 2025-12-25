@@ -95,6 +95,7 @@ const navStructure: NavEntry[] = [
       { id: 'budget', label: 'Budgetplanung', icon: Target },
       { id: 'alarme', label: 'KPI-Alarme', icon: Bell },
       { id: 'abteilungsleiter', label: 'Abteilungsleiter', icon: Users },
+      { id: 'benutzerverwaltung', label: 'Benutzerverwaltung', icon: ShieldCheck },
     ]
   },
   {

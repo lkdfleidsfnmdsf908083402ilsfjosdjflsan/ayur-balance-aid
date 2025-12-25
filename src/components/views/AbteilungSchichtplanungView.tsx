@@ -43,6 +43,8 @@ import {
   Calendar,
   BarChart3,
   FileDown,
+  Mail,
+  Loader2,
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -115,6 +117,7 @@ export function AbteilungSchichtplanungView() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sendingEmail, setSendingEmail] = useState(false);
   const [currentWeekStart, setCurrentWeekStart] = useState(() =>
     startOfWeek(new Date(), { weekStartsOn: 1 })
   );
@@ -431,6 +434,107 @@ export function AbteilungSchichtplanungView() {
 
     doc.save(`Schichtplan_${selectedAbteilung}_KW${kwNumber}_${yearNumber}.pdf`);
     toast.success("PDF erfolgreich erstellt");
+    
+    return doc;
+  };
+
+  // Email sending function
+  const sendEmailToLeiter = async () => {
+    setSendingEmail(true);
+    
+    try {
+      // Get the department head for the selected department
+      const { data: leiter, error: leiterError } = await supabase
+        .from("abteilungsleiter")
+        .select("*")
+        .eq("abteilung", selectedAbteilung)
+        .eq("aktiv", true)
+        .maybeSingle();
+      
+      if (leiterError) throw leiterError;
+      
+      if (!leiter) {
+        toast.error(`Kein aktiver Abteilungsleiter für ${selectedAbteilung} gefunden`);
+        setSendingEmail(false);
+        return;
+      }
+
+      // Generate PDF and get base64
+      const doc = new jsPDF({ orientation: "landscape" });
+      const kwNumber = format(currentWeekStart, "ww", { locale: de });
+      const yearNumber = format(currentWeekStart, "yyyy");
+      const weekStartStr = format(currentWeekStart, "dd.MM.yyyy", { locale: de });
+      const weekEndStr = format(addDays(currentWeekStart, 6), "dd.MM.yyyy", { locale: de });
+
+      // Build PDF content (simplified version for email)
+      doc.setFontSize(24);
+      doc.setTextColor(59, 130, 246);
+      doc.text("MANDIRA", 14, 18);
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(16);
+      doc.text(`Schichtplan ${selectedAbteilung}`, 14, 30);
+      doc.setFontSize(11);
+      doc.text(`KW ${kwNumber}/${yearNumber} (${weekStartStr} - ${weekEndStr})`, 14, 38);
+
+      const headers = [
+        "Mitarbeiter",
+        ...weekDays.map((day) => format(day, "EEE dd.MM", { locale: de })),
+        "Woche",
+      ];
+
+      const rows = filteredEmployees.map((employee) => {
+        const employeeShifts = weekDays.map((day) => getShiftForDay(employee.id, day));
+        const weekTotal = employeeShifts.reduce(
+          (sum, shift) => sum + (shift?.soll_stunden || 0),
+          0
+        );
+
+        return [
+          `${employee.vorname} ${employee.nachname}`,
+          ...employeeShifts.map((shift) => {
+            if (!shift) return "-";
+            if (shift.abwesenheit !== "Arbeit") {
+              return shift.abwesenheit;
+            }
+            return formatShiftDisplay(shift);
+          }),
+          `${weekTotal}h`,
+        ];
+      });
+
+      autoTable(doc, {
+        head: [headers],
+        body: rows,
+        startY: 45,
+        styles: { fontSize: 8, cellPadding: 2 },
+        headStyles: { fillColor: [59, 130, 246] },
+        theme: "grid",
+      });
+
+      // Convert to base64
+      const pdfBase64 = doc.output('datauristring').split(',')[1];
+
+      // Send email via edge function
+      const { data, error } = await supabase.functions.invoke('send-shift-plan', {
+        body: {
+          recipientEmail: leiter.email,
+          recipientName: leiter.name,
+          abteilung: selectedAbteilung,
+          weekStart: weekStartStr,
+          weekEnd: weekEndStr,
+          pdfBase64: pdfBase64,
+        },
+      });
+
+      if (error) throw error;
+
+      toast.success(`Schichtplan wurde an ${leiter.name} (${leiter.email}) gesendet`);
+    } catch (error: any) {
+      console.error("Error sending email:", error);
+      toast.error(`Fehler beim Senden: ${error.message}`);
+    } finally {
+      setSendingEmail(false);
+    }
   };
 
   return (
@@ -444,10 +548,22 @@ export function AbteilungSchichtplanungView() {
           </p>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2">
           <Button variant="outline" onClick={exportToPDF} disabled={filteredEmployees.length === 0}>
             <FileDown className="h-4 w-4 mr-2" />
             PDF Export
+          </Button>
+          <Button 
+            variant="default" 
+            onClick={sendEmailToLeiter} 
+            disabled={filteredEmployees.length === 0 || sendingEmail}
+          >
+            {sendingEmail ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Mail className="h-4 w-4 mr-2" />
+            )}
+            An Leiter senden
           </Button>
           <Select value={selectedAbteilung} onValueChange={setSelectedAbteilung}>
             <SelectTrigger className="w-48">
