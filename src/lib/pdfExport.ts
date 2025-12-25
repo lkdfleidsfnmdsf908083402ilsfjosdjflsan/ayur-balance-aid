@@ -759,3 +759,236 @@ export function exportKpiDocumentation() {
   // Download
   doc.save(`KPI-Dokumentation_${new Date().toISOString().split('T')[0]}.pdf`);
 }
+
+/**
+ * Exportiert eine Benutzer-Anleitung für Abteilungsleiter als PDF
+ */
+export function exportUserDocumentation() {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  
+  // Header
+  doc.setFontSize(22);
+  doc.setTextColor(40, 40, 40);
+  doc.text('Benutzerhandbuch', pageWidth / 2, 25, { align: 'center' });
+  
+  doc.setFontSize(12);
+  doc.setTextColor(100, 100, 100);
+  doc.text('Hotel Mandira KPI Dashboard', pageWidth / 2, 33, { align: 'center' });
+  
+  doc.setFontSize(10);
+  doc.text(`Version ${new Date().getFullYear()}.1`, pageWidth - 15, 15, { align: 'right' });
+
+  // ═══════════════════════════════════════════════════════════════
+  // ERSTE SCHRITTE
+  // ═══════════════════════════════════════════════════════════════
+  doc.setFontSize(16);
+  doc.setTextColor(79, 70, 229);
+  doc.text('1. Erste Schritte', 15, 50);
+  
+  doc.setFontSize(10);
+  doc.setTextColor(60, 60, 60);
+  
+  let y = 60;
+  const steps = [
+    '1. Öffnen Sie die App-URL in Ihrem Browser (Desktop oder Mobil)',
+    '2. Auf der Login-Seite: Geben Sie Ihre E-Mail-Adresse und Passwort ein',
+    '3. Falls Sie noch kein Konto haben: Klicken Sie auf "Registrieren"',
+    '4. Nach erfolgreicher Anmeldung sehen Sie Ihr persönliches Dashboard',
+  ];
+  
+  steps.forEach(step => {
+    doc.text(step, 20, y);
+    y += 8;
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // DASHBOARD ÜBERSICHT
+  // ═══════════════════════════════════════════════════════════════
+  y += 10;
+  doc.setFontSize(16);
+  doc.setTextColor(79, 70, 229);
+  doc.text('2. Ihr Dashboard', 15, y);
+  
+  y += 10;
+  doc.setFontSize(10);
+  doc.setTextColor(60, 60, 60);
+  
+  const dashboardInfo = [
+    'Das Dashboard zeigt Ihnen auf einen Blick:',
+    '• Aktuelle Mitarbeiter-Statistiken (Anwesend, Urlaub, Krank)',
+    '• Anwesenheitsquote und Arbeitsstunden des Tages',
+    '• Schnellzugriff auf wichtige Funktionen',
+    '• Aktive KPI-Alarme Ihrer Abteilung',
+  ];
+  
+  dashboardInfo.forEach(info => {
+    doc.text(info, 20, y);
+    y += 7;
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // SCHICHTPLANUNG
+  // ═══════════════════════════════════════════════════════════════
+  y += 10;
+  doc.setFontSize(16);
+  doc.setTextColor(79, 70, 229);
+  doc.text('3. Schichtplanung', 15, y);
+  
+  y += 10;
+  doc.setFontSize(10);
+  doc.setTextColor(60, 60, 60);
+  
+  const schichtInfo = [
+    'In der Schichtplanung können Sie:',
+    '• Wochenansicht der Mitarbeiter-Schichten einsehen',
+    '• Schichten hinzufügen, bearbeiten und löschen',
+    '• Abwesenheiten (Urlaub, Krank, Fortbildung) erfassen',
+    '• Ist-Zeiten nach der Schicht nachtragen',
+    '• Den Schichtplan per E-Mail an Mitarbeiter senden',
+  ];
+  
+  schichtInfo.forEach(info => {
+    doc.text(info, 20, y);
+    y += 7;
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // MITARBEITERVERWALTUNG
+  // ═══════════════════════════════════════════════════════════════
+  y += 10;
+  doc.setFontSize(16);
+  doc.setTextColor(79, 70, 229);
+  doc.text('4. Mitarbeiterverwaltung', 15, y);
+  
+  y += 10;
+  doc.setFontSize(10);
+  doc.setTextColor(60, 60, 60);
+  
+  const maInfo = [
+    'Hier verwalten Sie Ihre Mitarbeiter-Stammdaten:',
+    '• Neue Mitarbeiter anlegen',
+    '• Personalnummer, Name, Kontaktdaten pflegen',
+    '• Anstellungsart (Vollzeit, Teilzeit, Mini-Job) festlegen',
+    '• Wöchentliche Soll-Stunden und Stundenlohn definieren',
+    '• Mitarbeiter aktivieren/deaktivieren',
+  ];
+  
+  maInfo.forEach(info => {
+    doc.text(info, 20, y);
+    y += 7;
+  });
+
+  // Neue Seite
+  doc.addPage();
+
+  // ═══════════════════════════════════════════════════════════════
+  // ZEITKONTEN
+  // ═══════════════════════════════════════════════════════════════
+  doc.setFontSize(16);
+  doc.setTextColor(79, 70, 229);
+  doc.text('5. Zeitkonten', 15, 20);
+  
+  y = 30;
+  doc.setFontSize(10);
+  doc.setTextColor(60, 60, 60);
+  
+  const zeitInfo = [
+    'Die Zeitkonten zeigen pro Mitarbeiter und Monat:',
+    '• Überstunden-Saldo (neu angefallen, abgebaut, aktueller Stand)',
+    '• Urlaubsanspruch, genommene Urlaubstage, Resturlaub',
+    '• Krankheitstage',
+    '• Automatische Berechnung aus den Schichtdaten',
+  ];
+  
+  zeitInfo.forEach(info => {
+    doc.text(info, 20, y);
+    y += 7;
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // KPI ÜBERSICHT
+  // ═══════════════════════════════════════════════════════════════
+  y += 10;
+  doc.setFontSize(16);
+  doc.setTextColor(79, 70, 229);
+  doc.text('6. KPI-Übersicht', 15, y);
+  
+  y += 10;
+  doc.setFontSize(10);
+  doc.setTextColor(60, 60, 60);
+  
+  const kpiInfo = [
+    'In der KPI-Ansicht Ihrer Abteilung sehen Sie:',
+    '• Aktuelle Finanzkennzahlen (Umsatz, DB I, DB II)',
+    '• Personalkosten und Personalquote',
+    '• Vergleich zum Vorjahr und Budget',
+    '• Trend-Entwicklung über die letzten Monate',
+  ];
+  
+  kpiInfo.forEach(info => {
+    doc.text(info, 20, y);
+    y += 7;
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // TIPPS
+  // ═══════════════════════════════════════════════════════════════
+  y += 15;
+  doc.setFontSize(16);
+  doc.setTextColor(79, 70, 229);
+  doc.text('7. Tipps & Tricks', 15, y);
+  
+  y += 10;
+  doc.setFontSize(10);
+  doc.setTextColor(60, 60, 60);
+  
+  const tipps = [
+    '💡 Mobile Nutzung: Die App ist für Smartphones optimiert',
+    '💡 Schnellzugriff: Nutzen Sie die Kacheln im Dashboard',
+    '💡 Daten aktualisieren: Ziehen Sie nach unten (Pull-to-Refresh)',
+    '💡 PDF-Export: Schichtpläne können als PDF exportiert werden',
+    '💡 E-Mail: Senden Sie Schichtpläne direkt an Ihre Mitarbeiter',
+  ];
+  
+  tipps.forEach(tipp => {
+    doc.text(tipp, 20, y);
+    y += 8;
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // SUPPORT
+  // ═══════════════════════════════════════════════════════════════
+  y += 15;
+  doc.setFillColor(245, 245, 250);
+  doc.roundedRect(15, y, pageWidth - 30, 35, 3, 3, 'F');
+  
+  y += 10;
+  doc.setFontSize(12);
+  doc.setTextColor(79, 70, 229);
+  doc.text('Hilfe & Support', 20, y);
+  
+  y += 8;
+  doc.setFontSize(10);
+  doc.setTextColor(60, 60, 60);
+  doc.text('Bei Fragen wenden Sie sich bitte an Ihren Administrator.', 20, y);
+  y += 6;
+  doc.text('Technischer Support: support@hotel-mandira.de', 20, y);
+
+  // Footer auf allen Seiten
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text(
+      `Seite ${i} von ${pageCount} | Benutzerhandbuch | ${new Date().toLocaleDateString('de-DE')}`,
+      pageWidth / 2,
+      doc.internal.pageSize.getHeight() - 10,
+      { align: 'center' }
+    );
+  }
+
+  // Download
+  doc.save(`Benutzerhandbuch_Hotel-Mandira.pdf`);
+}

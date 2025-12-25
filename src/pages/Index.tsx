@@ -25,6 +25,7 @@ import { BereicheView } from '@/components/views/BereicheView';
 import { DatenqualitaetView } from '@/components/views/DatenqualitaetView';
 import { BenutzerVerwaltungView } from '@/components/views/BenutzerVerwaltungView';
 import { MobileSchichtplanungView } from '@/components/views/MobileSchichtplanungView';
+import { AbteilungsleiterDashboardView } from '@/components/views/AbteilungsleiterDashboardView';
 import { useFinanceStore } from '@/store/financeStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -40,17 +41,19 @@ const Index = () => {
     initialize();
   }, [initialize]);
 
-  // Auto-switch to mobile shift planning for Abteilungsleiter on mobile
+  // Auto-switch to abteilungsleiter dashboard for Abteilungsleiter
   useEffect(() => {
-    if (isMobile && isAbteilungsleiter && !isAdmin) {
-      setActiveView('mobile-schichtplanung');
+    if (isAbteilungsleiter && !isAdmin && activeView === 'dashboard') {
+      setActiveView('abteilungsleiter-dashboard');
     }
-  }, [isMobile, isAbteilungsleiter, isAdmin]);
+  }, [isAbteilungsleiter, isAdmin, activeView]);
 
   const renderView = () => {
     switch (activeView) {
       case 'dashboard':
         return <DashboardView />;
+      case 'abteilungsleiter-dashboard':
+        return <AbteilungsleiterDashboardView />;
       case 'abteilung-kpi':
         return <AbteilungKpiView />;
       case 'kpi-trends':
