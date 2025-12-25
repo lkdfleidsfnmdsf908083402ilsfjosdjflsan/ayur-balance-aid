@@ -6,13 +6,17 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Plus, Calendar, Clock, Users, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, Search } from 'lucide-react';
+import { Calendar, Clock, Users, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, Search, Sun, Moon } from 'lucide-react';
 import { format, startOfWeek, endOfWeek, addDays, addWeeks, subWeeks, eachDayOfInterval, isSameDay } from 'date-fns';
 import { de } from 'date-fns/locale';
+import { Database } from '@/integrations/supabase/types';
+
+type AbsenceReason = Database["public"]["Enums"]["absence_reason"];
 
 interface Employee {
   id: string;
@@ -32,25 +36,53 @@ interface Shift {
   soll_stunden: number;
   schicht_beginn: string | null;
   schicht_ende: string | null;
+  vormittag_beginn: string | null;
+  vormittag_ende: string | null;
+  nachmittag_beginn: string | null;
+  nachmittag_ende: string | null;
   ist_stunden: number | null;
   ist_beginn: string | null;
   ist_ende: string | null;
   ueberstunden: number | null;
-  abwesenheit: 'Arbeit' | 'Urlaub' | 'Krank' | 'Fortbildung' | 'Frei' | 'Überstundenabbau' | 'Elternzeit' | 'Sonstiges';
+  abwesenheit: AbsenceReason;
   abwesenheit_notiz: string | null;
   pause_minuten: number;
 }
 
-const ABWESENHEIT_OPTIONS: Shift['abwesenheit'][] = [
-  'Arbeit', 'Urlaub', 'Krank', 'Fortbildung', 'Frei', 'Überstundenabbau', 'Elternzeit', 'Sonstiges'
+const ABWESENHEIT_OPTIONS: { value: AbsenceReason; label: string; color: string }[] = [
+  { value: 'Arbeit', label: 'Arbeit', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' },
+  { value: 'Urlaub', label: 'Urlaub', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100' },
+  { value: 'Krank', label: 'Krank', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100' },
+  { value: 'Fortbildung', label: 'Fortbildung', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100' },
+  { value: 'Frei', label: 'Frei', color: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100' },
+  { value: 'Überstundenabbau', label: 'Überstundenabbau', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100' },
+  { value: 'Elternzeit', label: 'Elternzeit', color: 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-100' },
+  { value: 'Sonstiges', label: 'Sonstiges', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100' },
 ];
 
 const ABTEILUNGEN = [
   'Logis', 'F&B', 'Spa', 'Ärztin', 'Shop', 
   'Verwaltung', 'Technik', 'Energie', 'Marketing', 
   'Personal', 'Finanzierung', 'Sonstiges',
-  'Housekeeping', 'Küche', 'Service', 'Rezeption'
+  'Housekeeping', 'Küche', 'Service', 'Rezeption', 'Front Office'
 ];
+
+interface FormData {
+  soll_stunden: number;
+  schicht_beginn: string;
+  schicht_ende: string;
+  vormittag_beginn: string;
+  vormittag_ende: string;
+  nachmittag_beginn: string;
+  nachmittag_ende: string;
+  ist_stunden: number | null;
+  ist_beginn: string | null;
+  ist_ende: string | null;
+  abwesenheit: AbsenceReason;
+  abwesenheit_notiz: string;
+  pause_minuten: number;
+  schichtTyp: 'einfach' | 'geteilt';
+}
 
 export function SchichtplanungView() {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -62,16 +94,21 @@ export function SchichtplanungView() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [formData, setFormData] = useState<Partial<Shift>>({
+  const [formData, setFormData] = useState<FormData>({
     soll_stunden: 8,
     schicht_beginn: '08:00',
     schicht_ende: '16:30',
+    vormittag_beginn: '08:00',
+    vormittag_ende: '12:00',
+    nachmittag_beginn: '13:00',
+    nachmittag_ende: '17:00',
     ist_stunden: null,
     ist_beginn: null,
     ist_ende: null,
     abwesenheit: 'Arbeit',
     abwesenheit_notiz: '',
     pause_minuten: 30,
+    schichtTyp: 'einfach',
   });
 
   const weekStart = startOfWeek(currentWeek, { weekStartsOn: 1 });
@@ -85,7 +122,6 @@ export function SchichtplanungView() {
   const loadData = async () => {
     setLoading(true);
     
-    // Load employees
     const { data: empData } = await supabase
       .from('employees')
       .select('*')
@@ -93,7 +129,6 @@ export function SchichtplanungView() {
       .order('abteilung', { ascending: true })
       .order('nachname', { ascending: true });
 
-    // Load shifts for current week
     const { data: shiftData } = await supabase
       .from('employee_shifts')
       .select('*')
@@ -101,7 +136,7 @@ export function SchichtplanungView() {
       .lte('datum', format(weekEnd, 'yyyy-MM-dd'));
 
     setEmployees(empData || []);
-    setShifts(shiftData || []);
+    setShifts((shiftData || []) as Shift[]);
     setLoading(false);
   };
 
@@ -132,30 +167,40 @@ export function SchichtplanungView() {
     
     const existingShift = getShiftForDay(employee.id, date);
     if (existingShift) {
+      const hasGeteilteSchicht = existingShift.vormittag_beginn || existingShift.nachmittag_beginn;
       setFormData({
         soll_stunden: existingShift.soll_stunden,
         schicht_beginn: existingShift.schicht_beginn || '08:00',
         schicht_ende: existingShift.schicht_ende || '16:30',
+        vormittag_beginn: existingShift.vormittag_beginn || '08:00',
+        vormittag_ende: existingShift.vormittag_ende || '12:00',
+        nachmittag_beginn: existingShift.nachmittag_beginn || '13:00',
+        nachmittag_ende: existingShift.nachmittag_ende || '17:00',
         ist_stunden: existingShift.ist_stunden,
         ist_beginn: existingShift.ist_beginn,
         ist_ende: existingShift.ist_ende,
         abwesenheit: existingShift.abwesenheit,
         abwesenheit_notiz: existingShift.abwesenheit_notiz || '',
-        pause_minuten: existingShift.pause_minuten,
+        pause_minuten: existingShift.pause_minuten || 30,
+        schichtTyp: hasGeteilteSchicht ? 'geteilt' : 'einfach',
       });
     } else {
-      // Default based on weekly hours
       const dailyHours = employee.wochenstunden_soll / 5;
       setFormData({
         soll_stunden: dailyHours,
         schicht_beginn: '08:00',
-        schicht_ende: format(addDays(new Date(`2000-01-01T08:00`), 0).setMinutes(dailyHours * 60 + 30), 'HH:mm'),
+        schicht_ende: '16:30',
+        vormittag_beginn: '08:00',
+        vormittag_ende: '12:00',
+        nachmittag_beginn: '13:00',
+        nachmittag_ende: '17:00',
         ist_stunden: null,
         ist_beginn: null,
         ist_ende: null,
         abwesenheit: 'Arbeit',
         abwesenheit_notiz: '',
         pause_minuten: 30,
+        schichtTyp: 'einfach',
       });
     }
     
@@ -166,12 +211,20 @@ export function SchichtplanungView() {
     if (!selectedEmployee || !selectedDate) return;
 
     const existingShift = getShiftForDay(selectedEmployee.id, selectedDate);
-    const payload = {
+    
+    const isArbeit = formData.abwesenheit === 'Arbeit';
+    const isGeteilt = formData.schichtTyp === 'geteilt';
+    
+    const payload: any = {
       employee_id: selectedEmployee.id,
       datum: format(selectedDate, 'yyyy-MM-dd'),
       soll_stunden: formData.soll_stunden || 0,
-      schicht_beginn: formData.abwesenheit === 'Arbeit' ? formData.schicht_beginn : null,
-      schicht_ende: formData.abwesenheit === 'Arbeit' ? formData.schicht_ende : null,
+      schicht_beginn: isArbeit && !isGeteilt ? formData.schicht_beginn : null,
+      schicht_ende: isArbeit && !isGeteilt ? formData.schicht_ende : null,
+      vormittag_beginn: isArbeit && isGeteilt ? formData.vormittag_beginn : null,
+      vormittag_ende: isArbeit && isGeteilt ? formData.vormittag_ende : null,
+      nachmittag_beginn: isArbeit && isGeteilt ? formData.nachmittag_beginn : null,
+      nachmittag_ende: isArbeit && isGeteilt ? formData.nachmittag_ende : null,
       ist_stunden: formData.ist_stunden,
       ist_beginn: formData.ist_beginn,
       ist_ende: formData.ist_ende,
@@ -211,20 +264,15 @@ export function SchichtplanungView() {
   };
 
   const getAbwesenheitBadge = (shift: Shift) => {
-    const colors: Record<Shift['abwesenheit'], string> = {
-      'Arbeit': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100',
-      'Urlaub': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100',
-      'Krank': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100',
-      'Fortbildung': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100',
-      'Frei': 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100',
-      'Überstundenabbau': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100',
-      'Elternzeit': 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-100',
-      'Sonstiges': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100',
-    };
-    return colors[shift.abwesenheit] || 'bg-gray-100 text-gray-800';
+    const option = ABWESENHEIT_OPTIONS.find(o => o.value === shift.abwesenheit);
+    return option?.color || 'bg-gray-100 text-gray-800';
   };
 
-  // Wochenstatistiken
+  const getAbwesenheitLabel = (abwesenheit: AbsenceReason) => {
+    const option = ABWESENHEIT_OPTIONS.find(o => o.value === abwesenheit);
+    return option?.label || abwesenheit;
+  };
+
   const weekStats = useMemo(() => {
     const employeeStats = filteredEmployees.map(emp => {
       const empShifts = shifts.filter(s => s.employee_id === emp.id);
@@ -234,14 +282,7 @@ export function SchichtplanungView() {
       const krankTage = empShifts.filter(s => s.abwesenheit === 'Krank').length;
       const urlaubTage = empShifts.filter(s => s.abwesenheit === 'Urlaub').length;
 
-      return {
-        employee: emp,
-        sollGesamt,
-        istGesamt,
-        ueberstundenGesamt,
-        krankTage,
-        urlaubTage,
-      };
+      return { employee: emp, sollGesamt, istGesamt, ueberstundenGesamt, krankTage, urlaubTage };
     });
 
     return {
@@ -253,6 +294,38 @@ export function SchichtplanungView() {
       totalUrlaub: employeeStats.reduce((sum, e) => sum + e.urlaubTage, 0),
     };
   }, [filteredEmployees, shifts]);
+
+  const formatShiftDisplay = (shift: Shift) => {
+    if (shift.abwesenheit !== 'Arbeit') {
+      return shift.abwesenheit.slice(0, 3);
+    }
+    
+    if (shift.vormittag_beginn && shift.nachmittag_beginn) {
+      return (
+        <div className="text-xs space-y-0.5">
+          <div className="flex items-center gap-0.5">
+            <Sun className="h-2.5 w-2.5" />
+            {shift.vormittag_beginn?.slice(0, 5)}-{shift.vormittag_ende?.slice(0, 5)}
+          </div>
+          <div className="flex items-center gap-0.5">
+            <Moon className="h-2.5 w-2.5" />
+            {shift.nachmittag_beginn?.slice(0, 5)}-{shift.nachmittag_ende?.slice(0, 5)}
+          </div>
+        </div>
+      );
+    }
+    
+    return (
+      <>
+        <div>{shift.soll_stunden}h</div>
+        {shift.schicht_beginn && (
+          <div className="text-xs opacity-75">
+            {shift.schicht_beginn.slice(0, 5)}-{shift.schicht_ende?.slice(0, 5)}
+          </div>
+        )}
+      </>
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -271,6 +344,22 @@ export function SchichtplanungView() {
           <Button variant="outline" onClick={() => setCurrentWeek(new Date())}>Heute</Button>
         </div>
       </div>
+
+      {/* Farblegende */}
+      <Card>
+        <CardHeader className="py-3">
+          <CardTitle className="text-sm">Legende</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <div className="flex flex-wrap gap-2">
+            {ABWESENHEIT_OPTIONS.map((option) => (
+              <Badge key={option.value} className={option.color}>
+                {option.label}
+              </Badge>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Wochenstatistiken */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -407,16 +496,7 @@ export function SchichtplanungView() {
                           >
                             {shift ? (
                               <div className={`rounded px-1 py-0.5 text-xs ${getAbwesenheitBadge(shift)}`}>
-                                {shift.abwesenheit === 'Arbeit' ? (
-                                  <>
-                                    <div>{shift.soll_stunden}h</div>
-                                    {shift.ist_stunden !== null && (
-                                      <div className="font-medium">{shift.ist_stunden}h</div>
-                                    )}
-                                  </>
-                                ) : (
-                                  <div>{shift.abwesenheit.slice(0, 3)}</div>
-                                )}
+                                {formatShiftDisplay(shift)}
                               </div>
                             ) : (
                               <div className="text-muted-foreground text-xs">-</div>
@@ -447,48 +527,120 @@ export function SchichtplanungView() {
 
       {/* Schicht-Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
               Schicht: {selectedEmployee?.vorname} {selectedEmployee?.nachname}
               {selectedDate && ` - ${format(selectedDate, 'EEEE, dd.MM.yyyy', { locale: de })}`}
             </DialogTitle>
           </DialogHeader>
+          
           <div className="space-y-4 py-4">
+            {/* Status-Auswahl mit Farblegende */}
             <div className="space-y-2">
-              <Label>Status</Label>
-              <Select 
-                value={formData.abwesenheit} 
-                onValueChange={(v) => setFormData({ ...formData, abwesenheit: v as Shift['abwesenheit'] })}
-              >
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {ABWESENHEIT_OPTIONS.map((a) => (
-                    <SelectItem key={a} value={a}>{a}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Status / Abwesenheit</Label>
+              <div className="grid grid-cols-2 gap-2">
+                {ABWESENHEIT_OPTIONS.map((option) => (
+                  <Button
+                    key={option.value}
+                    type="button"
+                    variant={formData.abwesenheit === option.value ? "default" : "outline"}
+                    className={`justify-start ${formData.abwesenheit === option.value ? '' : option.color}`}
+                    onClick={() => setFormData({ ...formData, abwesenheit: option.value })}
+                  >
+                    {option.label}
+                  </Button>
+                ))}
+              </div>
             </div>
 
             {formData.abwesenheit === 'Arbeit' && (
               <>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Schicht Beginn</Label>
-                    <Input
-                      type="time"
-                      value={formData.schicht_beginn || ''}
-                      onChange={(e) => setFormData({ ...formData, schicht_beginn: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Schicht Ende</Label>
-                    <Input
-                      type="time"
-                      value={formData.schicht_ende || ''}
-                      onChange={(e) => setFormData({ ...formData, schicht_ende: e.target.value })}
-                    />
-                  </div>
+                {/* Schichttyp-Auswahl */}
+                <div className="space-y-2">
+                  <Label>Schichttyp</Label>
+                  <Tabs 
+                    value={formData.schichtTyp} 
+                    onValueChange={(v) => setFormData({ ...formData, schichtTyp: v as 'einfach' | 'geteilt' })}
+                  >
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="einfach">Durchgehend</TabsTrigger>
+                      <TabsTrigger value="geteilt">Geteilt (Vormittag/Nachmittag)</TabsTrigger>
+                    </TabsList>
+                    
+                    <TabsContent value="einfach" className="space-y-4 mt-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Schicht Beginn</Label>
+                          <Input
+                            type="time"
+                            value={formData.schicht_beginn || ''}
+                            onChange={(e) => setFormData({ ...formData, schicht_beginn: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Schicht Ende</Label>
+                          <Input
+                            type="time"
+                            value={formData.schicht_ende || ''}
+                            onChange={(e) => setFormData({ ...formData, schicht_ende: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                    </TabsContent>
+                    
+                    <TabsContent value="geteilt" className="space-y-4 mt-4">
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-sm font-medium">
+                          <Sun className="h-4 w-4 text-yellow-500" />
+                          Vormittag
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Beginn</Label>
+                            <Input
+                              type="time"
+                              value={formData.vormittag_beginn || ''}
+                              onChange={(e) => setFormData({ ...formData, vormittag_beginn: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Ende</Label>
+                            <Input
+                              type="time"
+                              value={formData.vormittag_ende || ''}
+                              onChange={(e) => setFormData({ ...formData, vormittag_ende: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2 text-sm font-medium">
+                          <Moon className="h-4 w-4 text-indigo-500" />
+                          Nachmittag
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Beginn</Label>
+                            <Input
+                              type="time"
+                              value={formData.nachmittag_beginn || ''}
+                              onChange={(e) => setFormData({ ...formData, nachmittag_beginn: e.target.value })}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Ende</Label>
+                            <Input
+                              type="time"
+                              value={formData.nachmittag_ende || ''}
+                              onChange={(e) => setFormData({ ...formData, nachmittag_ende: e.target.value })}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -553,19 +705,21 @@ export function SchichtplanungView() {
 
             {formData.abwesenheit !== 'Arbeit' && (
               <div className="space-y-2">
-                <Label>Notiz</Label>
+                <Label>Notiz / Begründung</Label>
                 <Textarea
                   value={formData.abwesenheit_notiz || ''}
                   onChange={(e) => setFormData({ ...formData, abwesenheit_notiz: e.target.value })}
-                  placeholder="Optionale Bemerkung..."
+                  placeholder={`Optionale Bemerkung zur ${getAbwesenheitLabel(formData.abwesenheit)}...`}
+                  rows={3}
                 />
               </div>
             )}
           </div>
-          <div className="flex justify-end gap-2">
+          
+          <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Abbrechen</Button>
             <Button onClick={handleSaveShift}>Speichern</Button>
-          </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

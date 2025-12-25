@@ -307,12 +307,16 @@ export type Database = {
           ist_beginn: string | null
           ist_ende: string | null
           ist_stunden: number | null
+          nachmittag_beginn: string | null
+          nachmittag_ende: string | null
           pause_minuten: number | null
           schicht_beginn: string | null
           schicht_ende: string | null
           soll_stunden: number
           ueberstunden: number | null
           updated_at: string
+          vormittag_beginn: string | null
+          vormittag_ende: string | null
         }
         Insert: {
           abwesenheit?: Database["public"]["Enums"]["absence_reason"]
@@ -324,12 +328,16 @@ export type Database = {
           ist_beginn?: string | null
           ist_ende?: string | null
           ist_stunden?: number | null
+          nachmittag_beginn?: string | null
+          nachmittag_ende?: string | null
           pause_minuten?: number | null
           schicht_beginn?: string | null
           schicht_ende?: string | null
           soll_stunden?: number
           ueberstunden?: number | null
           updated_at?: string
+          vormittag_beginn?: string | null
+          vormittag_ende?: string | null
         }
         Update: {
           abwesenheit?: Database["public"]["Enums"]["absence_reason"]
@@ -341,12 +349,16 @@ export type Database = {
           ist_beginn?: string | null
           ist_ende?: string | null
           ist_stunden?: number | null
+          nachmittag_beginn?: string | null
+          nachmittag_ende?: string | null
           pause_minuten?: number | null
           schicht_beginn?: string | null
           schicht_ende?: string | null
           soll_stunden?: number
           ueberstunden?: number | null
           updated_at?: string
+          vormittag_beginn?: string | null
+          vormittag_ende?: string | null
         }
         Relationships: [
           {
