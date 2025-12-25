@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { PeriodSelector } from '@/components/PeriodSelector';
 import { calculateAbteilungKpis, calculateGesamtKpis } from '@/lib/kpiCalculations';
 import { formatCurrency } from '@/lib/calculations';
+import { exportTrendToPdf } from '@/lib/pdfExport';
 import { operativeAbteilungen, bereichColors } from '@/lib/bereichMapping';
 import {
   TrendingUp,
@@ -16,6 +17,7 @@ import {
   Zap,
   BarChart3,
   Info,
+  FileDown,
 } from 'lucide-react';
 import {
   Tooltip as TooltipUI,
@@ -171,7 +173,17 @@ export function TrendDashboardView() {
               YTD {selectedYear}
             </Badge>
           </div>
-          <PeriodSelector />
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => exportTrendToPdf(trendData, ytdSummary, selectedYear)}
+              className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              disabled={trendData.length === 0}
+            >
+              <FileDown className="h-4 w-4" />
+              PDF Export
+            </button>
+            <PeriodSelector />
+          </div>
         </div>
 
         {/* YTD-Zusammenfassung */}
