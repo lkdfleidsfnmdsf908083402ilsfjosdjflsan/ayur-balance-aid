@@ -23,15 +23,28 @@ import { KontenView } from '@/components/views/KontenView';
 import { VergleichView } from '@/components/views/VergleichView';
 import { BereicheView } from '@/components/views/BereicheView';
 import { DatenqualitaetView } from '@/components/views/DatenqualitaetView';
+import { BenutzerVerwaltungView } from '@/components/views/BenutzerVerwaltungView';
+import { MobileSchichtplanungView } from '@/components/views/MobileSchichtplanungView';
 import { useFinanceStore } from '@/store/financeStore';
+import { useAuth } from '@/hooks/useAuth';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
   const [activeView, setActiveView] = useState('dashboard');
   const { initialize, isInitialized, isLoading } = useFinanceStore();
+  const { isAdmin, isAbteilungsleiter } = useAuth();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     initialize();
   }, [initialize]);
+
+  // Auto-switch to mobile shift planning for Abteilungsleiter on mobile
+  useEffect(() => {
+    if (isMobile && isAbteilungsleiter && !isAdmin) {
+      setActiveView('mobile-schichtplanung');
+    }
+  }, [isMobile, isAbteilungsleiter, isAdmin]);
 
   const renderView = () => {
     switch (activeView) {
@@ -61,6 +74,8 @@ const Index = () => {
         return <SchichtplanungView />;
       case 'abteilung-schichtplanung':
         return <AbteilungSchichtplanungView />;
+      case 'mobile-schichtplanung':
+        return <MobileSchichtplanungView />;
       case 'zeitkonten':
         return <ZeitkontenView />;
       case 'personal-kpis':
@@ -71,6 +86,8 @@ const Index = () => {
         return <KpiAlarmeView />;
       case 'abteilungsleiter':
         return <AbteilungsleiterView />;
+      case 'benutzerverwaltung':
+        return <BenutzerVerwaltungView />;
       case 'upload':
         return <UploadView />;
       case 'konten':
