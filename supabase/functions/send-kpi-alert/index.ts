@@ -76,48 +76,43 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const statusText = status === 'critical' ? '🔴 KRITISCH' : '🟡 WARNUNG';
-    const schwellenwertText = schwellenwertMin !== undefined && schwellenwertMax !== undefined
-      ? `${schwellenwertMin.toLocaleString('de-DE')} - ${schwellenwertMax.toLocaleString('de-DE')}`
+    // Extract first name from full name
+    const vorname = leiter.name.split(' ')[0];
+    
+    const schwellenwertText = schwellenwertMax !== undefined 
+      ? `${schwellenwertMax.toLocaleString('de-DE')}%`
       : schwellenwertMin !== undefined 
-        ? `Min: ${schwellenwertMin.toLocaleString('de-DE')}`
-        : `Max: ${schwellenwertMax?.toLocaleString('de-DE')}`;
+        ? `${schwellenwertMin.toLocaleString('de-DE')}%`
+        : '';
 
     const emailHtml = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h1 style="color: ${status === 'critical' ? '#dc2626' : '#f59e0b'};">
-          ${statusText}
-        </h1>
-        <h2>KPI-Alarm: ${kpiTyp}</h2>
-        <p>Sehr geehrte/r ${leiter.name},</p>
-        <p>für die Abteilung <strong>${abteilung}</strong> wurde ein KPI-Alarm ausgelöst:</p>
-        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-          <tr style="background: #f3f4f6;">
-            <td style="padding: 12px; border: 1px solid #e5e7eb;"><strong>KPI</strong></td>
-            <td style="padding: 12px; border: 1px solid #e5e7eb;">${kpiTyp}</td>
-          </tr>
-          <tr>
-            <td style="padding: 12px; border: 1px solid #e5e7eb;"><strong>Aktueller Wert</strong></td>
-            <td style="padding: 12px; border: 1px solid #e5e7eb; color: ${status === 'critical' ? '#dc2626' : '#f59e0b'};">
-              ${aktuellerWert.toLocaleString('de-DE')} €
-            </td>
-          </tr>
-          <tr style="background: #f3f4f6;">
-            <td style="padding: 12px; border: 1px solid #e5e7eb;"><strong>Schwellenwert</strong></td>
-            <td style="padding: 12px; border: 1px solid #e5e7eb;">${schwellenwertText}</td>
-          </tr>
-          <tr>
-            <td style="padding: 12px; border: 1px solid #e5e7eb;"><strong>Status</strong></td>
-            <td style="padding: 12px; border: 1px solid #e5e7eb;">${statusText}</td>
-          </tr>
-        </table>
-        <p>Bitte überprüfen Sie die Situation und ergreifen Sie bei Bedarf entsprechende Maßnahmen.</p>
-        <p style="color: #6b7280; font-size: 12px; margin-top: 40px;">
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+        <p style="margin-bottom: 20px;">Hallo ${vorname},</p>
+        
+        <p style="margin-bottom: 20px;">
+          Die ${kpiTyp} Deiner Abteilung <strong>${abteilung}</strong> hat den Schwellenwert von ${schwellenwertText} überschritten 
+          (aktueller Wert: <span style="color: ${status === 'critical' ? '#dc2626' : '#f59e0b'}; font-weight: bold;">${aktuellerWert.toLocaleString('de-DE')}%</span>). 
+          Ich würde gerne wissen woran das liegt und was deine Lösungsvorschläge sind. 
+          Ein dauerhafter Zustand wie dieser darf sich nicht einschleichen.
+        </p>
+        
+        <p style="margin-bottom: 20px;">
+          Ich bin sehr zuversichtlich gemeinsam eine gute Lösung für alle zu finden. 
+          Bis dahin verbleibe ich
+        </p>
+        
+        <p style="margin-bottom: 0;">Mit freundlichen Grüßen</p>
+        <p style="margin-top: 5px;"><strong>Andreas</strong></p>
+        
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;" />
+        <p style="color: #6b7280; font-size: 11px;">
           Diese E-Mail wurde automatisch vom KPI-Überwachungssystem gesendet.
         </p>
       </div>
     `;
 
+    const statusText = status === 'critical' ? 'KRITISCH' : 'WARNUNG';
+    
     const emailResponse = await sendEmail(
       leiter.email,
       `${statusText} - ${kpiTyp} Alarm für ${abteilung}`,
