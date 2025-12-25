@@ -62,13 +62,16 @@ const ROLE_LABELS: Record<AppRole, { label: string; icon: React.ReactNode; color
 };
 
 const ABTEILUNGEN = [
-  'Housekeeping',
-  'Küche',
-  'Service',
-  'Front Office',
-  'Spa & Wellness',
+  'Logis',
+  'F&B',
+  'Spa',
+  'Ärztin',
+  'Shop',
+  'Verwaltung',
   'Technik',
-  'Administration',
+  'Energie',
+  'Marketing',
+  'Personal',
 ];
 
 export function BenutzerVerwaltungView() {
