@@ -270,9 +270,21 @@ export function TrendDashboardView() {
           {/* DB I Trend */}
           <Card className="glass-card">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2">
                 <Package className="h-5 w-5 text-success" />
                 DB I Entwicklung (Rohertrag)
+                <TooltipProvider>
+                  <TooltipUI>
+                    <TooltipTrigger asChild>
+                      <Info className="h-4 w-4 text-muted-foreground hover:text-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p className="text-sm font-semibold mb-1">DB I (Deckungsbeitrag I)</p>
+                      <p className="text-sm">= Umsatz − Wareneinsatz</p>
+                      <p className="text-xs text-muted-foreground mt-1">Zeigt den Rohertrag nach Abzug der direkten Warenkosten.</p>
+                    </TooltipContent>
+                  </TooltipUI>
+                </TooltipProvider>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -321,9 +333,21 @@ export function TrendDashboardView() {
           {/* DB II Trend */}
           <Card className="glass-card">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" />
                 DB II Entwicklung
+                <TooltipProvider>
+                  <TooltipUI>
+                    <TooltipTrigger asChild>
+                      <Info className="h-4 w-4 text-muted-foreground hover:text-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p className="text-sm font-semibold mb-1">DB II (Deckungsbeitrag II)</p>
+                      <p className="text-sm">= DB I − Personalkosten</p>
+                      <p className="text-xs text-muted-foreground mt-1">Zeigt den Ertrag nach Abzug der Personalkosten.</p>
+                    </TooltipContent>
+                  </TooltipUI>
+                </TooltipProvider>
                 <Badge variant="outline" className="ml-auto text-xs">
                   {db2Diff >= 0 ? '+' : ''}{db2Diff.toFixed(1)}%
                 </Badge>
