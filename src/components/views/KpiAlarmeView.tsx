@@ -15,6 +15,7 @@ import { KpiSchwellenwert, KpiTyp, kpiTypLabels, kpiTypGroups, dailyReportAbteil
 import { Bereich } from '@/types/finance';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { exportKpiDocumentation } from '@/lib/pdfExport';
 import {
   Bell,
   BellOff,
@@ -33,6 +34,7 @@ import {
   Users,
   Wrench,
   ClipboardList,
+  Download,
 } from 'lucide-react';
 import {
   Table,
@@ -483,13 +485,25 @@ export function KpiAlarmeView() {
               </Badge>
             )}
           </div>
-          <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Schwellenwert hinzufügen
-              </Button>
-            </DialogTrigger>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              className="gap-2"
+              onClick={() => {
+                exportKpiDocumentation();
+                toast.success('KPI-Dokumentation wurde exportiert');
+              }}
+            >
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline">Dokumentation</span>
+            </Button>
+            <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Schwellenwert hinzufügen
+                </Button>
+              </DialogTrigger>
             <DialogContent className="max-w-lg">
               <DialogHeader>
                 <DialogTitle>Neuen Schwellenwert konfigurieren</DialogTitle>
@@ -593,6 +607,7 @@ export function KpiAlarmeView() {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {/* Aktive Alarme */}
