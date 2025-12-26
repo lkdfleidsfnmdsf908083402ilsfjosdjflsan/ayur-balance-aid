@@ -1,6 +1,12 @@
 import { cn } from '@/lib/utils';
-import { LucideIcon, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { LucideIcon, TrendingUp, TrendingDown, Minus, Info } from 'lucide-react';
 import { formatCurrency, formatPercent } from '@/lib/calculations';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface KPICardProps {
   title: string;
@@ -9,6 +15,7 @@ interface KPICardProps {
   icon: LucideIcon;
   variant?: 'default' | 'success' | 'warning' | 'accent';
   className?: string;
+  tooltip?: string;
 }
 
 export function KPICard({ 
@@ -17,7 +24,8 @@ export function KPICard({
   previousValue, 
   icon: Icon,
   variant = 'default',
-  className 
+  className,
+  tooltip
 }: KPICardProps) {
   const diff = previousValue !== null && previousValue !== undefined 
     ? value - previousValue 
@@ -71,7 +79,21 @@ export function KPICard({
       </div>
       
       <div>
-        <p className="text-sm text-muted-foreground mb-1">{title}</p>
+        <div className="flex items-center gap-1.5 mb-1">
+          <p className="text-sm text-muted-foreground">{title}</p>
+          {tooltip && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-3.5 w-3.5 text-muted-foreground/60 hover:text-muted-foreground cursor-help transition-colors" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs">
+                  <p className="text-sm">{tooltip}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
         <p className="text-2xl font-semibold font-mono text-foreground">
           {formatCurrency(value)}
         </p>
