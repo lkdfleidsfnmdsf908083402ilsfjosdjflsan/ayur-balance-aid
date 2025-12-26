@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useFinanceStore } from '@/store/financeStore';
 import { Header } from '@/components/layout/Header';
 import { KPICard } from '@/components/cards/KPICard';
 import { BereichChart } from '@/components/charts/BereichChart';
+import { AufwandKlassenChart } from '@/components/charts/AufwandKlassenChart';
 import { AlarmWidget } from '@/components/widgets/AlarmWidget';
 import { Euro, TrendingUp, ShoppingCart, Wallet } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,7 +21,15 @@ export function DashboardView() {
   }, []);
   
   // Erstelle Konten-Map für schnellen Zugriff auf Kontoklasse
-  const kontenMap = new Map(konten.map(k => [k.kontonummer, k]));
+  const kontenMap = useMemo(() => new Map(konten.map(k => [k.kontonummer, k])), [konten]);
+  
+  // Kontoklassen-Namen und Farben
+  const klassenInfo: Record<string, { name: string; color: string }> = {
+    '5': { name: 'Materialaufwand', color: 'hsl(var(--chart-1))' },
+    '6': { name: 'Personalaufwand', color: 'hsl(var(--chart-2))' },
+    '7': { name: 'Abschreibungen', color: 'hsl(var(--chart-3))' },
+    '8': { name: 'Sonstiger Aufwand', color: 'hsl(var(--chart-4))' },
+  };
   
   // Berechne Gesamt-KPIs
   const erlöseGesamt = bereichAggregationen
@@ -37,6 +46,25 @@ export function DashboardView() {
     const konto = kontenMap.get(kontonummer);
     return konto && aufwandsKlassen.includes(konto.kontoklasse);
   };
+  
+  // Aufwand nach Kontoklassen berechnen
+  const aufwandNachKlassen = useMemo(() => {
+    const klassenSummen: Record<string, number> = { '5': 0, '6': 0, '7': 0, '8': 0 };
+    
+    vergleiche.forEach(v => {
+      const konto = kontenMap.get(v.kontonummer);
+      if (konto && aufwandsKlassen.includes(konto.kontoklasse)) {
+        klassenSummen[konto.kontoklasse] += Math.abs(v.saldoAktuell);
+      }
+    });
+    
+    return aufwandsKlassen.map(klasse => ({
+      klasse,
+      name: klassenInfo[klasse].name,
+      value: klassenSummen[klasse],
+      color: klassenInfo[klasse].color,
+    }));
+  }, [vergleiche, kontenMap]);
   
   const aufwandGesamt = vergleiche
     .filter(v => isAufwandskonto(v.kontonummer))
@@ -117,6 +145,14 @@ export function DashboardView() {
         {/* Alarm Widget */}
         <div className="mb-6">
           <AlarmWidget schwellenwerte={schwellenwerte} />
+        </div>
+        
+        {/* Aufwand nach Kontoklassen Chart */}
+        <div className="mb-6">
+          <AufwandKlassenChart 
+            data={aufwandNachKlassen}
+            title="Gesamtaufwand nach Kontoklassen"
+          />
         </div>
         
         {/* Charts */}
