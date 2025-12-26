@@ -150,6 +150,7 @@ export function DashboardView() {
             previousValue={rohertragVormonat || null}
             icon={TrendingUp}
             variant={rohertrag > 0 ? 'success' : 'warning'}
+            tooltip="Rohertrag = Erlöse − Aufwand (Klassen 5-8: Material, Personal, Abschreibungen, Sonstiges)"
           />
           <KPICard
             title="Rohmarge"
