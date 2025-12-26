@@ -68,6 +68,13 @@
     --sidebar-accent-foreground: 40 30% 98%;
     --sidebar-border: 150 20% 20%;
     --sidebar-ring: 38 70% 52%;
+
+    /* Chart-Farben – markant und unterscheidbar */
+    --chart-1: 195 85% 45%;   /* Blau - Materialaufwand */
+    --chart-2: 350 75% 55%;   /* Rot/Pink - Personalaufwand */
+    --chart-3: 45 90% 50%;    /* Gelb/Gold - Abschreibungen */
+    --chart-4: 280 65% 55%;   /* Lila - Sonstiger Aufwand */
+    --chart-5: 160 60% 45%;   /* Türkis */
   }
 
   /* Light Mode – invertierte Mandira-Farben */
@@ -114,6 +121,13 @@
     --sidebar-accent-foreground: 150 25% 12%;
     --sidebar-border: 150 15% 85%;
     --sidebar-ring: 38 70% 45%;
+
+    /* Chart-Farben – Light Mode */
+    --chart-1: 195 80% 40%;   /* Blau - Materialaufwand */
+    --chart-2: 350 70% 50%;   /* Rot/Pink - Personalaufwand */
+    --chart-3: 45 85% 45%;    /* Gelb/Gold - Abschreibungen */
+    --chart-4: 280 60% 50%;   /* Lila - Sonstiger Aufwand */
+    --chart-5: 160 55% 40%;   /* Türkis */
   }
 
   .dark {
