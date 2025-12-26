@@ -1,5 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { Resend } from "https://esm.sh/resend@2.0.0";
+
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -111,6 +114,17 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Admin ${callingUser.id} resetting password for user ${userId}`);
 
+    // Get target user info before reset
+    const { data: targetUserData } = await supabaseAdmin.auth.admin.getUserById(userId);
+    const targetEmail = targetUserData?.user?.email;
+
+    // Get admin profile for the email
+    const { data: adminProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('name')
+      .eq('id', callingUser.id)
+      .single();
+
     // Update the user's password using admin API
     const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
       userId,
@@ -126,6 +140,62 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log(`Password successfully reset for user ${userId}`);
+
+    // Send email notification to the user
+    if (targetEmail) {
+      try {
+        const adminName = adminProfile?.name || 'Ein Administrator';
+        
+        await resend.emails.send({
+          from: "Hotel Mandira <onboarding@resend.dev>",
+          to: [targetEmail],
+          subject: "Ihr Passwort wurde zurückgesetzt - Hotel Mandira KPI Dashboard",
+          html: `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 30px; border-radius: 10px 10px 0 0; text-align: center;">
+                <h1 style="color: #fff; margin: 0; font-size: 24px;">🔐 Passwort zurückgesetzt</h1>
+              </div>
+              
+              <div style="background: #fff; padding: 30px; border: 1px solid #e0e0e0; border-top: none; border-radius: 0 0 10px 10px;">
+                <p style="font-size: 16px;">Hallo,</p>
+                
+                <p style="font-size: 16px;">
+                  Ihr Passwort für das <strong>Hotel Mandira KPI Dashboard</strong> wurde von <strong>${adminName}</strong> zurückgesetzt.
+                </p>
+                
+                <div style="background: #f8f9fa; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; border-radius: 4px;">
+                  <p style="margin: 0; color: #856404;">
+                    <strong>⚠️ Wichtig:</strong> Bitte ändern Sie Ihr Passwort bei der nächsten Anmeldung, um die Sicherheit Ihres Kontos zu gewährleisten.
+                  </p>
+                </div>
+                
+                <p style="font-size: 16px;">
+                  Falls Sie diese Änderung nicht angefordert haben, wenden Sie sich bitte umgehend an die Administration.
+                </p>
+                
+                <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;">
+                
+                <p style="font-size: 12px; color: #666; text-align: center;">
+                  Diese E-Mail wurde automatisch vom Hotel Mandira KPI Dashboard gesendet.
+                </p>
+              </div>
+            </body>
+            </html>
+          `,
+        });
+        
+        console.log(`Email notification sent to ${targetEmail}`);
+      } catch (emailError) {
+        // Log but don't fail the request if email fails
+        console.error("Error sending email notification:", emailError);
+      }
+    }
 
     return new Response(
       JSON.stringify({ success: true, message: "Passwort wurde erfolgreich geändert" }),
