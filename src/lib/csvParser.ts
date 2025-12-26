@@ -89,11 +89,10 @@ export function extractKonten(data: RawSaldenliste[]): Konto[] {
 export function extractSalden(data: RawSaldenliste[], jahr: number, monat: number): SaldoMonat[] {
   const salden: SaldoMonat[] = [];
   
-  // Erstelle Monat/Jahr Pattern für die Spaltensuche
-  // Format: "MM/YY" oder "M/YY" (z.B. "10/24" oder "1/25")
-  const jahrKurz = String(jahr).slice(-2);
-  const monatPattern1 = `${monat}/${jahrKurz}`;  // z.B. "10/24"
-  const monatPattern2 = `${String(monat).padStart(2, '0')}/${jahrKurz}`; // z.B. "01/25"
+  // Erstelle Monat-Pattern für die Spaltensuche (ohne Jahr, da dieses variieren kann)
+  // Format: "Saldo Soll 10 - 10/25" -> suche nach "saldo soll 10 -" oder "saldo soll 10 "
+  const monatStr = String(monat);
+  const monatPadded = String(monat).padStart(2, '0');
   
   for (const row of data) {
     const kontonummer = String(row.KontoNr || '').trim();
@@ -101,38 +100,61 @@ export function extractSalden(data: RawSaldenliste[], jahr: number, monat: numbe
     
     let saldoSollMonat = 0;
     let saldoHabenMonat = 0;
-    let foundSpecificMonth = false;
+    let foundSoll = false;
+    let foundHaben = false;
     
     // Suche nach "Saldo Soll" und "Saldo Haben" Spalten für den spezifischen Monat
     for (const key of Object.keys(row)) {
       const lowerKey = key.toLowerCase().trim();
       
-      // Prüfe ob die Spalte zum gesuchten Monat/Jahr gehört
-      const matchesMonth = key.includes(monatPattern1) || key.includes(monatPattern2);
+      // Prüfe ob die Spalte zum gesuchten Monat gehört
+      // Muster: "saldo soll 10 - 10/25" oder "saldo soll 10 - 10/24"
+      const sollPattern1 = `saldo soll ${monatStr} -`;
+      const sollPattern2 = `saldo soll ${monatPadded} -`;
+      const habenPattern1 = `saldo haben ${monatStr} -`;
+      const habenPattern2 = `saldo haben ${monatPadded} -`;
       
-      // Saldo Soll Spalte (z.B. "Saldo Soll 10 - 10/24")
-      if (lowerKey.startsWith('saldo soll')) {
-        const val = row[key];
-        if (typeof val === 'number') {
-          if (matchesMonth) {
+      // Saldo Soll Spalte
+      if (!foundSoll && lowerKey.startsWith('saldo soll')) {
+        if (lowerKey.includes(sollPattern1) || lowerKey.includes(sollPattern2)) {
+          const val = row[key];
+          if (typeof val === 'number') {
             saldoSollMonat = val;
-            foundSpecificMonth = true;
-          } else if (!foundSpecificMonth && saldoSollMonat === 0) {
-            // Fallback: nimm erste Spalte wenn kein spezifischer Monat gefunden
-            saldoSollMonat = val;
+            foundSoll = true;
           }
         }
       }
       
-      // Saldo Haben Spalte (z.B. "Saldo Haben 10 - 10/24")
-      if (lowerKey.startsWith('saldo haben')) {
-        const val = row[key];
-        if (typeof val === 'number') {
-          if (matchesMonth) {
+      // Saldo Haben Spalte
+      if (!foundHaben && lowerKey.startsWith('saldo haben')) {
+        if (lowerKey.includes(habenPattern1) || lowerKey.includes(habenPattern2)) {
+          const val = row[key];
+          if (typeof val === 'number') {
             saldoHabenMonat = val;
-          } else if (!foundSpecificMonth && saldoHabenMonat === 0) {
-            // Fallback: nimm erste Spalte wenn kein spezifischer Monat gefunden
+            foundHaben = true;
+          }
+        }
+      }
+    }
+    
+    // Fallback: Wenn kein spezifischer Monat gefunden, nimm erste Saldo-Spalten
+    if (!foundSoll || !foundHaben) {
+      for (const key of Object.keys(row)) {
+        const lowerKey = key.toLowerCase().trim();
+        
+        if (!foundSoll && lowerKey.startsWith('saldo soll')) {
+          const val = row[key];
+          if (typeof val === 'number') {
+            saldoSollMonat = val;
+            foundSoll = true;
+          }
+        }
+        
+        if (!foundHaben && lowerKey.startsWith('saldo haben')) {
+          const val = row[key];
+          if (typeof val === 'number') {
             saldoHabenMonat = val;
+            foundHaben = true;
           }
         }
       }
