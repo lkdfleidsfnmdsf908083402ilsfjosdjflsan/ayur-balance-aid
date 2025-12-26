@@ -91,8 +91,8 @@ export function DashboardView() {
     .filter(v => isAufwandskonto(v.kontonummer))
     .reduce((sum, v) => sum + Math.abs(v.saldoVormonat ?? 0), 0);
   
-  const rohertrag = erlöseGesamt - aufwandGesamt;
-  const rohertragVormonat = erlöseVormonat - aufwandVormonat;
+  const rohertrag = Math.abs(erlöseGesamt) - aufwandGesamt;
+  const rohertragVormonat = Math.abs(erlöseVormonat) - aufwandVormonat;
   
   const months = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 
