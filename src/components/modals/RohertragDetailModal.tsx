@@ -4,9 +4,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { formatCurrency } from '@/lib/calculations';
-import { TrendingUp, TrendingDown, Minus, ArrowRight } from 'lucide-react';
+import { TrendingUp, Minus, ArrowRight, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { exportRohertragToPdf } from '@/lib/pdfExport';
+import { BereichAggregation } from '@/types/finance';
 
 interface RohertragDetailModalProps {
   open: boolean;
@@ -21,6 +24,9 @@ interface RohertragDetailModalProps {
   }>;
   rohertrag: number;
   rohmarge: number;
+  bereicheErloese?: BereichAggregation[];
+  jahr?: number;
+  monat?: number;
 }
 
 export function RohertragDetailModal({
@@ -31,18 +37,51 @@ export function RohertragDetailModal({
   aufwandNachKlassen,
   rohertrag,
   rohmarge,
+  bereicheErloese = [],
+  jahr = new Date().getFullYear(),
+  monat = new Date().getMonth() + 1,
 }: RohertragDetailModalProps) {
   const isPositive = rohertrag > 0;
   const isNegative = rohertrag < 0;
+
+  const handleExportPdf = () => {
+    const bereicheData = bereicheErloese.map(b => ({
+      bereich: b.bereich,
+      saldoAktuell: b.saldoAktuell,
+      saldoVormonat: b.saldoVormonat,
+    }));
+    
+    exportRohertragToPdf(
+      erloese,
+      aufwand,
+      rohertrag,
+      rohmarge,
+      aufwandNachKlassen,
+      bereicheData,
+      jahr,
+      monat
+    );
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            Rohertrag-Berechnung
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              Rohertrag-Berechnung
+            </DialogTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportPdf}
+              className="flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              PDF
+            </Button>
+          </div>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
