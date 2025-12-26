@@ -89,30 +89,51 @@ export function extractKonten(data: RawSaldenliste[]): Konto[] {
 export function extractSalden(data: RawSaldenliste[], jahr: number, monat: number): SaldoMonat[] {
   const salden: SaldoMonat[] = [];
   
+  // Erstelle Monat/Jahr Pattern für die Spaltensuche
+  // Format: "MM/YY" oder "M/YY" (z.B. "10/24" oder "1/25")
+  const jahrKurz = String(jahr).slice(-2);
+  const monatPattern1 = `${monat}/${jahrKurz}`;  // z.B. "10/24"
+  const monatPattern2 = `${String(monat).padStart(2, '0')}/${jahrKurz}`; // z.B. "01/25"
+  
   for (const row of data) {
     const kontonummer = String(row.KontoNr || '').trim();
     if (!kontonummer) continue;
     
     let saldoSollMonat = 0;
     let saldoHabenMonat = 0;
+    let foundSpecificMonth = false;
     
-    // Suche nach "Saldo Soll" und "Saldo Haben" Spalten (z.B. "Saldo Soll 10 - 10/25")
+    // Suche nach "Saldo Soll" und "Saldo Haben" Spalten für den spezifischen Monat
     for (const key of Object.keys(row)) {
       const lowerKey = key.toLowerCase().trim();
       
-      // Saldo Soll Spalte (z.B. "Saldo Soll 10 - 10/25")
-      if (saldoSollMonat === 0 && lowerKey.startsWith('saldo soll')) {
+      // Prüfe ob die Spalte zum gesuchten Monat/Jahr gehört
+      const matchesMonth = key.includes(monatPattern1) || key.includes(monatPattern2);
+      
+      // Saldo Soll Spalte (z.B. "Saldo Soll 10 - 10/24")
+      if (lowerKey.startsWith('saldo soll')) {
         const val = row[key];
         if (typeof val === 'number') {
-          saldoSollMonat = val;
+          if (matchesMonth) {
+            saldoSollMonat = val;
+            foundSpecificMonth = true;
+          } else if (!foundSpecificMonth && saldoSollMonat === 0) {
+            // Fallback: nimm erste Spalte wenn kein spezifischer Monat gefunden
+            saldoSollMonat = val;
+          }
         }
       }
       
-      // Saldo Haben Spalte (z.B. "Saldo Haben 10 - 10/25")
-      if (saldoHabenMonat === 0 && lowerKey.startsWith('saldo haben')) {
+      // Saldo Haben Spalte (z.B. "Saldo Haben 10 - 10/24")
+      if (lowerKey.startsWith('saldo haben')) {
         const val = row[key];
         if (typeof val === 'number') {
-          saldoHabenMonat = val;
+          if (matchesMonth) {
+            saldoHabenMonat = val;
+          } else if (!foundSpecificMonth && saldoHabenMonat === 0) {
+            // Fallback: nimm erste Spalte wenn kein spezifischer Monat gefunden
+            saldoHabenMonat = val;
+          }
         }
       }
     }
