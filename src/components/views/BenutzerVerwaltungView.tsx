@@ -30,7 +30,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, UserCog, User, Users, Trash2, Edit, Plus, Search, Mail, Loader2, UserPlus } from 'lucide-react';
+import { Shield, UserCog, User, Users, Trash2, Edit, Plus, Search, Mail, Loader2, UserPlus, KeyRound } from 'lucide-react';
 
 type AppRole = 'admin' | 'abteilungsleiter' | 'mitarbeiter';
 
@@ -83,7 +83,11 @@ export function BenutzerVerwaltungView() {
   const [selectedUser, setSelectedUser] = useState<UserWithRole | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+  const [isResetPasswordDialogOpen, setIsResetPasswordDialogOpen] = useState(false);
   const [sendingInvite, setSendingInvite] = useState(false);
+  const [resettingPassword, setResettingPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [inviteForm, setInviteForm] = useState({
     email: '',
     name: '',
@@ -153,6 +157,65 @@ export function BenutzerVerwaltungView() {
       abteilung: user.abteilung || '',
     });
     setIsEditDialogOpen(true);
+  };
+
+  const handleResetPassword = (user: UserWithRole) => {
+    setSelectedUser(user);
+    setNewPassword('');
+    setConfirmNewPassword('');
+    setIsResetPasswordDialogOpen(true);
+  };
+
+  const handleConfirmResetPassword = async () => {
+    if (!selectedUser) return;
+
+    if (newPassword !== confirmNewPassword) {
+      toast({
+        variant: 'destructive',
+        title: 'Passwörter stimmen nicht überein',
+        description: 'Bitte geben Sie dasselbe Passwort ein',
+      });
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast({
+        variant: 'destructive',
+        title: 'Passwort zu kurz',
+        description: 'Das Passwort muss mindestens 6 Zeichen lang sein',
+      });
+      return;
+    }
+
+    setResettingPassword(true);
+    try {
+      const { error } = await supabase.functions.invoke('admin-reset-password', {
+        body: {
+          userId: selectedUser.id,
+          newPassword: newPassword,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Passwort geändert',
+        description: `Das Passwort für ${selectedUser.name || selectedUser.email} wurde erfolgreich geändert.`,
+      });
+
+      setIsResetPasswordDialogOpen(false);
+      setNewPassword('');
+      setConfirmNewPassword('');
+    } catch (error: any) {
+      console.error('Error resetting password:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Fehler',
+        description: error.message || 'Passwort konnte nicht geändert werden',
+      });
+    } finally {
+      setResettingPassword(false);
+    }
   };
 
   const handleSaveUser = async () => {
@@ -414,14 +477,26 @@ export function BenutzerVerwaltungView() {
                           {new Date(user.created_at).toLocaleDateString('de-DE')}
                         </TableCell>
                         <TableCell>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditUser(user)}
-                            disabled={user.id === currentUser?.id}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditUser(user)}
+                              disabled={user.id === currentUser?.id}
+                              title="Bearbeiten"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleResetPassword(user)}
+                              disabled={user.id === currentUser?.id}
+                              title="Passwort zurücksetzen"
+                            >
+                              <KeyRound className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
@@ -614,6 +689,75 @@ export function BenutzerVerwaltungView() {
                 <>
                   <Mail className="h-4 w-4 mr-2" />
                   Einladung senden
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={isResetPasswordDialogOpen} onOpenChange={setIsResetPasswordDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5" />
+              Passwort zurücksetzen
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedUser && (
+            <div className="space-y-4">
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <p className="font-medium">{selectedUser.name || 'Unbekannt'}</p>
+                <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Neues Passwort *</Label>
+                <Input
+                  type="password"
+                  placeholder="Mindestens 6 Zeichen"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  minLength={6}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Passwort bestätigen *</Label>
+                <Input
+                  type="password"
+                  placeholder="Passwort wiederholen"
+                  value={confirmNewPassword}
+                  onChange={(e) => setConfirmNewPassword(e.target.value)}
+                  minLength={6}
+                />
+              </div>
+
+              <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg text-sm">
+                <p className="text-amber-600 dark:text-amber-400 font-medium">Hinweis:</p>
+                <p className="text-muted-foreground mt-1">
+                  Das neue Passwort wird sofort aktiv. Der Benutzer sollte das Passwort bei der nächsten Anmeldung ändern.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsResetPasswordDialogOpen(false)}>
+              Abbrechen
+            </Button>
+            <Button onClick={handleConfirmResetPassword} disabled={resettingPassword}>
+              {resettingPassword ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Wird geändert...
+                </>
+              ) : (
+                <>
+                  <KeyRound className="h-4 w-4 mr-2" />
+                  Passwort ändern
                 </>
               )}
             </Button>
