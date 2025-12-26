@@ -8,7 +8,7 @@ import { Euro, TrendingUp, ShoppingCart, Wallet } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 export function DashboardView() {
-  const { bereichAggregationen, selectedYear, selectedMonth, uploadedFiles } = useFinanceStore();
+  const { bereichAggregationen, vergleiche, konten, selectedYear, selectedMonth, uploadedFiles } = useFinanceStore();
   const [schwellenwerte, setSchwellenwerte] = useState<any[]>([]);
 
   useEffect(() => {
@@ -19,6 +19,9 @@ export function DashboardView() {
     loadSchwellenwerte();
   }, []);
   
+  // Erstelle Konten-Map für schnellen Zugriff auf Kontoklasse
+  const kontenMap = new Map(konten.map(k => [k.kontonummer, k]));
+  
   // Berechne Gesamt-KPIs
   const erlöseGesamt = bereichAggregationen
     .filter(b => b.kostenarttTyp === 'Erlös')
@@ -28,16 +31,23 @@ export function DashboardView() {
     .filter(b => b.kostenarttTyp === 'Erlös')
     .reduce((sum, b) => sum + (b.saldoVormonat ?? 0), 0);
   
-  const einkaufGesamt = bereichAggregationen
-    .filter(b => b.kostenarttTyp === 'Einkauf')
-    .reduce((sum, b) => sum + Math.abs(b.saldoAktuell), 0);
+  // Gesamtaufwand = alle Konten der Klassen 5, 6, 7, 8 (Aufwandskonten)
+  const aufwandsKlassen = ['5', '6', '7', '8'];
+  const isAufwandskonto = (kontonummer: string) => {
+    const konto = kontenMap.get(kontonummer);
+    return konto && aufwandsKlassen.includes(konto.kontoklasse);
+  };
   
-  const einkaufVormonat = bereichAggregationen
-    .filter(b => b.kostenarttTyp === 'Einkauf')
-    .reduce((sum, b) => sum + Math.abs(b.saldoVormonat ?? 0), 0);
+  const aufwandGesamt = vergleiche
+    .filter(v => isAufwandskonto(v.kontonummer))
+    .reduce((sum, v) => sum + Math.abs(v.saldoAktuell), 0);
   
-  const rohertrag = erlöseGesamt - einkaufGesamt;
-  const rohertragVormonat = erlöseVormonat - einkaufVormonat;
+  const aufwandVormonat = vergleiche
+    .filter(v => isAufwandskonto(v.kontonummer))
+    .reduce((sum, v) => sum + Math.abs(v.saldoVormonat ?? 0), 0);
+  
+  const rohertrag = erlöseGesamt - aufwandGesamt;
+  const rohertragVormonat = erlöseVormonat - aufwandVormonat;
   
   const months = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 
@@ -84,8 +94,8 @@ export function DashboardView() {
           />
           <KPICard
             title="Gesamtaufwand"
-            value={einkaufGesamt}
-            previousValue={einkaufVormonat || null}
+            value={aufwandGesamt}
+            previousValue={aufwandVormonat || null}
             icon={ShoppingCart}
             variant="default"
           />
