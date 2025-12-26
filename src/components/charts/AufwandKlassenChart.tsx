@@ -236,9 +236,22 @@ export function AufwandKlassenChart({ data, title }: AufwandKlassenChartProps) {
               tickFormatter={(v) => `Kl. ${v}`}
             />
             <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--muted)/0.1)' }} />
-            <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-              {data.map((entry) => (
-                <Cell key={entry.klasse} fill={entry.color} />
+            <Bar 
+              dataKey="value" 
+              radius={[0, 4, 4, 0]}
+              animationBegin={0}
+              animationDuration={800}
+              animationEasing="ease-out"
+            >
+              {data.map((entry, index) => (
+                <Cell 
+                  key={entry.klasse} 
+                  fill={entry.color}
+                  className="transition-all duration-200 hover:opacity-80 hover:drop-shadow-lg cursor-pointer"
+                  style={{
+                    filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
+                  }}
+                />
               ))}
             </Bar>
           </BarChart>
