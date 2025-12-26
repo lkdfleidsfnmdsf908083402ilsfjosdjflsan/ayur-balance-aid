@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { MandiraLogo } from '@/components/MandiraLogo';
-import { Loader2, LogIn, UserPlus } from 'lucide-react';
+import { Loader2, LogIn, UserPlus, KeyRound, ArrowLeft } from 'lucide-react';
 
 const ABTEILUNGEN = [
   'Housekeeping',
@@ -29,6 +30,8 @@ const Auth = () => {
   const [signupPassword, setSignupPassword] = useState('');
   const [signupName, setSignupName] = useState('');
   const [signupAbteilung, setSignupAbteilung] = useState('');
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
   
   const { signIn, signUp, user } = useAuth();
   const { toast } = useToast();
@@ -116,6 +119,89 @@ const Auth = () => {
     setIsLoading(false);
   };
 
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+      redirectTo: `${window.location.origin}/auth/reset`,
+    });
+
+    if (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Fehler',
+        description: 'Passwort-Reset konnte nicht gesendet werden',
+      });
+    } else {
+      toast({
+        title: 'E-Mail gesendet',
+        description: 'Prüfen Sie Ihr Postfach für den Reset-Link',
+      });
+      setShowResetPassword(false);
+      setResetEmail('');
+    }
+
+    setIsLoading(false);
+  };
+
+  // Password reset view
+  if (showResetPassword) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md glass-card">
+          <CardHeader className="text-center space-y-4">
+            <div className="flex justify-center">
+              <MandiraLogo className="h-16 w-auto" />
+            </div>
+            <CardTitle className="text-2xl font-bold">Passwort zurücksetzen</CardTitle>
+            <CardDescription>
+              Geben Sie Ihre E-Mail-Adresse ein, um einen Reset-Link zu erhalten
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleResetPassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="reset-email">E-Mail</Label>
+                <Input
+                  id="reset-email"
+                  type="email"
+                  placeholder="ihre.email@hotel.de"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Wird gesendet...
+                  </>
+                ) : (
+                  <>
+                    <KeyRound className="mr-2 h-4 w-4" />
+                    Reset-Link senden
+                  </>
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full"
+                onClick={() => setShowResetPassword(false)}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Zurück zur Anmeldung
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md glass-card">
@@ -179,6 +265,17 @@ const Auth = () => {
                       Anmelden
                     </>
                   )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="link"
+                  className="w-full text-muted-foreground"
+                  onClick={() => {
+                    setResetEmail(loginEmail);
+                    setShowResetPassword(true);
+                  }}
+                >
+                  Passwort vergessen?
                 </Button>
               </form>
             </TabsContent>
