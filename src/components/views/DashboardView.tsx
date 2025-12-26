@@ -5,12 +5,14 @@ import { KPICard } from '@/components/cards/KPICard';
 import { BereichChart } from '@/components/charts/BereichChart';
 import { AufwandKlassenChart } from '@/components/charts/AufwandKlassenChart';
 import { AlarmWidget } from '@/components/widgets/AlarmWidget';
+import { RohertragDetailModal } from '@/components/modals/RohertragDetailModal';
 import { Euro, TrendingUp, ShoppingCart, Wallet } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 export function DashboardView() {
   const { bereichAggregationen, vergleiche, konten, selectedYear, selectedMonth, uploadedFiles } = useFinanceStore();
   const [schwellenwerte, setSchwellenwerte] = useState<any[]>([]);
+  const [rohertragModalOpen, setRohertragModalOpen] = useState(false);
 
   useEffect(() => {
     const loadSchwellenwerte = async () => {
@@ -136,6 +138,7 @@ export function DashboardView() {
             previousValue={erlöseVormonat ? Math.abs(erlöseVormonat) : null}
             icon={Euro}
             variant="accent"
+            tooltip="Summe aller Konten mit Kostenartt-Typ 'Erlös' (Umsatzerlöse, sonstige Erträge)"
           />
           <KPICard
             title="Gesamtaufwand"
@@ -143,20 +146,27 @@ export function DashboardView() {
             previousValue={aufwandVormonat || null}
             icon={ShoppingCart}
             variant="default"
+            tooltip="Summe aller Aufwandskonten der Klassen 5 (Material), 6 (Personal), 7 (Abschreibungen), 8 (Sonstiges)"
           />
-          <KPICard
-            title="Rohertrag"
-            value={rohertrag}
-            previousValue={rohertragVormonat || null}
-            icon={TrendingUp}
-            variant={rohertrag > 0 ? 'success' : 'warning'}
-            tooltip="Rohertrag = Erlöse − Aufwand (Klassen 5-8: Material, Personal, Abschreibungen, Sonstiges)"
-          />
+          <div 
+            className="cursor-pointer transition-transform hover:scale-[1.02]"
+            onClick={() => setRohertragModalOpen(true)}
+          >
+            <KPICard
+              title="Rohertrag"
+              value={rohertrag}
+              previousValue={rohertragVormonat || null}
+              icon={TrendingUp}
+              variant={rohertrag > 0 ? 'success' : 'warning'}
+              tooltip="Erlöse − Aufwand (Klassen 5-8). Klicken für Details."
+            />
+          </div>
           <KPICard
             title="Rohmarge"
             value={erlöseGesamt !== 0 ? (rohertrag / Math.abs(erlöseGesamt)) * 100 : 0}
             icon={Wallet}
             variant="default"
+            tooltip="Rohertrag ÷ Erlöse × 100 – zeigt die Rentabilität in Prozent"
           />
         </div>
         
@@ -187,6 +197,17 @@ export function DashboardView() {
           />
         </div>
       </div>
+
+      {/* Rohertrag Detail Modal */}
+      <RohertragDetailModal
+        open={rohertragModalOpen}
+        onOpenChange={setRohertragModalOpen}
+        erloese={erlöseGesamt}
+        aufwand={aufwandGesamt}
+        aufwandNachKlassen={aufwandNachKlassen}
+        rohertrag={rohertrag}
+        rohmarge={erlöseGesamt !== 0 ? (rohertrag / Math.abs(erlöseGesamt)) * 100 : 0}
+      />
     </div>
   );
 }
