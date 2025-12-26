@@ -105,6 +105,12 @@ const bereichRules: MappingRule[] = [
   { bezeichnungPattern: /\bFB\b|F\s*&\s*B|Food|Beverage|Küche|Getränke|Restaurant|Speisen|Buffet|Frühstück|Mittag|Abendessen|Menü|à la carte|a la carte|Catering|Bankett|Bar\b|Minibar|Kaffee|Tee|Wein|Bier|Spirituosen|Fleisch|Wurst|Brot|Gebäck|Gemüse|Obst|Milch|Molkerei|Speiseeis|Süßwaren|Konserven|Tiefkühl|Gewürz/i, bereich: 'F&B' },
 
   // ═══════════════════════════════════════════════════════════════════
+  // REZEPTION / FRONT OFFICE
+  // ═══════════════════════════════════════════════════════════════════
+  { range: { from: '4490', to: '4499' }, bereich: 'Rezeption' },
+  { bezeichnungPattern: /Rezeption|Front\s*Office|Empfang|Check[\s-]?in|Check[\s-]?out|Concierge|Guest\s*Service|Gästeservice|Portier|Nachtdienst|Night\s*Audit|Telefonzentrale|Schlüssel|Keycard|Gästebetreuer|Begrüßung|Verabschiedung/i, bereich: 'Rezeption' },
+
+  // ═══════════════════════════════════════════════════════════════════
   // LOGIS / BEHERBERGUNG
   // ═══════════════════════════════════════════════════════════════════
   { range: { from: '4400', to: '4408' }, bereich: 'Logis' },
@@ -349,7 +355,7 @@ export const kpiKategorieColors: Record<KpiKategorie, string> = {
 };
 
 // Liste aller operativen Abteilungen (für KPI-Berechnung)
-export const operativeAbteilungen: Bereich[] = ['Logis', 'F&B', 'Spa', 'Ärztin', 'Shop'];
+export const operativeAbteilungen: Bereich[] = ['Logis', 'F&B', 'Rezeption', 'Spa', 'Ärztin', 'Shop'];
 
 // Liste aller Service-Abteilungen
 export const serviceAbteilungen: Bereich[] = ['Verwaltung', 'Technik', 'Energie', 'Marketing', 'Personal'];
