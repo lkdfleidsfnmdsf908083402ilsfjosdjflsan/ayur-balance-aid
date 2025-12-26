@@ -47,25 +47,42 @@ export function DashboardView() {
     return konto && aufwandsKlassen.includes(konto.kontoklasse);
   };
   
-  // Aufwand nach Kontoklassen berechnen
+  // Aufwand nach Kontoklassen berechnen mit Vormonat und Vorjahr
   const aufwandNachKlassen = useMemo(() => {
-    const klassenSummen: Record<string, number> = { '5': 0, '6': 0, '7': 0, '8': 0 };
+    const klassenSummen: Record<string, { aktuell: number; vormonat: number; vorjahr: number; konten: any[] }> = {
+      '5': { aktuell: 0, vormonat: 0, vorjahr: 0, konten: [] },
+      '6': { aktuell: 0, vormonat: 0, vorjahr: 0, konten: [] },
+      '7': { aktuell: 0, vormonat: 0, vorjahr: 0, konten: [] },
+      '8': { aktuell: 0, vormonat: 0, vorjahr: 0, konten: [] },
+    };
     
     vergleiche.forEach(v => {
       const konto = kontenMap.get(v.kontonummer);
       if (konto && aufwandsKlassen.includes(konto.kontoklasse)) {
-        klassenSummen[konto.kontoklasse] += Math.abs(v.saldoAktuell);
+        const klasse = konto.kontoklasse;
+        klassenSummen[klasse].aktuell += Math.abs(v.saldoAktuell);
+        klassenSummen[klasse].vormonat += Math.abs(v.saldoVormonat ?? 0);
+        klassenSummen[klasse].vorjahr += Math.abs(v.saldoVorjahr ?? 0);
+        klassenSummen[klasse].konten.push({
+          kontonummer: v.kontonummer,
+          bezeichnung: konto.kontobezeichnung,
+          saldoAktuell: v.saldoAktuell,
+          saldoVormonat: v.saldoVormonat,
+          saldoVorjahr: v.saldoVorjahr,
+        });
       }
     });
     
     return aufwandsKlassen.map(klasse => ({
       klasse,
       name: klassenInfo[klasse].name,
-      value: klassenSummen[klasse],
+      value: klassenSummen[klasse].aktuell,
+      valueVormonat: klassenSummen[klasse].vormonat,
+      valueVorjahr: klassenSummen[klasse].vorjahr,
       color: klassenInfo[klasse].color,
+      konten: klassenSummen[klasse].konten,
     }));
   }, [vergleiche, kontenMap]);
-  
   const aufwandGesamt = vergleiche
     .filter(v => isAufwandskonto(v.kontonummer))
     .reduce((sum, v) => sum + Math.abs(v.saldoAktuell), 0);
