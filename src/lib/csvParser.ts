@@ -4,16 +4,17 @@ import { mapBereich, mapKostenarttTyp, mapKpiKategorie } from './bereichMapping'
 export function parseCSV(csvText: string): RawSaldenliste[] {
   const lines = csvText.split('\n').filter(line => line.trim());
   if (lines.length < 2) return [];
-  
+
   // Erste Zeile = Header
-  const headers = parseCSVLine(lines[0]);
-  
+  const delimiter = detectDelimiter(lines[0]);
+  const headers = parseCSVLine(lines[0], delimiter);
+
   const data: RawSaldenliste[] = [];
-  
+
   for (let i = 1; i < lines.length; i++) {
-    const values = parseCSVLine(lines[i]);
+    const values = parseCSVLine(lines[i], delimiter);
     if (values.length < headers.length) continue;
-    
+
     const row: RawSaldenliste = {} as RawSaldenliste;
     headers.forEach((header, index) => {
       const value = values[index]?.trim() || '';
@@ -21,33 +22,55 @@ export function parseCSV(csvText: string): RawSaldenliste[] {
       const numericValue = parseGermanNumber(value);
       row[header] = isNaN(numericValue) ? value : numericValue;
     });
-    
+
     if (row.KontoNr || row.Kontoklasse) {
       data.push(row);
     }
   }
-  
+
   return data;
 }
 
-function parseCSVLine(line: string): string[] {
+function detectDelimiter(headerLine: string): ';' | ',' {
+  // Wichtig: Deutsche Zahlen nutzen Komma als Dezimaltrennzeichen.
+  // Daher NIE blind auf ',' splitten, wenn ';' der eigentliche CSV-Separator ist.
+  let semicolons = 0;
+  let commas = 0;
+  let inQuotes = false;
+
+  for (let i = 0; i < headerLine.length; i++) {
+    const char = headerLine[i];
+    if (char === '"') inQuotes = !inQuotes;
+    if (!inQuotes) {
+      if (char === ';') semicolons++;
+      if (char === ',') commas++;
+    }
+  }
+
+  if (semicolons === 0 && commas === 0) return ';';
+  if (semicolons === 0) return ',';
+  if (commas === 0) return ';';
+  return semicolons >= commas ? ';' : ',';
+}
+
+function parseCSVLine(line: string, delimiter: ';' | ','): string[] {
   const result: string[] = [];
   let current = '';
   let inQuotes = false;
-  
+
   for (let i = 0; i < line.length; i++) {
     const char = line[i];
-    
+
     if (char === '"') {
       inQuotes = !inQuotes;
-    } else if ((char === ';' || char === ',') && !inQuotes) {
+    } else if (char === delimiter && !inQuotes) {
       result.push(current.trim());
       current = '';
     } else {
       current += char;
     }
   }
-  
+
   result.push(current.trim());
   return result;
 }
@@ -61,6 +84,7 @@ function parseGermanNumber(value: string): number {
     .replace(/[^\d.-]/g, '');
   return parseFloat(cleaned);
 }
+
 
 export function extractKonten(data: RawSaldenliste[]): Konto[] {
   const kontenMap = new Map<string, Konto>();
