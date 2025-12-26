@@ -113,10 +113,22 @@ export function extractKonten(data: RawSaldenliste[]): Konto[] {
 export function extractSalden(data: RawSaldenliste[], jahr: number, monat: number): SaldoMonat[] {
   const salden: SaldoMonat[] = [];
   
-  // Erstelle Monat-Pattern für die Spaltensuche (ohne Jahr, da dieses variieren kann)
-  // Format: "Saldo Soll 10 - 10/25" -> suche nach "saldo soll 10 -" oder "saldo soll 10 "
+  // Format: "Saldo Soll 1/25" oder "Saldo Haben 1/25"
+  // Suche nach Spalten die zum Monat passen
+  const jahrKurz = String(jahr).slice(-2); // 2025 -> "25"
   const monatStr = String(monat);
-  const monatPadded = String(monat).padStart(2, '0');
+  
+  // Mögliche Spaltenmuster
+  const sollPatterns = [
+    `saldo soll ${monatStr}/${jahrKurz}`,      // "saldo soll 1/25"
+    `saldo soll ${monatStr}/${jahr}`,          // "saldo soll 1/2025"
+    `saldo soll ${monatStr} -`,                // "saldo soll 1 - ..." (altes Format)
+  ];
+  const habenPatterns = [
+    `saldo haben ${monatStr}/${jahrKurz}`,
+    `saldo haben ${monatStr}/${jahr}`,
+    `saldo haben ${monatStr} -`,
+  ];
   
   for (const row of data) {
     const kontonummer = String(row.KontoNr || '').trim();
@@ -127,41 +139,40 @@ export function extractSalden(data: RawSaldenliste[], jahr: number, monat: numbe
     let foundSoll = false;
     let foundHaben = false;
     
-    // Suche nach "Saldo Soll" und "Saldo Haben" Spalten für den spezifischen Monat
+    // Suche nach passenden Spalten
     for (const key of Object.keys(row)) {
       const lowerKey = key.toLowerCase().trim();
       
-      // Prüfe ob die Spalte zum gesuchten Monat gehört
-      // Muster: "saldo soll 10 - 10/25" oder "saldo soll 10 - 10/24"
-      const sollPattern1 = `saldo soll ${monatStr} -`;
-      const sollPattern2 = `saldo soll ${monatPadded} -`;
-      const habenPattern1 = `saldo haben ${monatStr} -`;
-      const habenPattern2 = `saldo haben ${monatPadded} -`;
-      
-      // Saldo Soll Spalte
-      if (!foundSoll && lowerKey.startsWith('saldo soll')) {
-        if (lowerKey.includes(sollPattern1) || lowerKey.includes(sollPattern2)) {
-          const val = row[key];
-          if (typeof val === 'number') {
-            saldoSollMonat = val;
-            foundSoll = true;
+      // Saldo Soll
+      if (!foundSoll) {
+        for (const pattern of sollPatterns) {
+          if (lowerKey === pattern || lowerKey.startsWith(pattern)) {
+            const val = row[key];
+            if (typeof val === 'number') {
+              saldoSollMonat = val;
+              foundSoll = true;
+              break;
+            }
           }
         }
       }
       
-      // Saldo Haben Spalte
-      if (!foundHaben && lowerKey.startsWith('saldo haben')) {
-        if (lowerKey.includes(habenPattern1) || lowerKey.includes(habenPattern2)) {
-          const val = row[key];
-          if (typeof val === 'number') {
-            saldoHabenMonat = val;
-            foundHaben = true;
+      // Saldo Haben
+      if (!foundHaben) {
+        for (const pattern of habenPatterns) {
+          if (lowerKey === pattern || lowerKey.startsWith(pattern)) {
+            const val = row[key];
+            if (typeof val === 'number') {
+              saldoHabenMonat = val;
+              foundHaben = true;
+              break;
+            }
           }
         }
       }
     }
     
-    // Fallback: Wenn kein spezifischer Monat gefunden, nimm erste Saldo-Spalten
+    // Fallback: Erste Saldo-Spalten nehmen wenn nichts gefunden
     if (!foundSoll || !foundHaben) {
       for (const key of Object.keys(row)) {
         const lowerKey = key.toLowerCase().trim();
