@@ -992,3 +992,215 @@ export function exportUserDocumentation() {
   // Download
   doc.save(`Benutzerhandbuch_Hotel-Mandira.pdf`);
 }
+
+/**
+ * Exportiert den Rohertrag-Report als PDF
+ */
+interface AufwandKlasse {
+  klasse: string;
+  name: string;
+  value: number;
+  color: string;
+}
+
+interface BereichErloes {
+  bereich: string;
+  saldoAktuell: number;
+  saldoVormonat: number | null;
+}
+
+export function exportRohertragToPdf(
+  erloese: number,
+  aufwand: number,
+  rohertrag: number,
+  rohmarge: number,
+  aufwandNachKlassen: AufwandKlasse[],
+  bereicheErloese: BereichErloes[],
+  jahr: number,
+  monat: number
+) {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  
+  // Header
+  doc.setFontSize(20);
+  doc.setTextColor(40, 40, 40);
+  doc.text('Rohertrag-Report', pageWidth / 2, 20, { align: 'center' });
+  
+  doc.setFontSize(12);
+  doc.setTextColor(100, 100, 100);
+  doc.text(`${months[monat]} ${jahr}`, pageWidth / 2, 28, { align: 'center' });
+  
+  doc.setFontSize(10);
+  doc.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, pageWidth - 15, 15, { align: 'right' });
+  
+  // Hauptkennzahlen Box
+  doc.setFillColor(245, 245, 250);
+  doc.roundedRect(15, 38, pageWidth - 30, 40, 3, 3, 'F');
+  
+  doc.setFontSize(14);
+  doc.setTextColor(40, 40, 40);
+  doc.text('Übersicht', 20, 48);
+  
+  doc.setFontSize(11);
+  doc.setTextColor(80, 80, 80);
+  
+  // Formel visualisieren
+  doc.text(`Erlöse: ${formatCurrency(Math.abs(erloese))}`, 25, 58);
+  doc.text(`−  Aufwand: ${formatCurrency(aufwand)}`, 25, 66);
+  
+  doc.setDrawColor(150, 150, 150);
+  doc.line(25, 69, 95, 69);
+  
+  doc.setFontSize(12);
+  doc.setTextColor(rohertrag >= 0 ? 34 : 185, rohertrag >= 0 ? 139 : 28, rohertrag >= 0 ? 34 : 28);
+  doc.text(`=  Rohertrag: ${formatCurrency(rohertrag)}`, 25, 75);
+  
+  // Rohmarge rechts
+  doc.setFontSize(11);
+  doc.setTextColor(100, 100, 100);
+  doc.text('Rohmarge:', 130, 58);
+  doc.setFontSize(18);
+  doc.setTextColor(rohmarge >= 0 ? 34 : 185, rohmarge >= 0 ? 139 : 28, rohmarge >= 0 ? 34 : 28);
+  doc.text(`${rohmarge.toFixed(1)}%`, 130, 70);
+  
+  // Aufwand nach Kontoklassen
+  doc.setFontSize(14);
+  doc.setTextColor(40, 40, 40);
+  doc.text('Aufwand nach Kontoklassen', 15, 95);
+  
+  const aufwandTableData = aufwandNachKlassen.map(k => {
+    const prozent = aufwand > 0 ? (k.value / aufwand) * 100 : 0;
+    return [
+      `Klasse ${k.klasse}`,
+      k.name,
+      formatCurrency(k.value),
+      `${prozent.toFixed(1)}%`,
+    ];
+  });
+  
+  // Summenzeile
+  aufwandTableData.push([
+    '',
+    'Gesamt',
+    formatCurrency(aufwand),
+    '100%',
+  ]);
+
+  autoTable(doc, {
+    startY: 100,
+    head: [['Klasse', 'Bezeichnung', 'Betrag', 'Anteil']],
+    body: aufwandTableData,
+    theme: 'striped',
+    headStyles: {
+      fillColor: [220, 38, 38],
+      textColor: 255,
+      fontStyle: 'bold',
+      fontSize: 9,
+    },
+    bodyStyles: { fontSize: 9 },
+    alternateRowStyles: { fillColor: [254, 242, 242] },
+    columnStyles: {
+      0: { fontStyle: 'bold', cellWidth: 30 },
+      1: { cellWidth: 60 },
+      2: { halign: 'right', cellWidth: 45 },
+      3: { halign: 'right', cellWidth: 30 },
+    },
+    margin: { left: 15, right: 15 },
+    didParseCell: (data) => {
+      // Letzte Zeile (Summe) fett machen
+      if (data.row.index === aufwandTableData.length - 1) {
+        data.cell.styles.fontStyle = 'bold';
+        data.cell.styles.fillColor = [254, 226, 226];
+      }
+    },
+  });
+
+  // Erlöse nach Bereich
+  const y = (doc as any).lastAutoTable?.finalY + 15 || 170;
+  
+  doc.setFontSize(14);
+  doc.setTextColor(40, 40, 40);
+  doc.text('Erlöse nach Bereich', 15, y);
+  
+  const sortedBereiche = [...bereicheErloese].sort((a, b) => 
+    Math.abs(b.saldoAktuell) - Math.abs(a.saldoAktuell)
+  );
+  
+  const erloeseTableData = sortedBereiche.map(b => {
+    const value = Math.abs(b.saldoAktuell);
+    const prozent = Math.abs(erloese) > 0 ? (value / Math.abs(erloese)) * 100 : 0;
+    return [
+      b.bereich,
+      formatCurrency(value),
+      `${prozent.toFixed(1)}%`,
+      b.saldoVormonat !== null ? formatCurrency(Math.abs(b.saldoVormonat)) : '–',
+    ];
+  });
+  
+  // Summenzeile
+  erloeseTableData.push([
+    'Gesamt',
+    formatCurrency(Math.abs(erloese)),
+    '100%',
+    '',
+  ]);
+
+  autoTable(doc, {
+    startY: y + 5,
+    head: [['Bereich', 'Betrag', 'Anteil', 'Vormonat']],
+    body: erloeseTableData,
+    theme: 'striped',
+    headStyles: {
+      fillColor: [34, 139, 34],
+      textColor: 255,
+      fontStyle: 'bold',
+      fontSize: 9,
+    },
+    bodyStyles: { fontSize: 9 },
+    alternateRowStyles: { fillColor: [240, 253, 244] },
+    columnStyles: {
+      0: { fontStyle: 'bold', cellWidth: 50 },
+      1: { halign: 'right', cellWidth: 45 },
+      2: { halign: 'right', cellWidth: 30 },
+      3: { halign: 'right', cellWidth: 45 },
+    },
+    margin: { left: 15, right: 15 },
+    didParseCell: (data) => {
+      if (data.row.index === erloeseTableData.length - 1) {
+        data.cell.styles.fontStyle = 'bold';
+        data.cell.styles.fillColor = [220, 252, 231];
+      }
+    },
+  });
+
+  // Erklärung
+  const finalY = (doc as any).lastAutoTable?.finalY + 15 || 250;
+  
+  doc.setFillColor(248, 250, 252);
+  doc.roundedRect(15, finalY, pageWidth - 30, 25, 3, 3, 'F');
+  
+  doc.setFontSize(10);
+  doc.setTextColor(100, 100, 100);
+  doc.text('Formeln:', 20, finalY + 8);
+  doc.setFontSize(9);
+  doc.text('Rohertrag = Erlöse − Aufwand (Klassen 5, 6, 7, 8)', 20, finalY + 16);
+  doc.text('Rohmarge = (Rohertrag / Erlöse) × 100', 20, finalY + 22);
+
+  // Footer
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text(
+      `Seite ${i} von ${pageCount}`,
+      pageWidth / 2,
+      doc.internal.pageSize.getHeight() - 10,
+      { align: 'center' }
+    );
+  }
+
+  // Download
+  doc.save(`Rohertrag-Report_${jahr}-${String(monat).padStart(2, '0')}.pdf`);
+}

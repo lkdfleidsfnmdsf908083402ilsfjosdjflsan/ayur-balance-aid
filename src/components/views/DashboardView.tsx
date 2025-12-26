@@ -6,6 +6,7 @@ import { BereichChart } from '@/components/charts/BereichChart';
 import { AufwandKlassenChart } from '@/components/charts/AufwandKlassenChart';
 import { AlarmWidget } from '@/components/widgets/AlarmWidget';
 import { RohertragDetailModal } from '@/components/modals/RohertragDetailModal';
+import { ErloesDetailModal } from '@/components/modals/ErloesDetailModal';
 import { Euro, TrendingUp, ShoppingCart, Wallet } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -13,6 +14,7 @@ export function DashboardView() {
   const { bereichAggregationen, vergleiche, konten, selectedYear, selectedMonth, uploadedFiles } = useFinanceStore();
   const [schwellenwerte, setSchwellenwerte] = useState<any[]>([]);
   const [rohertragModalOpen, setRohertragModalOpen] = useState(false);
+  const [erloeseModalOpen, setErloeseModalOpen] = useState(false);
 
   useEffect(() => {
     const loadSchwellenwerte = async () => {
@@ -132,14 +134,19 @@ export function DashboardView() {
       <div className="flex-1 overflow-auto p-6">
         {/* KPI Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <KPICard
-            title="Gesamterlöse"
-            value={Math.abs(erlöseGesamt)}
-            previousValue={erlöseVormonat ? Math.abs(erlöseVormonat) : null}
-            icon={Euro}
-            variant="accent"
-            tooltip="Summe aller Konten mit Kostenartt-Typ 'Erlös' (Umsatzerlöse, sonstige Erträge)"
-          />
+          <div 
+            className="cursor-pointer transition-transform hover:scale-[1.02]"
+            onClick={() => setErloeseModalOpen(true)}
+          >
+            <KPICard
+              title="Gesamterlöse"
+              value={Math.abs(erlöseGesamt)}
+              previousValue={erlöseVormonat ? Math.abs(erlöseVormonat) : null}
+              icon={Euro}
+              variant="accent"
+              tooltip="Summe aller Erlös-Konten. Klicken für Aufschlüsselung nach Bereich."
+            />
+          </div>
           <KPICard
             title="Gesamtaufwand"
             value={aufwandGesamt}
@@ -207,6 +214,24 @@ export function DashboardView() {
         aufwandNachKlassen={aufwandNachKlassen}
         rohertrag={rohertrag}
         rohmarge={erlöseGesamt !== 0 ? (rohertrag / Math.abs(erlöseGesamt)) * 100 : 0}
+        bereicheErloese={bereichAggregationen.filter(b => b.kostenarttTyp === 'Erlös')}
+        jahr={selectedYear}
+        monat={selectedMonth}
+      />
+
+      {/* Erlöse Detail Modal */}
+      <ErloesDetailModal
+        open={erloeseModalOpen}
+        onOpenChange={setErloeseModalOpen}
+        erloeseGesamt={erlöseGesamt}
+        erloeseVormonat={erlöseVormonat}
+        bereicheDaten={bereichAggregationen.filter(b => b.kostenarttTyp === 'Erlös')}
+        aufwandGesamt={aufwandGesamt}
+        rohertrag={rohertrag}
+        rohmarge={erlöseGesamt !== 0 ? (rohertrag / Math.abs(erlöseGesamt)) * 100 : 0}
+        aufwandNachKlassen={aufwandNachKlassen}
+        jahr={selectedYear}
+        monat={selectedMonth}
       />
     </div>
   );
