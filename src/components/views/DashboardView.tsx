@@ -7,7 +7,8 @@ import { AufwandKlassenChart } from '@/components/charts/AufwandKlassenChart';
 import { AlarmWidget } from '@/components/widgets/AlarmWidget';
 import { RohertragDetailModal } from '@/components/modals/RohertragDetailModal';
 import { ErloesDetailModal } from '@/components/modals/ErloesDetailModal';
-import { Euro, TrendingUp, ShoppingCart, Wallet } from 'lucide-react';
+import { PersonalkostenDetailModal } from '@/components/modals/PersonalkostenDetailModal';
+import { Euro, TrendingUp, ShoppingCart, Wallet, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 export function DashboardView() {
@@ -15,6 +16,7 @@ export function DashboardView() {
   const [schwellenwerte, setSchwellenwerte] = useState<any[]>([]);
   const [rohertragModalOpen, setRohertragModalOpen] = useState(false);
   const [erloeseModalOpen, setErloeseModalOpen] = useState(false);
+  const [personalkostenModalOpen, setPersonalkostenModalOpen] = useState(false);
 
   useEffect(() => {
     const loadSchwellenwerte = async () => {
@@ -87,6 +89,44 @@ export function DashboardView() {
       konten: klassenSummen[klasse].konten,
     }));
   }, [vergleiche, kontenMap]);
+  
+  // Personalkosten nach Bereich berechnen (nur Klasse 6)
+  const personalkostenNachBereich = useMemo(() => {
+    const bereichSummen: Record<string, { aktuell: number; vormonat: number; vorjahr: number; konten: any[] }> = {};
+    
+    vergleiche.forEach(v => {
+      const konto = kontenMap.get(v.kontonummer);
+      if (konto && konto.kontoklasse === '6') {
+        const bereich = konto.bereich;
+        if (!bereichSummen[bereich]) {
+          bereichSummen[bereich] = { aktuell: 0, vormonat: 0, vorjahr: 0, konten: [] };
+        }
+        bereichSummen[bereich].aktuell += Math.abs(v.saldoAktuell);
+        bereichSummen[bereich].vormonat += Math.abs(v.saldoVormonat ?? 0);
+        bereichSummen[bereich].vorjahr += Math.abs(v.saldoVorjahr ?? 0);
+        bereichSummen[bereich].konten.push({
+          kontonummer: v.kontonummer,
+          bezeichnung: konto.kontobezeichnung,
+          saldoAktuell: v.saldoAktuell,
+          saldoVormonat: v.saldoVormonat,
+          saldoVorjahr: v.saldoVorjahr,
+        });
+      }
+    });
+    
+    return Object.entries(bereichSummen).map(([bereich, data]) => ({
+      bereich,
+      value: data.aktuell,
+      valueVormonat: data.vormonat,
+      valueVorjahr: data.vorjahr,
+      konten: data.konten,
+    }));
+  }, [vergleiche, kontenMap]);
+  
+  // Personalkosten gesamt (Klasse 6)
+  const personalkostenGesamt = aufwandNachKlassen.find(k => k.klasse === '6')?.value ?? 0;
+  const personalkostenVormonat = aufwandNachKlassen.find(k => k.klasse === '6')?.valueVormonat ?? 0;
+  
   const aufwandGesamt = vergleiche
     .filter(v => isAufwandskonto(v.kontonummer))
     .reduce((sum, v) => sum + Math.abs(v.saldoAktuell), 0);
@@ -133,7 +173,7 @@ export function DashboardView() {
       
       <div className="flex-1 overflow-auto p-6">
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
           <div 
             className="cursor-pointer transition-transform hover:scale-[1.02]"
             onClick={() => setErloeseModalOpen(true)}
@@ -155,6 +195,19 @@ export function DashboardView() {
             variant="default"
             tooltip="Summe aller Aufwandskonten der Klassen 5 (Material), 6 (Personal), 7 (Abschreibungen), 8 (Sonstiges)"
           />
+          <div 
+            className="cursor-pointer transition-transform hover:scale-[1.02]"
+            onClick={() => setPersonalkostenModalOpen(true)}
+          >
+            <KPICard
+              title="Personalkosten"
+              value={personalkostenGesamt}
+              previousValue={personalkostenVormonat || null}
+              icon={Users}
+              variant="default"
+              tooltip="Summe aller Konten der Klasse 6 (Löhne, Gehälter, Sozialabgaben). Klicken für Aufschlüsselung."
+            />
+          </div>
           <div 
             className="cursor-pointer transition-transform hover:scale-[1.02]"
             onClick={() => setRohertragModalOpen(true)}
@@ -230,6 +283,17 @@ export function DashboardView() {
         rohertrag={rohertrag}
         rohmarge={erlöseGesamt !== 0 ? (rohertrag / Math.abs(erlöseGesamt)) * 100 : 0}
         aufwandNachKlassen={aufwandNachKlassen}
+        jahr={selectedYear}
+        monat={selectedMonth}
+      />
+
+      {/* Personalkosten Detail Modal */}
+      <PersonalkostenDetailModal
+        open={personalkostenModalOpen}
+        onOpenChange={setPersonalkostenModalOpen}
+        personalkostenGesamt={personalkostenGesamt}
+        personalkostenVormonat={personalkostenVormonat}
+        personalkostenNachBereich={personalkostenNachBereich}
         jahr={selectedYear}
         monat={selectedMonth}
       />
