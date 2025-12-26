@@ -1204,3 +1204,158 @@ export function exportRohertragToPdf(
   // Download
   doc.save(`Rohertrag-Report_${jahr}-${String(monat).padStart(2, '0')}.pdf`);
 }
+
+interface PersonalkostenBereich {
+  bereich: string;
+  value: number;
+  valueVormonat: number;
+}
+
+export function exportPersonalkostenToPdf(
+  personalkostenGesamt: number,
+  personalkostenVormonat: number,
+  personalkostenNachBereich: PersonalkostenBereich[],
+  topKonten: { kontonummer: string; bezeichnung: string; saldoAktuell: number }[],
+  jahr: number,
+  monat: number
+) {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  
+  // Header
+  doc.setFontSize(20);
+  doc.setTextColor(40, 40, 40);
+  doc.text('Personalkosten-Report', pageWidth / 2, 20, { align: 'center' });
+  
+  doc.setFontSize(12);
+  doc.setTextColor(100, 100, 100);
+  doc.text(`${months[monat]} ${jahr}`, pageWidth / 2, 28, { align: 'center' });
+  
+  doc.setFontSize(10);
+  doc.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, pageWidth - 15, 15, { align: 'right' });
+  
+  // Übersicht Box
+  doc.setFillColor(245, 245, 250);
+  doc.roundedRect(15, 38, pageWidth - 30, 30, 3, 3, 'F');
+  
+  doc.setFontSize(14);
+  doc.setTextColor(40, 40, 40);
+  doc.text('Übersicht', 20, 48);
+  
+  doc.setFontSize(11);
+  doc.setTextColor(80, 80, 80);
+  doc.text(`Personalkosten Gesamt: ${formatCurrency(personalkostenGesamt)}`, 25, 58);
+  doc.text(`Vormonat: ${formatCurrency(personalkostenVormonat)}`, 110, 58);
+  
+  const diff = personalkostenGesamt - personalkostenVormonat;
+  doc.setTextColor(diff > 0 ? 185 : 34, diff > 0 ? 28 : 139, 28);
+  doc.text(`Differenz: ${diff > 0 ? '+' : ''}${formatCurrency(diff)}`, 25, 66);
+  
+  // Nach Abteilung
+  doc.setFontSize(14);
+  doc.setTextColor(40, 40, 40);
+  doc.text('Personalkosten nach Abteilung', 15, 85);
+  
+  const sortedBereiche = [...personalkostenNachBereich]
+    .filter(b => b.value > 0)
+    .sort((a, b) => b.value - a.value);
+  
+  const bereichTableData = sortedBereiche.map(b => {
+    const prozent = personalkostenGesamt > 0 ? (b.value / personalkostenGesamt) * 100 : 0;
+    const change = b.valueVormonat > 0 ? ((b.value - b.valueVormonat) / b.valueVormonat) * 100 : 0;
+    return [
+      b.bereich,
+      formatCurrency(b.value),
+      `${prozent.toFixed(1)}%`,
+      formatCurrency(b.valueVormonat),
+      `${change > 0 ? '+' : ''}${change.toFixed(1)}%`,
+    ];
+  });
+  
+  bereichTableData.push([
+    'Gesamt',
+    formatCurrency(personalkostenGesamt),
+    '100%',
+    formatCurrency(personalkostenVormonat),
+    '',
+  ]);
+
+  autoTable(doc, {
+    startY: 90,
+    head: [['Abteilung', 'Aktuell', 'Anteil', 'Vormonat', 'Trend']],
+    body: bereichTableData,
+    theme: 'striped',
+    headStyles: {
+      fillColor: [59, 130, 246],
+      textColor: 255,
+      fontStyle: 'bold',
+      fontSize: 9,
+    },
+    bodyStyles: { fontSize: 9 },
+    alternateRowStyles: { fillColor: [239, 246, 255] },
+    columnStyles: {
+      0: { fontStyle: 'bold', cellWidth: 45 },
+      1: { halign: 'right', cellWidth: 35 },
+      2: { halign: 'right', cellWidth: 25 },
+      3: { halign: 'right', cellWidth: 35 },
+      4: { halign: 'right', cellWidth: 30 },
+    },
+    margin: { left: 15, right: 15 },
+    didParseCell: (data) => {
+      if (data.row.index === bereichTableData.length - 1) {
+        data.cell.styles.fontStyle = 'bold';
+        data.cell.styles.fillColor = [219, 234, 254];
+      }
+    },
+  });
+
+  // Top Konten
+  const y = (doc as any).lastAutoTable?.finalY + 15 || 170;
+  
+  doc.setFontSize(14);
+  doc.setTextColor(40, 40, 40);
+  doc.text('Top 10 Personalkonten', 15, y);
+  
+  const kontenTableData = topKonten.slice(0, 10).map(k => [
+    k.kontonummer,
+    k.bezeichnung,
+    formatCurrency(k.saldoAktuell),
+  ]);
+
+  autoTable(doc, {
+    startY: y + 5,
+    head: [['Konto', 'Bezeichnung', 'Betrag']],
+    body: kontenTableData,
+    theme: 'striped',
+    headStyles: {
+      fillColor: [59, 130, 246],
+      textColor: 255,
+      fontStyle: 'bold',
+      fontSize: 9,
+    },
+    bodyStyles: { fontSize: 9 },
+    alternateRowStyles: { fillColor: [239, 246, 255] },
+    columnStyles: {
+      0: { cellWidth: 25 },
+      1: { cellWidth: 100 },
+      2: { halign: 'right', cellWidth: 40 },
+    },
+    margin: { left: 15, right: 15 },
+  });
+
+  // Footer
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text(
+      `Seite ${i} von ${pageCount}`,
+      pageWidth / 2,
+      doc.internal.pageSize.getHeight() - 10,
+      { align: 'center' }
+    );
+  }
+
+  doc.save(`Personalkosten-Report_${jahr}-${String(monat).padStart(2, '0')}.pdf`);
+}
