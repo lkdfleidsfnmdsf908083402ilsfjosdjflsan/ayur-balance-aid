@@ -5,13 +5,14 @@ import { KPICard } from '@/components/cards/KPICard';
 import { BereichChart } from '@/components/charts/BereichChart';
 import { AufwandKlassenChart } from '@/components/charts/AufwandKlassenChart';
 import { AlarmWidget } from '@/components/widgets/AlarmWidget';
+import { BudgetAbweichungWidget } from '@/components/widgets/BudgetAbweichungWidget';
 import { RohertragDetailModal } from '@/components/modals/RohertragDetailModal';
 import { ErloesDetailModal } from '@/components/modals/ErloesDetailModal';
 import { PersonalkostenDetailModal } from '@/components/modals/PersonalkostenDetailModal';
 import { FBDetailModal } from '@/components/modals/FBDetailModal';
 import { AufwandDetailModal } from '@/components/modals/AufwandDetailModal';
 import { HandbuchPreviewModal } from '@/components/modals/HandbuchPreviewModal';
-import { Euro, TrendingUp, ShoppingCart, Wallet, Users, UtensilsCrossed, BookOpen, Eye } from 'lucide-react';
+import { Euro, TrendingUp, ShoppingCart, Wallet, Users, UtensilsCrossed, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 
@@ -301,8 +302,9 @@ export function DashboardView() {
         </div>
         
         {/* Alarm Widget */}
-        <div className="mb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <AlarmWidget schwellenwerte={schwellenwerte} />
+          <BudgetAbweichungWidget jahr={selectedYear} monat={selectedMonth} />
         </div>
         
         {/* Aufwand nach Kontoklassen Chart */}

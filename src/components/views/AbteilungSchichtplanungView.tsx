@@ -45,7 +45,9 @@ import {
   FileDown,
   Mail,
   Loader2,
+  Printer,
 } from "lucide-react";
+import { SchichtplanDruckModal } from '@/components/modals/SchichtplanDruckModal';
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { Database } from "@/integrations/supabase/types";
@@ -123,6 +125,7 @@ export function AbteilungSchichtplanungView() {
   );
   const [selectedAbteilung, setSelectedAbteilung] = useState<string>(ABTEILUNGEN[0]);
   const [showDialog, setShowDialog] = useState(false);
+  const [showPrintModal, setShowPrintModal] = useState(false);
   const [selectedShift, setSelectedShift] = useState<{
     employee: Employee;
     date: Date;
@@ -549,6 +552,14 @@ export function AbteilungSchichtplanungView() {
         </div>
 
         <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setShowPrintModal(true)} 
+            disabled={filteredEmployees.length === 0}
+          >
+            <Printer className="h-4 w-4 mr-2" />
+            Druckansicht
+          </Button>
           <Button variant="outline" onClick={exportToPDF} disabled={filteredEmployees.length === 0}>
             <FileDown className="h-4 w-4 mr-2" />
             PDF Export
@@ -964,6 +975,17 @@ export function AbteilungSchichtplanungView() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Print Modal */}
+      <SchichtplanDruckModal
+        open={showPrintModal}
+        onOpenChange={setShowPrintModal}
+        abteilung={selectedAbteilung}
+        employees={filteredEmployees}
+        shifts={shifts}
+        weekStart={currentWeekStart}
+        weekDays={weekDays}
+      />
     </div>
   );
 }
