@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { exportKpiDocumentation } from '@/lib/pdfExport';
 import { KpiSchwellenwerteExportButton } from '@/components/KpiSchwellenwerteExportButton';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Bell,
   BellOff,
@@ -71,6 +72,7 @@ interface DailyReportData {
 
 export function KpiAlarmeView() {
   const { konten, salden, selectedYear, selectedMonth, uploadedFiles } = useFinanceStore();
+  const { t } = useLanguage();
   const [schwellenwerte, setSchwellenwerte] = useState<KpiSchwellenwert[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -331,13 +333,13 @@ export function KpiAlarmeView() {
 
       if (error) throw error;
 
-      toast.success('Schwellenwert gespeichert');
+      toast.success(t('kpiAlarm.saved'));
       setShowAddDialog(false);
       setNewSchwellenwert({ abteilung: 'Gesamt', kpiTyp: 'umsatz', alarmAktiv: true });
       loadSchwellenwerte();
     } catch (error) {
       console.error('Fehler beim Speichern:', error);
-      toast.error('Fehler beim Speichern');
+      toast.error(t('common.error'));
     }
   };
 
@@ -363,18 +365,18 @@ export function KpiAlarmeView() {
         .eq('id', id);
 
       if (error) throw error;
-      toast.success('Schwellenwert gelöscht');
+      toast.success(t('kpiAlarm.deleted'));
       loadSchwellenwerte();
     } catch (error) {
       console.error('Fehler:', error);
-      toast.error('Fehler beim Löschen');
+      toast.error(t('common.error'));
     }
   };
 
   const activeAlarms = schwellenwerte.filter(s => s.alarmAktiv && ['warning', 'critical'].includes(checkAlarm(s)));
 
   const formatValue = (kpiTyp: KpiTyp, value: number | null): string => {
-    if (value === null) return 'Keine Daten';
+    if (value === null) return t('kpiAlarm.noDataAvailable');
     
     // Prozent-KPIs
     if (kpiTyp.includes('_pct') || kpiTyp.includes('_marge') || kpiTyp.includes('_rate')) {
@@ -445,17 +447,17 @@ export function KpiAlarmeView() {
   if (uploadedFiles.length === 0) {
     return (
       <div className="flex-1 flex flex-col">
-        <Header title="KPI-Alarme" description="Schwellenwerte und Warnungen" />
+        <Header title={t('kpiAlarm.title')} description={t('kpiAlarm.description')} />
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="text-center max-w-md animate-fade-in">
             <div className="w-20 h-20 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-6">
               <Bell className="h-10 w-10 text-muted-foreground" />
             </div>
             <h3 className="text-xl font-semibold text-foreground mb-2">
-              Keine Daten vorhanden
+              {t('kpiAlarm.noData')}
             </h3>
             <p className="text-muted-foreground">
-              Laden Sie Ihre Saldenlisten hoch, um Alarme zu konfigurieren.
+              {t('kpiAlarm.uploadHint')}
             </p>
           </div>
         </div>
@@ -466,8 +468,8 @@ export function KpiAlarmeView() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <Header 
-        title="KPI-Alarme" 
-        description="Schwellenwerte und Warnungen konfigurieren"
+        title={t('kpiAlarm.title')} 
+        description={t('kpiAlarm.description')}
       />
       
       <div className="flex-1 overflow-auto p-4 md:p-6 space-y-6">
@@ -477,12 +479,12 @@ export function KpiAlarmeView() {
             {activeAlarms.length > 0 ? (
               <Badge variant="destructive" className="gap-2">
                 <AlertTriangle className="h-3 w-3" />
-                {activeAlarms.length} Alarm{activeAlarms.length !== 1 ? 'e' : ''} aktiv
+                {activeAlarms.length} {activeAlarms.length !== 1 ? t('kpiAlarm.activeAlarms') : t('kpiAlarm.activeAlarms')}
               </Badge>
             ) : (
               <Badge variant="outline" className="gap-2 border-success text-success">
                 <CheckCircle2 className="h-3 w-3" />
-                Alle KPIs im Zielbereich
+                {t('kpiAlarm.noAlarms')}
               </Badge>
             )}
           </div>
@@ -493,26 +495,26 @@ export function KpiAlarmeView() {
               className="gap-2"
               onClick={() => {
                 exportKpiDocumentation();
-                toast.success('KPI-Dokumentation wurde exportiert');
+                toast.success(t('deptKpi.exportSuccess'));
               }}
             >
               <Download className="h-4 w-4" />
-              <span className="hidden sm:inline">Dokumentation</span>
+              <span className="hidden sm:inline">{t('kpiAlarm.exportDoc')}</span>
             </Button>
             <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
               <DialogTrigger asChild>
                 <Button className="gap-2">
                   <Plus className="h-4 w-4" />
-                  Schwellenwert hinzufügen
+                  {t('kpiAlarm.addThreshold')}
                 </Button>
               </DialogTrigger>
             <DialogContent className="max-w-lg">
               <DialogHeader>
-                <DialogTitle>Neuen Schwellenwert konfigurieren</DialogTitle>
+                <DialogTitle>{t('kpiAlarm.newThreshold')}</DialogTitle>
               </DialogHeader>
               <div className="space-y-4 mt-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Bereich / Abteilung</label>
+                  <label className="text-sm font-medium">{t('kpiAlarm.department')}</label>
                   <Select 
                     value={newSchwellenwert.abteilung} 
                     onValueChange={(v) => {
@@ -529,23 +531,23 @@ export function KpiAlarmeView() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectGroup>
-                        <SelectLabel>Übergreifend</SelectLabel>
-                        <SelectItem value="Gesamt">Gesamt</SelectItem>
+                        <SelectLabel>{t('common.total')}</SelectLabel>
+                        <SelectItem value="Gesamt">{t('common.total')}</SelectItem>
                       </SelectGroup>
                       <SelectGroup>
-                        <SelectLabel>Operative Abteilungen</SelectLabel>
+                        <SelectLabel>{t('deptKpi.operativeDepts')}</SelectLabel>
                         {operativeAbteilungen.map(abt => (
                           <SelectItem key={abt} value={abt}>{abt}</SelectItem>
                         ))}
                       </SelectGroup>
                       <SelectGroup>
-                        <SelectLabel>Service-Abteilungen</SelectLabel>
+                        <SelectLabel>{t('deptKpi.serviceDepts')}</SelectLabel>
                         {serviceAbteilungen.map(abt => (
                           <SelectItem key={abt} value={abt}>{abt}</SelectItem>
                         ))}
                       </SelectGroup>
                       <SelectGroup>
-                        <SelectLabel>Daily Report Bereiche</SelectLabel>
+                        <SelectLabel>Daily Report</SelectLabel>
                         {dailyReportAbteilungen.map(abt => (
                           <SelectItem key={abt} value={abt}>
                             <div className="flex items-center gap-2">
@@ -559,7 +561,7 @@ export function KpiAlarmeView() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">KPI</label>
+                  <label className="text-sm font-medium">{t('kpiAlarm.kpi')}</label>
                   <Select 
                     value={newSchwellenwert.kpiTyp} 
                     onValueChange={(v) => setNewSchwellenwert({...newSchwellenwert, kpiTyp: v as KpiTyp})}
@@ -578,10 +580,10 @@ export function KpiAlarmeView() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Minimum</label>
+                    <label className="text-sm font-medium">{t('kpiAlarm.min')}</label>
                     <Input
                       type="number"
-                      placeholder="Bei Unterschreitung warnen"
+                      placeholder={t('kpiAlarm.minThreshold')}
                       value={newSchwellenwert.schwellenwertMin || ''}
                       onChange={(e) => setNewSchwellenwert({
                         ...newSchwellenwert, 
@@ -590,10 +592,10 @@ export function KpiAlarmeView() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Maximum</label>
+                    <label className="text-sm font-medium">{t('kpiAlarm.max')}</label>
                     <Input
                       type="number"
-                      placeholder="Bei Überschreitung warnen"
+                      placeholder={t('kpiAlarm.maxThreshold')}
                       value={newSchwellenwert.schwellenwertMax || ''}
                       onChange={(e) => setNewSchwellenwert({
                         ...newSchwellenwert, 
@@ -604,7 +606,7 @@ export function KpiAlarmeView() {
                 </div>
                 <Button onClick={addSchwellenwert} className="w-full gap-2">
                   <Save className="h-4 w-4" />
-                  Speichern
+                  {t('common.save')}
                 </Button>
               </div>
             </DialogContent>
@@ -618,7 +620,7 @@ export function KpiAlarmeView() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-destructive">
                 <AlertCircle className="h-5 w-5" />
-                Aktive Warnungen
+                {t('kpiAlarm.activeAlarms')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -647,8 +649,8 @@ export function KpiAlarmeView() {
                             {formatValue(alarm.kpiTyp, value)}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            {alarm.schwellenwertMin !== undefined && `Min: ${alarm.schwellenwertMin}`}
-                            {alarm.schwellenwertMax !== undefined && ` Max: ${alarm.schwellenwertMax}`}
+                            {alarm.schwellenwertMin !== undefined && `${t('kpiAlarm.min')}: ${alarm.schwellenwertMin}`}
+                            {alarm.schwellenwertMax !== undefined && ` ${t('kpiAlarm.max')}: ${alarm.schwellenwertMax}`}
                           </div>
                         </div>
                       </div>
@@ -665,26 +667,26 @@ export function KpiAlarmeView() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5 text-primary" />
-              Konfigurierte Schwellenwerte
+              {t('kpiAlarm.thresholds')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {schwellenwerte.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                Noch keine Schwellenwerte konfiguriert. Klicken Sie auf "Schwellenwert hinzufügen".
+                {t('kpiAlarm.noThresholdsConfig')}
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-16">Aktiv</TableHead>
-                      <TableHead>Bereich</TableHead>
-                      <TableHead>KPI</TableHead>
-                      <TableHead className="text-right">Min</TableHead>
-                      <TableHead className="text-right">Max</TableHead>
-                      <TableHead className="text-right">Aktueller Wert</TableHead>
-                      <TableHead className="text-center w-20">Status</TableHead>
+                      <TableHead className="w-16">{t('kpiAlarm.alarmActive')}</TableHead>
+                      <TableHead>{t('kpiAlarm.department')}</TableHead>
+                      <TableHead>{t('kpiAlarm.kpi')}</TableHead>
+                      <TableHead className="text-right">{t('kpiAlarm.min')}</TableHead>
+                      <TableHead className="text-right">{t('kpiAlarm.max')}</TableHead>
+                      <TableHead className="text-right">{t('kpiAlarm.currentValue')}</TableHead>
+                      <TableHead className="text-center w-20">{t('kpiAlarm.status')}</TableHead>
                       <TableHead className="w-12"></TableHead>
                     </TableRow>
                   </TableHeader>

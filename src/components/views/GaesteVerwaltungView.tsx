@@ -455,9 +455,9 @@ export function GaesteVerwaltungView() {
             
             <div className="grid grid-cols-2 gap-4 py-4">
               <div className="space-y-2">
-                <Label>Anrede</Label>
+                <Label>{t('guestMgmt.salutation')}</Label>
                 <Select value={newGuest.anrede} onValueChange={v => setNewGuest({...newGuest, anrede: v})}>
-                  <SelectTrigger><SelectValue placeholder="Auswählen" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder={t('guestMgmt.select')} /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Herr">Herr</SelectItem>
                     <SelectItem value="Frau">Frau</SelectItem>
@@ -467,7 +467,7 @@ export function GaesteVerwaltungView() {
               </div>
               
               <div className="space-y-2">
-                <Label>Geburtsdatum</Label>
+                <Label>{t('guestMgmt.birthdate')}</Label>
                 <Input 
                   type="date" 
                   value={newGuest.geburtsdatum} 
@@ -476,7 +476,7 @@ export function GaesteVerwaltungView() {
               </div>
               
               <div className="space-y-2">
-                <Label>Vorname *</Label>
+                <Label>{t('guestMgmt.firstName')} *</Label>
                 <Input 
                   value={newGuest.vorname} 
                   onChange={e => setNewGuest({...newGuest, vorname: e.target.value})}
@@ -485,7 +485,7 @@ export function GaesteVerwaltungView() {
               </div>
               
               <div className="space-y-2">
-                <Label>Nachname *</Label>
+                <Label>{t('guestMgmt.lastName')} *</Label>
                 <Input 
                   value={newGuest.nachname} 
                   onChange={e => setNewGuest({...newGuest, nachname: e.target.value})}
@@ -494,16 +494,16 @@ export function GaesteVerwaltungView() {
               </div>
               
               <div className="space-y-2">
-                <Label>E-Mail</Label>
+                <Label>{t('guestMgmt.email')}</Label>
                 <Input 
                   type="email"
-                  value={newGuest.email} 
+                  value={newGuest.email}
                   onChange={e => setNewGuest({...newGuest, email: e.target.value})}
                 />
               </div>
               
               <div className="space-y-2">
-                <Label>Telefon</Label>
+                <Label>{t('guestMgmt.phone')}</Label>
                 <Input 
                   value={newGuest.telefon} 
                   onChange={e => setNewGuest({...newGuest, telefon: e.target.value})}
@@ -511,7 +511,7 @@ export function GaesteVerwaltungView() {
               </div>
               
               <div className="col-span-2 space-y-2">
-                <Label>Straße</Label>
+                <Label>{t('guestMgmt.street')}</Label>
                 <Input 
                   value={newGuest.strasse} 
                   onChange={e => setNewGuest({...newGuest, strasse: e.target.value})}
@@ -519,7 +519,7 @@ export function GaesteVerwaltungView() {
               </div>
               
               <div className="space-y-2">
-                <Label>PLZ</Label>
+                <Label>{t('guestMgmt.zip')}</Label>
                 <Input 
                   value={newGuest.plz} 
                   onChange={e => setNewGuest({...newGuest, plz: e.target.value})}
@@ -527,7 +527,7 @@ export function GaesteVerwaltungView() {
               </div>
               
               <div className="space-y-2">
-                <Label>Ort</Label>
+                <Label>{t('guestMgmt.city')}</Label>
                 <Input 
                   value={newGuest.ort} 
                   onChange={e => setNewGuest({...newGuest, ort: e.target.value})}
@@ -535,7 +535,7 @@ export function GaesteVerwaltungView() {
               </div>
               
               <div className="space-y-2">
-                <Label>Land</Label>
+                <Label>{t('guestMgmt.country')}</Label>
                 <Input 
                   value={newGuest.land} 
                   onChange={e => setNewGuest({...newGuest, land: e.target.value})}
@@ -543,7 +543,7 @@ export function GaesteVerwaltungView() {
               </div>
               
               <div className="space-y-2">
-                <Label>Sprache</Label>
+                <Label>{t('guestMgmt.language')}</Label>
                 <Input 
                   value={newGuest.sprache} 
                   onChange={e => setNewGuest({...newGuest, sprache: e.target.value})}
@@ -551,25 +551,23 @@ export function GaesteVerwaltungView() {
               </div>
               
               <div className="col-span-2 space-y-2">
-                <Label>Allergien (kommagetrennt)</Label>
+                <Label>{t('guestMgmt.allergies')}</Label>
                 <Input 
                   value={newGuest.allergien} 
                   onChange={e => setNewGuest({...newGuest, allergien: e.target.value})}
-                  placeholder="z.B. Gluten, Laktose, Nüsse"
                 />
               </div>
               
               <div className="col-span-2 space-y-2">
-                <Label>Ernährungshinweise</Label>
+                <Label>{t('guestMgmt.dietaryNotes')}</Label>
                 <Textarea 
                   value={newGuest.ernaehrungshinweise} 
                   onChange={e => setNewGuest({...newGuest, ernaehrungshinweise: e.target.value})}
-                  placeholder="z.B. Vegetarisch, Vegan, etc."
                 />
               </div>
               
               <div className="col-span-2 space-y-2">
-                <Label>Sonderwünsche</Label>
+                <Label>{t('guestMgmt.specialRequests')}</Label>
                 <Textarea 
                   value={newGuest.sonderwuensche} 
                   onChange={e => setNewGuest({...newGuest, sonderwuensche: e.target.value})}
@@ -582,7 +580,7 @@ export function GaesteVerwaltungView() {
                   checked={newGuest.newsletter_optin}
                   onCheckedChange={c => setNewGuest({...newGuest, newsletter_optin: !!c})}
                 />
-                <Label htmlFor="newsletter">Newsletter abonniert</Label>
+                <Label htmlFor="newsletter">{t('guestMgmt.newsletter')}</Label>
               </div>
               
               <div className="flex items-center space-x-2">
@@ -591,7 +589,7 @@ export function GaesteVerwaltungView() {
                   checked={newGuest.marketing_optin}
                   onCheckedChange={c => setNewGuest({...newGuest, marketing_optin: !!c})}
                 />
-                <Label htmlFor="marketing">Marketing erlaubt</Label>
+                <Label htmlFor="marketing">{t('guestMgmt.marketing')}</Label>
               </div>
               
               <div className="flex items-center space-x-2">
@@ -600,7 +598,7 @@ export function GaesteVerwaltungView() {
                   checked={newGuest.vip_status}
                   onCheckedChange={c => setNewGuest({...newGuest, vip_status: !!c})}
                 />
-                <Label htmlFor="vip">VIP-Status</Label>
+                <Label htmlFor="vip">{t('guestMgmt.vipStatus')}</Label>
               </div>
               
               <div className="flex items-center space-x-2">
@@ -609,14 +607,14 @@ export function GaesteVerwaltungView() {
                   checked={newGuest.arzt_freigabe}
                   onCheckedChange={c => setNewGuest({...newGuest, arzt_freigabe: !!c})}
                 />
-                <Label htmlFor="arzt">Arzt-Freigabe</Label>
+                <Label htmlFor="arzt">{t('guestMgmt.doctorApproval')}</Label>
               </div>
             </div>
             
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>Abbrechen</Button>
+              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>{t('common.cancel')}</Button>
               <Button onClick={handleAddGuest} disabled={!newGuest.vorname || !newGuest.nachname}>
-                Gast anlegen
+                {t('guestMgmt.addGuest')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -633,7 +631,7 @@ export function GaesteVerwaltungView() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.totalGuests}</p>
-                <p className="text-xs text-muted-foreground">Gäste gesamt</p>
+                <p className="text-xs text-muted-foreground">{t('guestMgmt.totalGuests')}</p>
               </div>
             </div>
           </CardContent>
@@ -647,7 +645,7 @@ export function GaesteVerwaltungView() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.newThisMonth}</p>
-                <p className="text-xs text-muted-foreground">Neu diesen Monat</p>
+                <p className="text-xs text-muted-foreground">{t('guestMgmt.newThisMonth')}</p>
               </div>
             </div>
           </CardContent>
@@ -661,7 +659,7 @@ export function GaesteVerwaltungView() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.vipGuests}</p>
-                <p className="text-xs text-muted-foreground">VIP-Gäste</p>
+                <p className="text-xs text-muted-foreground">{t('guestMgmt.vipGuests')}</p>
               </div>
             </div>
           </CardContent>
@@ -675,7 +673,7 @@ export function GaesteVerwaltungView() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{formatCurrency(stats.avgRevenue)}</p>
-                <p className="text-xs text-muted-foreground">Ø Umsatz/Gast</p>
+                <p className="text-xs text-muted-foreground">{t('guestMgmt.avgRevenue')}</p>
               </div>
             </div>
           </CardContent>
@@ -689,7 +687,7 @@ export function GaesteVerwaltungView() {
               </div>
               <div>
                 <p className="text-2xl font-bold">{stats.returningRate.toFixed(1)}%</p>
-                <p className="text-xs text-muted-foreground">Wiederkehrerquote</p>
+                <p className="text-xs text-muted-foreground">{t('guestMgmt.returningRate')}</p>
               </div>
             </div>
           </CardContent>
@@ -702,11 +700,11 @@ export function GaesteVerwaltungView() {
         <Card className="lg:col-span-2 bg-card/50 border-border/50">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Gästeliste</CardTitle>
+              <CardTitle>{t('guestMgmt.guestList')}</CardTitle>
               <div className="relative w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
-                  placeholder="Suchen..." 
+                  placeholder={t('guestMgmt.searchGuests')} 
                   className="pl-9"
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
@@ -719,11 +717,11 @@ export function GaesteVerwaltungView() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/30">
-                    <TableHead>Gast-Nr.</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Kontakt</TableHead>
-                    <TableHead className="text-center">Aufenthalte</TableHead>
-                    <TableHead className="text-right">Umsatz</TableHead>
+                    <TableHead>{t('guestMgmt.guestNumber')}</TableHead>
+                    <TableHead>{t('guestMgmt.name')}</TableHead>
+                    <TableHead>{t('guestMgmt.contact')}</TableHead>
+                    <TableHead className="text-center">{t('guestMgmt.stays')}</TableHead>
+                    <TableHead className="text-right">{t('guestMgmt.totalRevenue')}</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -731,13 +729,13 @@ export function GaesteVerwaltungView() {
                   {loading ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                        Lade Gäste...
+                        {t('common.loading')}
                       </TableCell>
                     </TableRow>
                   ) : filteredGuests.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                        Keine Gäste gefunden
+                        {t('guestMgmt.noGuests')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -802,7 +800,7 @@ export function GaesteVerwaltungView() {
             </div>
             {filteredGuests.length > 20 && (
               <p className="text-sm text-muted-foreground text-center mt-4">
-                Zeige 20 von {filteredGuests.length} Gästen
+                {t('guestMgmt.showing')} 20 {t('comparison.ofPositions')} {filteredGuests.length}
               </p>
             )}
           </CardContent>
@@ -818,7 +816,7 @@ export function GaesteVerwaltungView() {
                   {selectedGuest.vorname} {selectedGuest.nachname}
                 </div>
               ) : (
-                'Gast auswählen'
+                t('guestMgmt.selectGuest')
               )}
             </CardTitle>
             {selectedGuest && (
@@ -829,9 +827,9 @@ export function GaesteVerwaltungView() {
             {selectedGuest ? (
               <Tabs defaultValue="info" className="w-full">
                 <TabsList className="w-full">
-                  <TabsTrigger value="info" className="flex-1">Info</TabsTrigger>
-                  <TabsTrigger value="stays" className="flex-1">Aufenthalte</TabsTrigger>
-                  <TabsTrigger value="prefs" className="flex-1">Präferenzen</TabsTrigger>
+                  <TabsTrigger value="info" className="flex-1">{t('guestMgmt.info')}</TabsTrigger>
+                  <TabsTrigger value="stays" className="flex-1">{t('guestMgmt.stays')}</TabsTrigger>
+                  <TabsTrigger value="prefs" className="flex-1">{t('guestMgmt.preferences')}</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="info" className="space-y-4 mt-4">
@@ -857,7 +855,7 @@ export function GaesteVerwaltungView() {
                     {selectedGuest.erstbesuch_datum && (
                       <div className="flex items-center gap-3">
                         <Calendar className="h-4 w-4 text-muted-foreground" />
-                        <span>Erstbesuch: {new Date(selectedGuest.erstbesuch_datum).toLocaleDateString('de-DE')}</span>
+                        <span>{t('guestMgmt.firstVisit')}: {new Date(selectedGuest.erstbesuch_datum).toLocaleDateString('de-DE')}</span>
                       </div>
                     )}
                   </div>
@@ -865,11 +863,11 @@ export function GaesteVerwaltungView() {
                   <div className="grid grid-cols-2 gap-3 pt-4 border-t border-border">
                     <div className="p-3 rounded-lg bg-muted/30">
                       <p className="text-lg font-bold">{selectedGuest.anzahl_aufenthalte}</p>
-                      <p className="text-xs text-muted-foreground">Aufenthalte</p>
+                      <p className="text-xs text-muted-foreground">{t('guestMgmt.stays')}</p>
                     </div>
                     <div className="p-3 rounded-lg bg-muted/30">
                       <p className="text-lg font-bold">{formatCurrency(selectedGuest.gesamtumsatz)}</p>
-                      <p className="text-xs text-muted-foreground">Gesamtumsatz</p>
+                      <p className="text-xs text-muted-foreground">{t('guestMgmt.totalRevenue')}</p>
                     </div>
                   </div>
                   
@@ -889,13 +887,13 @@ export function GaesteVerwaltungView() {
                     onClick={() => setIsStayDialogOpen(true)}
                   >
                     <Plus className="h-4 w-4" />
-                    Aufenthalt hinzufügen
+                    {t('guestMgmt.addStay')}
                   </Button>
                   
                   <div className="space-y-2">
                     {guestStays.length === 0 ? (
                       <p className="text-sm text-muted-foreground text-center py-4">
-                        Keine Aufenthalte erfasst
+                        {t('guestMgmt.noStays')}
                       </p>
                     ) : (
                       guestStays.map(stay => (
@@ -923,7 +921,7 @@ export function GaesteVerwaltungView() {
                 <TabsContent value="prefs" className="space-y-4 mt-4">
                   {selectedGuest.allergien && selectedGuest.allergien.length > 0 && (
                     <div>
-                      <p className="text-sm font-medium mb-2">Allergien</p>
+                      <p className="text-sm font-medium mb-2">{t('guestMgmt.allergies')}</p>
                       <div className="flex flex-wrap gap-1">
                         {selectedGuest.allergien.map((a, i) => (
                           <Badge key={i} variant="destructive" className="text-xs">{a}</Badge>
@@ -934,21 +932,21 @@ export function GaesteVerwaltungView() {
                   
                   {selectedGuest.ernaehrungshinweise && (
                     <div>
-                      <p className="text-sm font-medium mb-1">Ernährung</p>
+                      <p className="text-sm font-medium mb-1">{t('guestMgmt.dietaryNotes')}</p>
                       <p className="text-sm text-muted-foreground">{selectedGuest.ernaehrungshinweise}</p>
                     </div>
                   )}
                   
                   {selectedGuest.zimmerpraeferenz && (
                     <div>
-                      <p className="text-sm font-medium mb-1">Zimmerpräferenz</p>
+                      <p className="text-sm font-medium mb-1">{t('guestMgmt.roomPreference')}</p>
                       <p className="text-sm text-muted-foreground">{selectedGuest.zimmerpraeferenz}</p>
                     </div>
                   )}
                   
                   {selectedGuest.sonderwuensche && (
                     <div>
-                      <p className="text-sm font-medium mb-1">Sonderwünsche</p>
+                      <p className="text-sm font-medium mb-1">{t('guestMgmt.specialRequests')}</p>
                       <p className="text-sm text-muted-foreground">{selectedGuest.sonderwuensche}</p>
                     </div>
                   )}
@@ -957,7 +955,7 @@ export function GaesteVerwaltungView() {
                     <div>
                       <p className="text-sm font-medium mb-1 flex items-center gap-1">
                         <Heart className="h-3 w-3 text-red-400" />
-                        Medizinische Hinweise
+                        {t('guestMgmt.medicalNotes')}
                       </p>
                       <p className="text-sm text-muted-foreground">{selectedGuest.medizinische_hinweise}</p>
                     </div>
@@ -965,7 +963,7 @@ export function GaesteVerwaltungView() {
                   
                   {selectedGuest.notizen && (
                     <div>
-                      <p className="text-sm font-medium mb-1">Notizen</p>
+                      <p className="text-sm font-medium mb-1">{t('guestMgmt.notes')}</p>
                       <p className="text-sm text-muted-foreground">{selectedGuest.notizen}</p>
                     </div>
                   )}
@@ -974,7 +972,7 @@ export function GaesteVerwaltungView() {
             ) : (
               <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
                 <Users className="h-12 w-12 mb-4 opacity-50" />
-                <p>Wählen Sie einen Gast aus der Liste</p>
+                <p>{t('guestMgmt.selectGuest')}</p>
               </div>
             )}
           </CardContent>
@@ -985,15 +983,15 @@ export function GaesteVerwaltungView() {
       <Dialog open={isStayDialogOpen} onOpenChange={setIsStayDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Aufenthalt hinzufügen</DialogTitle>
+            <DialogTitle>{t('guestMgmt.addStay')}</DialogTitle>
             <DialogDescription>
-              Neuen Aufenthalt für {selectedGuest?.vorname} {selectedGuest?.nachname}
+              {t('guestMgmt.newStayFor')} {selectedGuest?.vorname} {selectedGuest?.nachname}
             </DialogDescription>
           </DialogHeader>
           
           <div className="grid grid-cols-2 gap-4 py-4">
             <div className="space-y-2">
-              <Label>Anreise *</Label>
+              <Label>{t('guestMgmt.arrival')} *</Label>
               <Input 
                 type="date" 
                 value={newStay.anreise} 
@@ -1002,7 +1000,7 @@ export function GaesteVerwaltungView() {
             </div>
             
             <div className="space-y-2">
-              <Label>Abreise *</Label>
+              <Label>{t('guestMgmt.departure')} *</Label>
               <Input 
                 type="date" 
                 value={newStay.abreise} 
@@ -1011,27 +1009,27 @@ export function GaesteVerwaltungView() {
             </div>
             
             <div className="space-y-2">
-              <Label>Gasttyp</Label>
+              <Label>{t('guestMgmt.guestType')}</Label>
               <Select value={newStay.gasttyp} onValueChange={v => setNewStay({...newStay, gasttyp: v})}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {guestTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  {guestTypes.map(gt => <SelectItem key={gt} value={gt}>{gt}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             
             <div className="space-y-2">
-              <Label>Kurtyp</Label>
+              <Label>{t('guestMgmt.cureType')}</Label>
               <Select value={newStay.kurtyp} onValueChange={v => setNewStay({...newStay, kurtyp: v})}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {cureTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  {cureTypes.map(ct => <SelectItem key={ct} value={ct}>{ct}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
             
             <div className="space-y-2">
-              <Label>Buchungskanal</Label>
+              <Label>{t('guestMgmt.bookingChannel')}</Label>
               <Select value={newStay.buchungskanal} onValueChange={v => setNewStay({...newStay, buchungskanal: v})}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -1041,7 +1039,7 @@ export function GaesteVerwaltungView() {
             </div>
             
             <div className="space-y-2">
-              <Label>Verpflegung</Label>
+              <Label>{t('guestMgmt.mealPlan')}</Label>
               <Select value={newStay.verpflegung} onValueChange={v => setNewStay({...newStay, verpflegung: v})}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -1051,7 +1049,7 @@ export function GaesteVerwaltungView() {
             </div>
             
             <div className="space-y-2">
-              <Label>Zimmer-Nr.</Label>
+              <Label>{t('guestMgmt.roomNumber')}</Label>
               <Input 
                 value={newStay.zimmer_nummer} 
                 onChange={e => setNewStay({...newStay, zimmer_nummer: e.target.value})}
@@ -1059,7 +1057,7 @@ export function GaesteVerwaltungView() {
             </div>
             
             <div className="space-y-2">
-              <Label>Zimmerkategorie</Label>
+              <Label>{t('guestMgmt.roomCategory')}</Label>
               <Input 
                 value={newStay.zimmer_kategorie} 
                 onChange={e => setNewStay({...newStay, zimmer_kategorie: e.target.value})}
@@ -1067,7 +1065,7 @@ export function GaesteVerwaltungView() {
             </div>
             
             <div className="space-y-2">
-              <Label>Zimmerpreis/Nacht (€)</Label>
+              <Label>{t('guestMgmt.pricePerNight')} (€)</Label>
               <Input 
                 type="number"
                 value={newStay.zimmerpreis_nacht} 
@@ -1076,7 +1074,7 @@ export function GaesteVerwaltungView() {
             </div>
             
             <div className="space-y-2">
-              <Label>Gesamtpreis (€)</Label>
+              <Label>{t('guestMgmt.totalPrice')} (€)</Label>
               <Input 
                 type="number"
                 value={newStay.gesamtpreis} 
@@ -1085,7 +1083,7 @@ export function GaesteVerwaltungView() {
             </div>
             
             <div className="space-y-2">
-              <Label>Spa-Umsatz (€)</Label>
+              <Label>{t('guestMgmt.spaRevenue')} (€)</Label>
               <Input 
                 type="number"
                 value={newStay.spa_umsatz} 
@@ -1094,7 +1092,7 @@ export function GaesteVerwaltungView() {
             </div>
             
             <div className="space-y-2">
-              <Label>F&B-Umsatz (€)</Label>
+              <Label>{t('guestMgmt.fbRevenue')} (€)</Label>
               <Input 
                 type="number"
                 value={newStay.fb_umsatz} 
@@ -1104,9 +1102,9 @@ export function GaesteVerwaltungView() {
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsStayDialogOpen(false)}>Abbrechen</Button>
+            <Button variant="outline" onClick={() => setIsStayDialogOpen(false)}>{t('common.cancel')}</Button>
             <Button onClick={handleAddStay} disabled={!newStay.anreise || !newStay.abreise}>
-              Aufenthalt speichern
+              {t('common.save')}
             </Button>
           </DialogFooter>
         </DialogContent>
