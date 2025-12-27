@@ -236,13 +236,13 @@ export function DashboardView() {
             onClick={() => setErloeseModalOpen(true)}
           >
             <KPICard
-              title="Gesamterlöse"
+              title={t('kpi.totalRevenue')}
               value={Math.abs(erlöseGesamt)}
               previousValue={erlöseVormonat ? Math.abs(erlöseVormonat) : null}
               previousYearValue={erlöseVorjahr ? Math.abs(erlöseVorjahr) : null}
               icon={Euro}
               variant="accent"
-              tooltip="Summe aller Erlös-Konten. Klicken für Aufschlüsselung nach Bereich."
+              tooltip={t('tooltip.revenue')}
             />
           </div>
           <div 
@@ -250,13 +250,13 @@ export function DashboardView() {
             onClick={() => setFbModalOpen(true)}
           >
             <KPICard
-              title="F&B Erlöse"
+              title={t('kpi.fbRevenue')}
               value={fbErloese}
               previousValue={fbErloeseVormonat || null}
               previousYearValue={fbErloeseVorjahr || null}
               icon={UtensilsCrossed}
               variant="accent"
-              tooltip="Erlöse aus Food & Beverage (Restaurant, Küche, Bar, Bankett). Klicken für Details."
+              tooltip={t('tooltip.fb')}
             />
           </div>
           <div 
@@ -264,14 +264,14 @@ export function DashboardView() {
             onClick={() => setAufwandModalOpen(true)}
           >
             <KPICard
-              title="Gesamtaufwand"
+              title={t('kpi.totalExpenses')}
               value={aufwandGesamt}
               previousValue={aufwandVormonat || null}
               previousYearValue={aufwandVorjahr || null}
               icon={ShoppingCart}
               variant="default"
               invertTrend
-              tooltip="Summe aller Aufwandskonten der Klassen 5-8. Klicken für Aufschlüsselung."
+              tooltip={t('tooltip.expenses')}
             />
           </div>
           <div 
@@ -279,14 +279,14 @@ export function DashboardView() {
             onClick={() => setPersonalkostenModalOpen(true)}
           >
             <KPICard
-              title="Personalkosten"
+              title={t('kpi.personnelCosts')}
               value={personalkostenGesamt}
               previousValue={personalkostenVormonat || null}
               previousYearValue={personalkostenVorjahr || null}
               icon={Users}
               variant="default"
               invertTrend
-              tooltip="Summe aller Konten der Klasse 6 (Löhne, Gehälter, Sozialabgaben). Klicken für Aufschlüsselung."
+              tooltip={t('tooltip.personnel')}
             />
           </div>
           <div 
@@ -294,21 +294,21 @@ export function DashboardView() {
             onClick={() => setRohertragModalOpen(true)}
           >
             <KPICard
-              title="Rohertrag"
+              title={t('kpi.grossProfit')}
               value={rohertrag}
               previousValue={rohertragVormonat || null}
               previousYearValue={rohertragVorjahr || null}
               icon={TrendingUp}
               variant={rohertrag > 0 ? 'success' : 'warning'}
-              tooltip="Erlöse − Aufwand (Klassen 5-8). Klicken für Details."
+              tooltip={t('tooltip.grossProfit')}
             />
           </div>
           <KPICard
-            title="Rohmarge"
+            title={t('kpi.grossMargin')}
             value={erlöseGesamt !== 0 ? (rohertrag / Math.abs(erlöseGesamt)) * 100 : 0}
             icon={Wallet}
             variant="default"
-            tooltip="Rohertrag ÷ Erlöse × 100 – zeigt die Rentabilität in Prozent"
+            tooltip={t('tooltip.grossMargin')}
           />
         </div>
         
@@ -322,7 +322,7 @@ export function DashboardView() {
         <div className="mb-6">
           <AufwandKlassenChart 
             data={aufwandNachKlassen}
-            title="Gesamtaufwand nach Kontoklassen"
+            title={t('chart.expensesByClass')}
           />
         </div>
         
@@ -330,12 +330,12 @@ export function DashboardView() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <BereichChart 
             data={bereichAggregationen.filter(b => b.kostenarttTyp === 'Erlös')} 
-            title="Erlöse nach Bereich"
+            title={t('chart.revenueByArea')}
             type="erlös"
           />
           <BereichChart 
             data={bereichAggregationen.filter(b => b.kostenarttTyp === 'Einkauf')} 
-            title="Aufwand nach Bereich"
+            title={t('chart.expensesByArea')}
             type="einkauf"
           />
         </div>

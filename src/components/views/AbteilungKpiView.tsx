@@ -14,6 +14,7 @@ import { AbteilungKpi, Bereich, Konto, SaldoMonat } from '@/types/finance';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { exportKpiToPdf } from '@/lib/pdfExport';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -64,8 +65,12 @@ const abteilungIcons: Record<Bereich, React.ElementType> = {
 
 export function AbteilungKpiView() {
   const { konten, salden, selectedYear, selectedMonth, uploadedFiles } = useFinanceStore();
+  const { t } = useLanguage();
   const [selectedAbteilung, setSelectedAbteilung] = useState<Bereich | null>(null);
   const [showDrillDown, setShowDrillDown] = useState(false);
+  
+  // Localized months
+  const monthKeys = ['', 'month.january', 'month.february', 'month.march', 'month.april', 'month.may', 'month.june', 'month.july', 'month.august', 'month.september', 'month.october', 'month.november', 'month.december'];
   
   // Aktuelle KPIs
   const abteilungKpis = useMemo(() => {
@@ -87,10 +92,13 @@ export function AbteilungKpiView() {
     return calculateGesamtKpis(vorjahrKpis);
   }, [vorjahrKpis]);
   
-  const months = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
-  
   // Daten für das Balkendiagramm mit Vorjahresvergleich
   const chartData = useMemo(() => {
+    const revCurrentKey = t('deptKpi.revenueCurrent');
+    const revPYKey = t('deptKpi.revenuePY');
+    const db2CurrentKey = t('deptKpi.db2Current');
+    const db2PYKey = t('deptKpi.db2PY');
+    
     return abteilungKpis
       .filter(k => operativeAbteilungen.includes(k.abteilung))
       .filter(k => k.umsatz > 0 || k.db1 !== 0 || k.db2 !== 0)
@@ -98,17 +106,16 @@ export function AbteilungKpiView() {
         const vorjahr = vorjahrKpis.find(v => v.abteilung === k.abteilung);
         return {
           name: k.abteilung,
-          'Umsatz aktuell': k.umsatz,
-          'Umsatz Vorjahr': vorjahr?.umsatz || 0,
-          'DB I aktuell': k.db1,
-          'DB I Vorjahr': vorjahr?.db1 || 0,
-          'DB II aktuell': k.db2,
-          'DB II Vorjahr': vorjahr?.db2 || 0,
+          [revCurrentKey]: k.umsatz,
+          [revPYKey]: vorjahr?.umsatz || 0,
+          [db2CurrentKey]: k.db2,
+          [db2PYKey]: vorjahr?.db2 || 0,
           color: bereichColors[k.abteilung],
+          _revCurrent: k.umsatz, // for sorting
         };
       })
-      .sort((a, b) => b['Umsatz aktuell'] - a['Umsatz aktuell']);
-  }, [abteilungKpis, vorjahrKpis]);
+      .sort((a, b) => b._revCurrent - a._revCurrent);
+  }, [abteilungKpis, vorjahrKpis, t]);
 
   // Daten für Drill-Down
   const drillDownData = useMemo(() => {
@@ -192,7 +199,7 @@ export function AbteilungKpiView() {
     ]);
 
     const csvContent = [
-      `Abteilungs-KPIs ${months[selectedMonth]} ${selectedYear}`,
+      `Abteilungs-KPIs ${t(monthKeys[selectedMonth])} ${selectedYear}`,
       '',
       headers.join(';'),
       ...rows.map(row => row.join(';'))
@@ -204,7 +211,7 @@ export function AbteilungKpiView() {
     link.download = `Abteilungs-KPIs_${selectedYear}-${String(selectedMonth).padStart(2, '0')}.csv`;
     link.click();
     
-    toast.success('KPI-Export erfolgreich erstellt');
+    toast.success(t('deptKpi.exportSuccess'));
   };
 
   const handleAbteilungClick = (abteilung: Bereich) => {
@@ -215,17 +222,17 @@ export function AbteilungKpiView() {
   if (uploadedFiles.length === 0) {
     return (
       <div className="flex-1 flex flex-col">
-        <Header title="Abteilungs-KPIs" description="Deckungsbeitragsrechnung nach Abteilung" />
+        <Header title={t('deptKpi.title')} description={t('deptKpi.description')} />
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="text-center max-w-md animate-fade-in">
             <div className="w-20 h-20 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-6">
               <Euro className="h-10 w-10 text-muted-foreground" />
             </div>
             <h3 className="text-xl font-semibold text-foreground mb-2">
-              Keine Daten vorhanden
+              {t('deptKpi.noData')}
             </h3>
             <p className="text-muted-foreground">
-              Laden Sie Ihre Saldenlisten hoch, um die Abteilungs-KPIs zu berechnen.
+              {t('deptKpi.uploadHint')}
             </p>
           </div>
         </div>
@@ -236,8 +243,8 @@ export function AbteilungKpiView() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <Header 
-        title="Abteilungs-KPIs" 
-        description={`Deckungsbeitragsrechnung ${months[selectedMonth]} ${selectedYear}`}
+        title={t('deptKpi.title')} 
+        description={`${t('deptKpi.description')} ${t(monthKeys[selectedMonth])} ${selectedYear}`}
       />
       
       <div className="flex-1 overflow-auto p-6 space-y-6">
@@ -246,11 +253,11 @@ export function AbteilungKpiView() {
           <div className="flex items-center gap-4">
             <Badge variant="outline" className="gap-2">
               <Calendar className="h-3 w-3" />
-              {months[selectedMonth]} {selectedYear}
+              {t(monthKeys[selectedMonth])} {selectedYear}
             </Badge>
             {vorjahrKpis.length > 0 && (
               <Badge variant="secondary" className="gap-2">
-                vs. {selectedYear - 1}
+                {t('deptKpi.vs')} {selectedYear - 1}
               </Badge>
             )}
           </div>
@@ -270,40 +277,40 @@ export function AbteilungKpiView() {
         {/* Gesamt-KPIs mit Vorjahresvergleich */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <GesamtKpiCard 
-            title="Gesamtumsatz" 
+            title={t('deptKpi.totalRevenue')} 
             value={gesamtKpis.gesamtUmsatz}
             vorjahr={gesamtKpisVorjahr.gesamtUmsatz}
             icon={Euro}
             variant="accent"
           />
           <GesamtKpiCard 
-            title="Wareneinsatz" 
+            title={t('deptKpi.cogs')} 
             value={gesamtKpis.gesamtWareneinsatz}
             vorjahr={gesamtKpisVorjahr.gesamtWareneinsatz}
             icon={Package}
           />
           <GesamtKpiCard 
-            title="DB I gesamt" 
+            title={t('deptKpi.db1Total')} 
             value={gesamtKpis.gesamtDB1}
             vorjahr={gesamtKpisVorjahr.gesamtDB1}
             icon={TrendingUp}
             variant={gesamtKpis.gesamtDB1 > 0 ? 'success' : 'warning'}
           />
           <GesamtKpiCard 
-            title="Personal" 
+            title={t('deptKpi.personnel')} 
             value={gesamtKpis.gesamtPersonal}
             vorjahr={gesamtKpisVorjahr.gesamtPersonal}
             icon={Users}
           />
           <GesamtKpiCard 
-            title="DB II gesamt" 
+            title={t('deptKpi.db2Total')} 
             value={gesamtKpis.gesamtDB2}
             vorjahr={gesamtKpisVorjahr.gesamtDB2}
             icon={TrendingUp}
             variant={gesamtKpis.gesamtDB2 > 0 ? 'success' : 'warning'}
           />
           <GesamtKpiCard 
-            title="Energie" 
+            title={t('deptKpi.energy')} 
             value={gesamtKpis.gesamtEnergie}
             vorjahr={gesamtKpisVorjahr.gesamtEnergie}
             icon={Zap}
@@ -316,7 +323,7 @@ export function AbteilungKpiView() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-primary" />
-                Jahresvergleich: {selectedYear} vs. {selectedYear - 1}
+                {t('deptKpi.yearComparison')}: {selectedYear} {t('deptKpi.vs')} {selectedYear - 1}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -340,10 +347,10 @@ export function AbteilungKpiView() {
                     }}
                   />
                   <Legend />
-                  <Bar dataKey="Umsatz aktuell" fill="hsl(142, 76%, 36%)" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Umsatz Vorjahr" fill="hsl(142, 76%, 36%, 0.3)" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="DB II aktuell" fill="hsl(280, 70%, 60%)" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="DB II Vorjahr" fill="hsl(280, 70%, 60%, 0.3)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey={t('deptKpi.revenueCurrent')} fill="hsl(142, 76%, 36%)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey={t('deptKpi.revenuePY')} fill="hsl(142, 76%, 36%, 0.3)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey={t('deptKpi.db2Current')} fill="hsl(280, 70%, 60%)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey={t('deptKpi.db2PY')} fill="hsl(280, 70%, 60%, 0.3)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -354,9 +361,9 @@ export function AbteilungKpiView() {
         <div>
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Building2 className="h-5 w-5 text-primary" />
-            Operative Abteilungen
+            {t('deptKpi.operativeDepts')}
             <span className="text-sm font-normal text-muted-foreground ml-2">
-              (klicken für Kontendetails)
+              {t('deptKpi.clickForDetails')}
             </span>
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -372,6 +379,7 @@ export function AbteilungKpiView() {
                     kpi={kpi} 
                     vorjahr={vorjahr}
                     onClick={() => handleAbteilungClick(kpi.abteilung)}
+                    t={t}
                   />
                 );
               })}
@@ -382,7 +390,7 @@ export function AbteilungKpiView() {
         <div>
           <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Users className="h-5 w-5 text-primary" />
-            Service-Bereiche (Kostenübersicht)
+            {t('deptKpi.serviceDepts')}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {abteilungKpis
@@ -393,6 +401,7 @@ export function AbteilungKpiView() {
                   key={kpi.abteilung} 
                   kpi={kpi}
                   onClick={() => handleAbteilungClick(kpi.abteilung)}
+                  t={t}
                 />
               ))}
           </div>
@@ -415,12 +424,12 @@ export function AbteilungKpiView() {
                       return <Icon className="h-4 w-4" style={{ color: bereichColors[selectedAbteilung] }} />;
                     })()}
                   </div>
-                  {selectedAbteilung} - Kontendetails
+                  {selectedAbteilung} - {t('deptKpi.accountDetails')}
                 </>
               )}
             </SheetTitle>
             <SheetDescription>
-              {months[selectedMonth]} {selectedYear} · {drillDownData.salden.length} Konten mit Saldo
+              {t(monthKeys[selectedMonth])} {selectedYear} · {drillDownData.salden.length} {t('deptKpi.accountsWithBalance')}
             </SheetDescription>
           </SheetHeader>
           
