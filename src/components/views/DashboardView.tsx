@@ -8,7 +8,7 @@ import { AlarmWidget } from '@/components/widgets/AlarmWidget';
 import { RohertragDetailModal } from '@/components/modals/RohertragDetailModal';
 import { ErloesDetailModal } from '@/components/modals/ErloesDetailModal';
 import { PersonalkostenDetailModal } from '@/components/modals/PersonalkostenDetailModal';
-import { Euro, TrendingUp, ShoppingCart, Wallet, Users } from 'lucide-react';
+import { Euro, TrendingUp, ShoppingCart, Wallet, Users, UtensilsCrossed } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 export function DashboardView() {
@@ -45,6 +45,10 @@ export function DashboardView() {
   const erlöseVormonat = bereichAggregationen
     .filter(b => b.kostenarttTyp === 'Erlös')
     .reduce((sum, b) => sum + (b.saldoVormonat ?? 0), 0);
+
+  const erlöseVorjahr = bereichAggregationen
+    .filter(b => b.kostenarttTyp === 'Erlös')
+    .reduce((sum, b) => sum + (b.saldoVorjahr ?? 0), 0);
   
   // Gesamtaufwand = alle Konten der Klassen 5, 6, 7, 8 (Aufwandskonten)
   const aufwandsKlassen = ['5', '6', '7', '8'];
@@ -126,6 +130,7 @@ export function DashboardView() {
   // Personalkosten gesamt (Klasse 6)
   const personalkostenGesamt = aufwandNachKlassen.find(k => k.klasse === '6')?.value ?? 0;
   const personalkostenVormonat = aufwandNachKlassen.find(k => k.klasse === '6')?.valueVormonat ?? 0;
+  const personalkostenVorjahr = aufwandNachKlassen.find(k => k.klasse === '6')?.valueVorjahr ?? 0;
   
   const aufwandGesamt = vergleiche
     .filter(v => isAufwandskonto(v.kontonummer))
@@ -134,9 +139,26 @@ export function DashboardView() {
   const aufwandVormonat = vergleiche
     .filter(v => isAufwandskonto(v.kontonummer))
     .reduce((sum, v) => sum + Math.abs(v.saldoVormonat ?? 0), 0);
+
+  const aufwandVorjahr = vergleiche
+    .filter(v => isAufwandskonto(v.kontonummer))
+    .reduce((sum, v) => sum + Math.abs(v.saldoVorjahr ?? 0), 0);
   
   const rohertrag = Math.abs(erlöseGesamt) - aufwandGesamt;
   const rohertragVormonat = Math.abs(erlöseVormonat) - aufwandVormonat;
+  const rohertragVorjahr = Math.abs(erlöseVorjahr) - aufwandVorjahr;
+
+  // F&B Bereich (Restaurant, Küche, Bar, Bankett)
+  const fbBereiche = ['Restaurant', 'Küche', 'Bar', 'Bankett', 'F&B'];
+  const fbErloese = bereichAggregationen
+    .filter(b => b.kostenarttTyp === 'Erlös' && fbBereiche.some(fb => b.bereich.includes(fb)))
+    .reduce((sum, b) => sum + Math.abs(b.saldoAktuell), 0);
+  const fbErloeseVormonat = bereichAggregationen
+    .filter(b => b.kostenarttTyp === 'Erlös' && fbBereiche.some(fb => b.bereich.includes(fb)))
+    .reduce((sum, b) => sum + Math.abs(b.saldoVormonat ?? 0), 0);
+  const fbErloeseVorjahr = bereichAggregationen
+    .filter(b => b.kostenarttTyp === 'Erlös' && fbBereiche.some(fb => b.bereich.includes(fb)))
+    .reduce((sum, b) => sum + Math.abs(b.saldoVorjahr ?? 0), 0);
   
   const months = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 
@@ -173,7 +195,7 @@ export function DashboardView() {
       
       <div className="flex-1 overflow-auto p-6">
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 mb-6">
           <div 
             className="cursor-pointer transition-transform hover:scale-[1.02]"
             onClick={() => setErloeseModalOpen(true)}
@@ -182,15 +204,26 @@ export function DashboardView() {
               title="Gesamterlöse"
               value={Math.abs(erlöseGesamt)}
               previousValue={erlöseVormonat ? Math.abs(erlöseVormonat) : null}
+              previousYearValue={erlöseVorjahr ? Math.abs(erlöseVorjahr) : null}
               icon={Euro}
               variant="accent"
               tooltip="Summe aller Erlös-Konten. Klicken für Aufschlüsselung nach Bereich."
             />
           </div>
           <KPICard
+            title="F&B Erlöse"
+            value={fbErloese}
+            previousValue={fbErloeseVormonat || null}
+            previousYearValue={fbErloeseVorjahr || null}
+            icon={UtensilsCrossed}
+            variant="accent"
+            tooltip="Erlöse aus Food & Beverage (Restaurant, Küche, Bar, Bankett)"
+          />
+          <KPICard
             title="Gesamtaufwand"
             value={aufwandGesamt}
             previousValue={aufwandVormonat || null}
+            previousYearValue={aufwandVorjahr || null}
             icon={ShoppingCart}
             variant="default"
             tooltip="Summe aller Aufwandskonten der Klassen 5 (Material), 6 (Personal), 7 (Abschreibungen), 8 (Sonstiges)"
@@ -203,6 +236,7 @@ export function DashboardView() {
               title="Personalkosten"
               value={personalkostenGesamt}
               previousValue={personalkostenVormonat || null}
+              previousYearValue={personalkostenVorjahr || null}
               icon={Users}
               variant="default"
               tooltip="Summe aller Konten der Klasse 6 (Löhne, Gehälter, Sozialabgaben). Klicken für Aufschlüsselung."
@@ -216,6 +250,7 @@ export function DashboardView() {
               title="Rohertrag"
               value={rohertrag}
               previousValue={rohertragVormonat || null}
+              previousYearValue={rohertragVorjahr || null}
               icon={TrendingUp}
               variant={rohertrag > 0 ? 'success' : 'warning'}
               tooltip="Erlöse − Aufwand (Klassen 5-8). Klicken für Details."

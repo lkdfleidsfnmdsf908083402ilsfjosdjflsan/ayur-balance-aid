@@ -12,6 +12,7 @@ interface KPICardProps {
   title: string;
   value: number;
   previousValue?: number | null;
+  previousYearValue?: number | null;
   icon: LucideIcon;
   variant?: 'default' | 'success' | 'warning' | 'accent';
   className?: string;
@@ -22,6 +23,7 @@ export function KPICard({
   title, 
   value, 
   previousValue, 
+  previousYearValue,
   icon: Icon,
   variant = 'default',
   className,
@@ -98,10 +100,17 @@ export function KPICard({
           {formatCurrency(value)}
         </p>
         
-        {previousValue !== null && previousValue !== undefined && (
-          <p className="text-xs text-muted-foreground mt-1">
-            Vormonat: {formatCurrency(previousValue)}
-          </p>
+        {(previousValue !== null && previousValue !== undefined) && (
+          <div className="flex flex-col gap-0.5 mt-1">
+            <p className="text-xs text-muted-foreground">
+              Vormonat: {formatCurrency(previousValue)}
+            </p>
+            {previousYearValue !== null && previousYearValue !== undefined && (
+              <p className="text-xs text-muted-foreground">
+                Vorjahr: {formatCurrency(previousYearValue)}
+              </p>
+            )}
+          </div>
         )}
       </div>
     </div>
