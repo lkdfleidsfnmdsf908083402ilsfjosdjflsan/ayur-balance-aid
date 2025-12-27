@@ -17,6 +17,8 @@ interface KPICardProps {
   variant?: 'default' | 'success' | 'warning' | 'accent';
   className?: string;
   tooltip?: string;
+  /** Bei true wird bei Aufwand-KPIs die Farbe invertiert (Steigerung = schlecht) */
+  invertTrend?: boolean;
 }
 
 export function KPICard({ 
@@ -27,19 +29,45 @@ export function KPICard({
   icon: Icon,
   variant = 'default',
   className,
-  tooltip
+  tooltip,
+  invertTrend = false
 }: KPICardProps) {
-  const diff = previousValue !== null && previousValue !== undefined 
+  // Vormonats-Trend
+  const diffVormonat = previousValue !== null && previousValue !== undefined 
     ? value - previousValue 
     : null;
-  const diffPercent = previousValue !== null && previousValue !== undefined && previousValue !== 0
+  const diffPercentVormonat = previousValue !== null && previousValue !== undefined && previousValue !== 0
     ? ((value - previousValue) / Math.abs(previousValue)) * 100
     : null;
   
-  const isPositive = diff !== null && diff > 0;
-  const isNegative = diff !== null && diff < 0;
+  // Vorjahres-Trend
+  const diffVorjahr = previousYearValue !== null && previousYearValue !== undefined 
+    ? value - previousYearValue 
+    : null;
+  const diffPercentVorjahr = previousYearValue !== null && previousYearValue !== undefined && previousYearValue !== 0
+    ? ((value - previousYearValue) / Math.abs(previousYearValue)) * 100
+    : null;
   
-  const TrendIcon = isPositive ? TrendingUp : isNegative ? TrendingDown : Minus;
+  const getTrendColor = (diff: number | null, invert: boolean) => {
+    if (diff === null) return "text-muted-foreground";
+    if (invert) {
+      // Bei Aufwand: Steigerung ist schlecht (rot), Senkung ist gut (grün)
+      if (diff > 0) return "text-destructive";
+      if (diff < 0) return "text-success";
+    } else {
+      // Normal: Steigerung ist gut (grün), Senkung ist schlecht (rot)
+      if (diff > 0) return "text-success";
+      if (diff < 0) return "text-destructive";
+    }
+    return "text-muted-foreground";
+  };
+  
+  const TrendIcon = (diff: number | null) => {
+    if (diff === null) return Minus;
+    if (diff > 0) return TrendingUp;
+    if (diff < 0) return TrendingDown;
+    return Minus;
+  };
   
   const variantStyles = {
     default: 'border-border',
@@ -47,6 +75,9 @@ export function KPICard({
     warning: 'border-warning/30',
     accent: 'border-secondary/30 glow-gold',
   };
+
+  const VormonatTrendIcon = TrendIcon(diffVormonat);
+  const VorjahrTrendIcon = TrendIcon(diffVorjahr);
 
   return (
     <div 
@@ -67,17 +98,29 @@ export function KPICard({
           )} />
         </div>
         
-        {diff !== null && (
-          <div className={cn(
-            "flex items-center gap-1 text-sm font-medium",
-            isPositive && "text-success",
-            isNegative && "text-destructive",
-            !isPositive && !isNegative && "text-muted-foreground"
-          )}>
-            <TrendIcon className="h-4 w-4" />
-            <span>{formatPercent(diffPercent)}</span>
-          </div>
-        )}
+        {/* Trend-Anzeigen */}
+        <div className="flex flex-col items-end gap-0.5">
+          {diffPercentVormonat !== null && (
+            <div className={cn(
+              "flex items-center gap-1 text-xs font-medium",
+              getTrendColor(diffVormonat, invertTrend)
+            )}>
+              <VormonatTrendIcon className="h-3 w-3" />
+              <span>{formatPercent(diffPercentVormonat)}</span>
+              <span className="text-muted-foreground/60">VM</span>
+            </div>
+          )}
+          {diffPercentVorjahr !== null && (
+            <div className={cn(
+              "flex items-center gap-1 text-xs font-medium",
+              getTrendColor(diffVorjahr, invertTrend)
+            )}>
+              <VorjahrTrendIcon className="h-3 w-3" />
+              <span>{formatPercent(diffPercentVorjahr)}</span>
+              <span className="text-muted-foreground/60">VJ</span>
+            </div>
+          )}
+        </div>
       </div>
       
       <div>

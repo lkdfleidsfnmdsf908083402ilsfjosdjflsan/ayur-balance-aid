@@ -8,6 +8,8 @@ import { AlarmWidget } from '@/components/widgets/AlarmWidget';
 import { RohertragDetailModal } from '@/components/modals/RohertragDetailModal';
 import { ErloesDetailModal } from '@/components/modals/ErloesDetailModal';
 import { PersonalkostenDetailModal } from '@/components/modals/PersonalkostenDetailModal';
+import { FBDetailModal } from '@/components/modals/FBDetailModal';
+import { AufwandDetailModal } from '@/components/modals/AufwandDetailModal';
 import { Euro, TrendingUp, ShoppingCart, Wallet, Users, UtensilsCrossed } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -17,6 +19,8 @@ export function DashboardView() {
   const [rohertragModalOpen, setRohertragModalOpen] = useState(false);
   const [erloeseModalOpen, setErloeseModalOpen] = useState(false);
   const [personalkostenModalOpen, setPersonalkostenModalOpen] = useState(false);
+  const [fbModalOpen, setFbModalOpen] = useState(false);
+  const [aufwandModalOpen, setAufwandModalOpen] = useState(false);
 
   useEffect(() => {
     const loadSchwellenwerte = async () => {
@@ -210,24 +214,35 @@ export function DashboardView() {
               tooltip="Summe aller Erlös-Konten. Klicken für Aufschlüsselung nach Bereich."
             />
           </div>
-          <KPICard
-            title="F&B Erlöse"
-            value={fbErloese}
-            previousValue={fbErloeseVormonat || null}
-            previousYearValue={fbErloeseVorjahr || null}
-            icon={UtensilsCrossed}
-            variant="accent"
-            tooltip="Erlöse aus Food & Beverage (Restaurant, Küche, Bar, Bankett)"
-          />
-          <KPICard
-            title="Gesamtaufwand"
-            value={aufwandGesamt}
-            previousValue={aufwandVormonat || null}
-            previousYearValue={aufwandVorjahr || null}
-            icon={ShoppingCart}
-            variant="default"
-            tooltip="Summe aller Aufwandskonten der Klassen 5 (Material), 6 (Personal), 7 (Abschreibungen), 8 (Sonstiges)"
-          />
+          <div 
+            className="cursor-pointer transition-transform hover:scale-[1.02]"
+            onClick={() => setFbModalOpen(true)}
+          >
+            <KPICard
+              title="F&B Erlöse"
+              value={fbErloese}
+              previousValue={fbErloeseVormonat || null}
+              previousYearValue={fbErloeseVorjahr || null}
+              icon={UtensilsCrossed}
+              variant="accent"
+              tooltip="Erlöse aus Food & Beverage (Restaurant, Küche, Bar, Bankett). Klicken für Details."
+            />
+          </div>
+          <div 
+            className="cursor-pointer transition-transform hover:scale-[1.02]"
+            onClick={() => setAufwandModalOpen(true)}
+          >
+            <KPICard
+              title="Gesamtaufwand"
+              value={aufwandGesamt}
+              previousValue={aufwandVormonat || null}
+              previousYearValue={aufwandVorjahr || null}
+              icon={ShoppingCart}
+              variant="default"
+              invertTrend
+              tooltip="Summe aller Aufwandskonten der Klassen 5-8. Klicken für Aufschlüsselung."
+            />
+          </div>
           <div 
             className="cursor-pointer transition-transform hover:scale-[1.02]"
             onClick={() => setPersonalkostenModalOpen(true)}
@@ -239,6 +254,7 @@ export function DashboardView() {
               previousYearValue={personalkostenVorjahr || null}
               icon={Users}
               variant="default"
+              invertTrend
               tooltip="Summe aller Konten der Klasse 6 (Löhne, Gehälter, Sozialabgaben). Klicken für Aufschlüsselung."
             />
           </div>
@@ -329,6 +345,32 @@ export function DashboardView() {
         personalkostenGesamt={personalkostenGesamt}
         personalkostenVormonat={personalkostenVormonat}
         personalkostenNachBereich={personalkostenNachBereich}
+        jahr={selectedYear}
+        monat={selectedMonth}
+      />
+
+      {/* F&B Detail Modal */}
+      <FBDetailModal
+        open={fbModalOpen}
+        onOpenChange={setFbModalOpen}
+        fbGesamt={fbErloese}
+        fbVormonat={fbErloeseVormonat}
+        fbVorjahr={fbErloeseVorjahr}
+        fbBereiche={bereichAggregationen.filter(b => 
+          b.kostenarttTyp === 'Erlös' && fbBereiche.some(fb => b.bereich.includes(fb))
+        )}
+        jahr={selectedYear}
+        monat={selectedMonth}
+      />
+
+      {/* Aufwand Detail Modal */}
+      <AufwandDetailModal
+        open={aufwandModalOpen}
+        onOpenChange={setAufwandModalOpen}
+        aufwandGesamt={aufwandGesamt}
+        aufwandVormonat={aufwandVormonat}
+        aufwandVorjahr={aufwandVorjahr}
+        aufwandNachKlassen={aufwandNachKlassen}
         jahr={selectedYear}
         monat={selectedMonth}
       />
