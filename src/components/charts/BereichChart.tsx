@@ -1,16 +1,19 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { BereichAggregation } from '@/types/finance';
+import { BereichAggregation, Bereich } from '@/types/finance';
 import { bereichColors } from '@/lib/bereichMapping';
 import { formatCurrency, formatPercent } from '@/lib/calculations';
+import { translateBereich } from '@/lib/translationMappings';
 
 interface BereichChartProps {
   data: BereichAggregation[];
   title: string;
   type: 'erlös' | 'einkauf';
+  translateFn?: (key: string) => string;
 }
 
 interface ChartDataItem {
   name: string;
+  bereich: Bereich;
   value: number;
   color: string;
   vormonatDiff: number | null;
@@ -67,11 +70,12 @@ const CustomTooltip = ({ active, payload, type }: any) => {
   );
 };
 
-export function BereichChart({ data, title, type }: BereichChartProps) {
+export function BereichChart({ data, title, type, translateFn }: BereichChartProps) {
   const chartData: ChartDataItem[] = data
     .filter(d => d.saldoAktuell !== 0)
     .map(d => ({
-      name: d.bereich,
+      name: translateFn ? translateBereich(d.bereich, translateFn) : d.bereich,
+      bereich: d.bereich,
       value: Math.abs(d.saldoAktuell),
       color: bereichColors[d.bereich],
       vormonatDiff: d.saldoVormonatDiff,

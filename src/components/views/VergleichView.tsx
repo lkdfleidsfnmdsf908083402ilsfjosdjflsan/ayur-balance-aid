@@ -9,6 +9,7 @@ import { formatCurrency, formatPercent } from '@/lib/calculations';
 import { Bereich } from '@/types/finance';
 import { bereichColors } from '@/lib/bereichMapping';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { translateBereich, translateKostenarttTyp } from '@/lib/translationMappings';
 
 const allBereiche: Bereich[] = [
   'Logis', 'F&B', 'Spa', 'Ärztin', 'Shop',
@@ -86,7 +87,7 @@ export function VergleichView() {
             <SelectContent>
               <SelectItem value="alle">{t('comparison.allAreas')}</SelectItem>
               {allBereiche.map(b => (
-                <SelectItem key={b} value={b}>{b}</SelectItem>
+                <SelectItem key={b} value={b}>{translateBereich(b, t)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -97,8 +98,8 @@ export function VergleichView() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="alle">{t('comparison.allTypes')}</SelectItem>
-              <SelectItem value="Erlös">{t('comparison.revenue')}</SelectItem>
-              <SelectItem value="Einkauf">{t('comparison.expense')}</SelectItem>
+              <SelectItem value="Erlös">{translateKostenarttTyp('Erlös', t)}</SelectItem>
+              <SelectItem value="Einkauf">{translateKostenarttTyp('Einkauf', t)}</SelectItem>
             </SelectContent>
           </Select>
         </div>

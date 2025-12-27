@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { formatCurrency, formatPercent } from '@/lib/calculations';
 import { bereichColors } from '@/lib/bereichMapping';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { translateBereich } from '@/lib/translationMappings';
 
 export function BereicheView() {
   const { bereichAggregationen, selectedYear, selectedMonth } = useFinanceStore();
@@ -52,8 +53,8 @@ export function BereicheView() {
           <>
             {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              <BereichChart data={erlöse} title={t('areas.revenueByArea')} type="erlös" />
-              <BereichChart data={einkauf} title={t('areas.expensesByArea')} type="einkauf" />
+              <BereichChart data={erlöse} title={t('areas.revenueByArea')} type="erlös" translateFn={t} />
+              <BereichChart data={einkauf} title={t('areas.expensesByArea')} type="einkauf" translateFn={t} />
             </div>
             
             {/* Detail Tables */}
@@ -71,7 +72,7 @@ export function BereicheView() {
                           className="w-3 h-3 rounded-full"
                           style={{ backgroundColor: bereichColors[b.bereich] }}
                         />
-                        <span className="text-sm text-foreground">{b.bereich}</span>
+                        <span className="text-sm text-foreground">{translateBereich(b.bereich, t)}</span>
                       </div>
                       <div className="text-right">
                         <div className="font-mono text-sm text-foreground">
@@ -102,7 +103,7 @@ export function BereicheView() {
                           className="w-3 h-3 rounded-full"
                           style={{ backgroundColor: bereichColors[b.bereich] }}
                         />
-                        <span className="text-sm text-foreground">{b.bereich}</span>
+                        <span className="text-sm text-foreground">{translateBereich(b.bereich, t)}</span>
                       </div>
                       <div className="text-right">
                         <div className="font-mono text-sm text-foreground">
