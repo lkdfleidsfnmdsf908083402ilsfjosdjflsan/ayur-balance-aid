@@ -576,6 +576,305 @@ export type Database = {
         }
         Relationships: []
       }
+      guest_daily_reports: {
+        Row: {
+          adr: number | null
+          aufenthaltsdauer_avg: number | null
+          belegungsrate_pct: number | null
+          bewertung_durchschnitt: number | null
+          bewertungen_anzahl: number | null
+          bewertungen_summe: number | null
+          buchungen_neu: number | null
+          created_at: string
+          gaeste_abreise: number | null
+          gaeste_anreise: number | null
+          gaeste_geschaeft: number | null
+          gaeste_inhouse: number | null
+          gaeste_kurgast: number | null
+          gaeste_retreat: number | null
+          gaeste_tagesgaeste: number | null
+          gaeste_wellness: number | null
+          id: string
+          no_shows: number | null
+          report_date: string
+          revpar: number | null
+          stornierungen: number | null
+          tagesumsatz_fb: number | null
+          tagesumsatz_gesamt: number | null
+          tagesumsatz_logis: number | null
+          tagesumsatz_sonstige: number | null
+          tagesumsatz_spa: number | null
+          umsatz_pro_gast: number | null
+          updated_at: string
+          wiederkehrende_gaeste: number | null
+          zimmer_belegt: number | null
+          zimmer_verfuegbar: number | null
+        }
+        Insert: {
+          adr?: number | null
+          aufenthaltsdauer_avg?: number | null
+          belegungsrate_pct?: number | null
+          bewertung_durchschnitt?: number | null
+          bewertungen_anzahl?: number | null
+          bewertungen_summe?: number | null
+          buchungen_neu?: number | null
+          created_at?: string
+          gaeste_abreise?: number | null
+          gaeste_anreise?: number | null
+          gaeste_geschaeft?: number | null
+          gaeste_inhouse?: number | null
+          gaeste_kurgast?: number | null
+          gaeste_retreat?: number | null
+          gaeste_tagesgaeste?: number | null
+          gaeste_wellness?: number | null
+          id?: string
+          no_shows?: number | null
+          report_date: string
+          revpar?: number | null
+          stornierungen?: number | null
+          tagesumsatz_fb?: number | null
+          tagesumsatz_gesamt?: number | null
+          tagesumsatz_logis?: number | null
+          tagesumsatz_sonstige?: number | null
+          tagesumsatz_spa?: number | null
+          umsatz_pro_gast?: number | null
+          updated_at?: string
+          wiederkehrende_gaeste?: number | null
+          zimmer_belegt?: number | null
+          zimmer_verfuegbar?: number | null
+        }
+        Update: {
+          adr?: number | null
+          aufenthaltsdauer_avg?: number | null
+          belegungsrate_pct?: number | null
+          bewertung_durchschnitt?: number | null
+          bewertungen_anzahl?: number | null
+          bewertungen_summe?: number | null
+          buchungen_neu?: number | null
+          created_at?: string
+          gaeste_abreise?: number | null
+          gaeste_anreise?: number | null
+          gaeste_geschaeft?: number | null
+          gaeste_inhouse?: number | null
+          gaeste_kurgast?: number | null
+          gaeste_retreat?: number | null
+          gaeste_tagesgaeste?: number | null
+          gaeste_wellness?: number | null
+          id?: string
+          no_shows?: number | null
+          report_date?: string
+          revpar?: number | null
+          stornierungen?: number | null
+          tagesumsatz_fb?: number | null
+          tagesumsatz_gesamt?: number | null
+          tagesumsatz_logis?: number | null
+          tagesumsatz_sonstige?: number | null
+          tagesumsatz_spa?: number | null
+          umsatz_pro_gast?: number | null
+          updated_at?: string
+          wiederkehrende_gaeste?: number | null
+          zimmer_belegt?: number | null
+          zimmer_verfuegbar?: number | null
+        }
+        Relationships: []
+      }
+      guest_stays: {
+        Row: {
+          abreise: string
+          anreise: string
+          bewertung_fb: number | null
+          bewertung_gesamt: number | null
+          bewertung_service: number | null
+          bewertung_spa: number | null
+          bewertung_zimmer: number | null
+          buchungskanal: Database["public"]["Enums"]["booking_channel"] | null
+          created_at: string
+          fb_umsatz: number | null
+          feedback: string | null
+          gasttyp: Database["public"]["Enums"]["guest_type"]
+          gesamtpreis: number | null
+          guest_id: string
+          id: string
+          kurtyp: Database["public"]["Enums"]["cure_type"] | null
+          naechte: number | null
+          sonstige_umsaetze: number | null
+          spa_umsatz: number | null
+          status: string | null
+          stornierungsgrund: string | null
+          updated_at: string
+          verpflegung: Database["public"]["Enums"]["meal_plan"] | null
+          zimmer_kategorie: string | null
+          zimmer_nummer: string | null
+          zimmerpreis_nacht: number | null
+        }
+        Insert: {
+          abreise: string
+          anreise: string
+          bewertung_fb?: number | null
+          bewertung_gesamt?: number | null
+          bewertung_service?: number | null
+          bewertung_spa?: number | null
+          bewertung_zimmer?: number | null
+          buchungskanal?: Database["public"]["Enums"]["booking_channel"] | null
+          created_at?: string
+          fb_umsatz?: number | null
+          feedback?: string | null
+          gasttyp?: Database["public"]["Enums"]["guest_type"]
+          gesamtpreis?: number | null
+          guest_id: string
+          id?: string
+          kurtyp?: Database["public"]["Enums"]["cure_type"] | null
+          naechte?: number | null
+          sonstige_umsaetze?: number | null
+          spa_umsatz?: number | null
+          status?: string | null
+          stornierungsgrund?: string | null
+          updated_at?: string
+          verpflegung?: Database["public"]["Enums"]["meal_plan"] | null
+          zimmer_kategorie?: string | null
+          zimmer_nummer?: string | null
+          zimmerpreis_nacht?: number | null
+        }
+        Update: {
+          abreise?: string
+          anreise?: string
+          bewertung_fb?: number | null
+          bewertung_gesamt?: number | null
+          bewertung_service?: number | null
+          bewertung_spa?: number | null
+          bewertung_zimmer?: number | null
+          buchungskanal?: Database["public"]["Enums"]["booking_channel"] | null
+          created_at?: string
+          fb_umsatz?: number | null
+          feedback?: string | null
+          gasttyp?: Database["public"]["Enums"]["guest_type"]
+          gesamtpreis?: number | null
+          guest_id?: string
+          id?: string
+          kurtyp?: Database["public"]["Enums"]["cure_type"] | null
+          naechte?: number | null
+          sonstige_umsaetze?: number | null
+          spa_umsatz?: number | null
+          status?: string | null
+          stornierungsgrund?: string | null
+          updated_at?: string
+          verpflegung?: Database["public"]["Enums"]["meal_plan"] | null
+          zimmer_kategorie?: string | null
+          zimmer_nummer?: string | null
+          zimmerpreis_nacht?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guest_stays_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "guests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      guests: {
+        Row: {
+          allergien: string[] | null
+          anrede: string | null
+          anzahl_aufenthalte: number | null
+          arzt_freigabe: boolean | null
+          created_at: string
+          email: string | null
+          ernaehrungshinweise: string | null
+          erstbesuch_datum: string | null
+          gast_nummer: string
+          geburtsdatum: string | null
+          gesamtumsatz: number | null
+          herkunftsland: string | null
+          id: string
+          land: string | null
+          letzter_besuch: string | null
+          marketing_optin: boolean | null
+          medizinische_hinweise: string | null
+          mobil: string | null
+          nachname: string
+          newsletter_optin: boolean | null
+          notizen: string | null
+          ort: string | null
+          plz: string | null
+          sonderwuensche: string | null
+          sprache: string | null
+          strasse: string | null
+          telefon: string | null
+          updated_at: string
+          vip_status: boolean | null
+          vorname: string
+          zimmerpraeferenz: string | null
+        }
+        Insert: {
+          allergien?: string[] | null
+          anrede?: string | null
+          anzahl_aufenthalte?: number | null
+          arzt_freigabe?: boolean | null
+          created_at?: string
+          email?: string | null
+          ernaehrungshinweise?: string | null
+          erstbesuch_datum?: string | null
+          gast_nummer: string
+          geburtsdatum?: string | null
+          gesamtumsatz?: number | null
+          herkunftsland?: string | null
+          id?: string
+          land?: string | null
+          letzter_besuch?: string | null
+          marketing_optin?: boolean | null
+          medizinische_hinweise?: string | null
+          mobil?: string | null
+          nachname: string
+          newsletter_optin?: boolean | null
+          notizen?: string | null
+          ort?: string | null
+          plz?: string | null
+          sonderwuensche?: string | null
+          sprache?: string | null
+          strasse?: string | null
+          telefon?: string | null
+          updated_at?: string
+          vip_status?: boolean | null
+          vorname: string
+          zimmerpraeferenz?: string | null
+        }
+        Update: {
+          allergien?: string[] | null
+          anrede?: string | null
+          anzahl_aufenthalte?: number | null
+          arzt_freigabe?: boolean | null
+          created_at?: string
+          email?: string | null
+          ernaehrungshinweise?: string | null
+          erstbesuch_datum?: string | null
+          gast_nummer?: string
+          geburtsdatum?: string | null
+          gesamtumsatz?: number | null
+          herkunftsland?: string | null
+          id?: string
+          land?: string | null
+          letzter_besuch?: string | null
+          marketing_optin?: boolean | null
+          medizinische_hinweise?: string | null
+          mobil?: string | null
+          nachname?: string
+          newsletter_optin?: boolean | null
+          notizen?: string | null
+          ort?: string | null
+          plz?: string | null
+          sonderwuensche?: string | null
+          sprache?: string | null
+          strasse?: string | null
+          telefon?: string | null
+          updated_at?: string
+          vip_status?: boolean | null
+          vorname?: string
+          zimmerpraeferenz?: string | null
+        }
+        Relationships: []
+      }
       hk_daily_reports: {
         Row: {
           attendance_rate: number | null
@@ -1292,6 +1591,30 @@ export type Database = {
         | "Elternzeit"
         | "Sonstiges"
       app_role: "admin" | "abteilungsleiter" | "mitarbeiter"
+      booking_channel:
+        | "Website"
+        | "Telefon"
+        | "Email"
+        | "Booking.com"
+        | "Expedia"
+        | "HRS"
+        | "Reisebüro"
+        | "Empfehlung"
+        | "Stammgast"
+        | "Kooperation"
+        | "Sonstige"
+      cure_type:
+        | "Fastenkur"
+        | "Basenkur"
+        | "Detox"
+        | "Ayurveda"
+        | "TCM"
+        | "Physiotherapie"
+        | "Rehabilitation"
+        | "Mental Wellness"
+        | "Gewichtsmanagement"
+        | "Burnout-Prävention"
+        | "Keine"
       employment_type:
         | "Vollzeit"
         | "Teilzeit"
@@ -1299,6 +1622,19 @@ export type Database = {
         | "Aushilfe"
         | "Praktikant"
         | "Azubi"
+      guest_type:
+        | "Wellness"
+        | "Kurgast"
+        | "Retreat"
+        | "Tagesgast"
+        | "Geschäftsreisend"
+        | "Privat"
+      meal_plan:
+        | "Vollpension"
+        | "Halbpension"
+        | "Frühstück"
+        | "Ohne Verpflegung"
+        | "Spezialdiät"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1437,6 +1773,32 @@ export const Constants = {
         "Sonstiges",
       ],
       app_role: ["admin", "abteilungsleiter", "mitarbeiter"],
+      booking_channel: [
+        "Website",
+        "Telefon",
+        "Email",
+        "Booking.com",
+        "Expedia",
+        "HRS",
+        "Reisebüro",
+        "Empfehlung",
+        "Stammgast",
+        "Kooperation",
+        "Sonstige",
+      ],
+      cure_type: [
+        "Fastenkur",
+        "Basenkur",
+        "Detox",
+        "Ayurveda",
+        "TCM",
+        "Physiotherapie",
+        "Rehabilitation",
+        "Mental Wellness",
+        "Gewichtsmanagement",
+        "Burnout-Prävention",
+        "Keine",
+      ],
       employment_type: [
         "Vollzeit",
         "Teilzeit",
@@ -1444,6 +1806,21 @@ export const Constants = {
         "Aushilfe",
         "Praktikant",
         "Azubi",
+      ],
+      guest_type: [
+        "Wellness",
+        "Kurgast",
+        "Retreat",
+        "Tagesgast",
+        "Geschäftsreisend",
+        "Privat",
+      ],
+      meal_plan: [
+        "Vollpension",
+        "Halbpension",
+        "Frühstück",
+        "Ohne Verpflegung",
+        "Spezialdiät",
       ],
     },
   },

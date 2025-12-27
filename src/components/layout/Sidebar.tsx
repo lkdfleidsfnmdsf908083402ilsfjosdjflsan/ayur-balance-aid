@@ -26,6 +26,7 @@ import {
   CalendarDays,
   Clock,
   ClipboardList,
+  Heart,
   LucideIcon
 } from 'lucide-react';
 import { MandiraLogo } from '@/components/MandiraLogo';
@@ -59,6 +60,7 @@ const SIDEBAR_STORAGE_KEY = 'sidebar-open-groups';
 
 const navStructure: NavEntry[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'gaeste', label: 'Gästeverwaltung', icon: Heart },
   { 
     id: 'abteilung-kpis',
     label: 'Abteilungs-KPIs',
