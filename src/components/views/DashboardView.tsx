@@ -24,6 +24,20 @@ export function DashboardView() {
   const [personalkostenModalOpen, setPersonalkostenModalOpen] = useState(false);
   const [fbModalOpen, setFbModalOpen] = useState(false);
   const [aufwandModalOpen, setAufwandModalOpen] = useState(false);
+  const [isExportingHandbuch, setIsExportingHandbuch] = useState(false);
+
+  const handleExportHandbuch = async () => {
+    setIsExportingHandbuch(true);
+    try {
+      await exportHandbuch();
+      toast.success('Handbuch erfolgreich exportiert');
+    } catch (error) {
+      console.error('Fehler beim Exportieren:', error);
+      toast.error('Fehler beim Exportieren des Handbuchs');
+    } finally {
+      setIsExportingHandbuch(false);
+    }
+  };
 
   useEffect(() => {
     const loadSchwellenwerte = async () => {
@@ -197,7 +211,23 @@ export function DashboardView() {
     <div className="flex-1 flex flex-col overflow-hidden">
       <Header 
         title="Dashboard" 
-        description={`Finanzübersicht ${months[selectedMonth]} ${selectedYear}`} 
+        description={`Finanzübersicht ${months[selectedMonth]} ${selectedYear}`}
+        actions={
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportHandbuch}
+            disabled={isExportingHandbuch}
+            className="gap-2"
+          >
+            {isExportingHandbuch ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <BookOpen className="h-4 w-4" />
+            )}
+            Handbuch exportieren
+          </Button>
+        }
       />
       
       <div className="flex-1 overflow-auto p-6">
