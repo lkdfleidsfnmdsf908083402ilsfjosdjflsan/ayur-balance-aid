@@ -533,7 +533,7 @@ function GesamtKpiCard({
   );
 }
 
-function AbteilungKpiCard({ kpi, vorjahr, onClick }: { kpi: AbteilungKpi; vorjahr?: AbteilungKpi; onClick: () => void }) {
+function AbteilungKpiCard({ kpi, vorjahr, onClick, t }: { kpi: AbteilungKpi; vorjahr?: AbteilungKpi; onClick: () => void; t: (key: string) => string }) {
   const Icon = abteilungIcons[kpi.abteilung] || Building2;
   const db1Marge = kpi.umsatz > 0 ? (kpi.db1 / kpi.umsatz) * 100 : 0;
   const db2Marge = kpi.umsatz > 0 ? (kpi.db2 / kpi.umsatz) * 100 : 0;
@@ -567,10 +567,10 @@ function AbteilungKpiCard({ kpi, vorjahr, onClick }: { kpi: AbteilungKpi; vorjah
         {/* Umsatz mit Vorjahr */}
         <div className="flex justify-between items-center">
           <div>
-            <span className="text-sm text-muted-foreground">Umsatz</span>
+            <span className="text-sm text-muted-foreground">{t('deptKpi.revenue')}</span>
             {vorjahr && vorjahr.umsatz > 0 && (
               <span className="text-xs text-muted-foreground/70 ml-2">
-                (VJ: {formatCurrency(vorjahr.umsatz)})
+                ({t('deptKpi.pyShort')}: {formatCurrency(vorjahr.umsatz)})
               </span>
             )}
           </div>
@@ -579,14 +579,14 @@ function AbteilungKpiCard({ kpi, vorjahr, onClick }: { kpi: AbteilungKpi; vorjah
         
         {/* Wareneinsatz */}
         <div className="flex justify-between items-center">
-          <span className="text-sm text-muted-foreground">Wareneinsatz</span>
+          <span className="text-sm text-muted-foreground">{t('deptKpi.cogs')}</span>
           <span className="font-medium text-warning">- {formatCurrency(kpi.wareneinsatz)}</span>
         </div>
         
         {/* DB I */}
         <div className="flex justify-between items-center pt-2 border-t border-border">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">DB I</span>
+            <span className="text-sm font-medium">{t('deptKpi.db1')}</span>
             <Badge variant="outline" className="text-xs">
               {db1Marge.toFixed(1)}%
             </Badge>
@@ -601,14 +601,14 @@ function AbteilungKpiCard({ kpi, vorjahr, onClick }: { kpi: AbteilungKpi; vorjah
         
         {/* Personal */}
         <div className="flex justify-between items-center">
-          <span className="text-sm text-muted-foreground">Personal</span>
+          <span className="text-sm text-muted-foreground">{t('deptKpi.personnel')}</span>
           <span className="font-medium text-warning">- {formatCurrency(kpi.personal)}</span>
         </div>
         
         {/* DB II mit Vorjahresvergleich */}
         <div className="flex justify-between items-center pt-2 border-t border-border">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">DB II</span>
+            <span className="text-sm font-medium">{t('deptKpi.db2')}</span>
             <Badge variant="outline" className="text-xs">
               {db2Marge.toFixed(1)}%
             </Badge>
@@ -636,7 +636,7 @@ function AbteilungKpiCard({ kpi, vorjahr, onClick }: { kpi: AbteilungKpi; vorjah
   );
 }
 
-function ServiceKpiCard({ kpi, onClick }: { kpi: AbteilungKpi; onClick: () => void }) {
+function ServiceKpiCard({ kpi, onClick, t }: { kpi: AbteilungKpi; onClick: () => void; t: (key: string) => string }) {
   const Icon = abteilungIcons[kpi.abteilung] || Building2;
   const totalKosten = kpi.personal + kpi.betriebsaufwand + kpi.energie + kpi.marketing;
   
@@ -662,30 +662,30 @@ function ServiceKpiCard({ kpi, onClick }: { kpi: AbteilungKpi; onClick: () => vo
       <CardContent className="space-y-2">
         {kpi.personal > 0 && (
           <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">Personal</span>
+            <span className="text-sm text-muted-foreground">{t('deptKpi.personnel')}</span>
             <span className="font-medium">{formatCurrency(kpi.personal)}</span>
           </div>
         )}
         {kpi.betriebsaufwand > 0 && (
           <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">Betriebsaufwand</span>
+            <span className="text-sm text-muted-foreground">{t('deptKpi.operatingExpenses')}</span>
             <span className="font-medium">{formatCurrency(kpi.betriebsaufwand)}</span>
           </div>
         )}
         {kpi.energie > 0 && (
           <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">Energie</span>
+            <span className="text-sm text-muted-foreground">{t('deptKpi.energy')}</span>
             <span className="font-medium">{formatCurrency(kpi.energie)}</span>
           </div>
         )}
         {kpi.marketing > 0 && (
           <div className="flex justify-between items-center">
-            <span className="text-sm text-muted-foreground">Marketing</span>
+            <span className="text-sm text-muted-foreground">{t('deptKpi.marketing')}</span>
             <span className="font-medium">{formatCurrency(kpi.marketing)}</span>
           </div>
         )}
         <div className="flex justify-between items-center pt-2 border-t border-border">
-          <span className="text-sm font-medium">Gesamt</span>
+          <span className="text-sm font-medium">{t('deptKpi.total')}</span>
           <span className="font-bold">{formatCurrency(totalKosten)}</span>
         </div>
       </CardContent>
