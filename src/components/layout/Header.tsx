@@ -13,9 +13,10 @@ const months = [
 interface HeaderProps {
   title: string;
   description?: string;
+  actions?: React.ReactNode;
 }
 
-export function Header({ title, description }: HeaderProps) {
+export function Header({ title, description, actions }: HeaderProps) {
   const { selectedYear, selectedMonth, setSelectedPeriod, uploadedFiles } = useFinanceStore();
   
   // Ermittle verfügbare Jahre aus hochgeladenen Dateien
@@ -35,6 +36,7 @@ export function Header({ title, description }: HeaderProps) {
       </div>
       
       <div className="flex items-center gap-2 md:gap-3">
+        {actions}
         <Calendar className="h-4 w-4 text-muted-foreground hidden sm:block" />
         
         <Select 
