@@ -5,14 +5,16 @@ import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatCurrency, formatPercent } from '@/lib/calculations';
 import { bereichColors } from '@/lib/bereichMapping';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function BereicheView() {
   const { bereichAggregationen, selectedYear, selectedMonth } = useFinanceStore();
+  const { t } = useLanguage();
   
   const erlöse = bereichAggregationen.filter(b => b.kostenarttTyp === 'Erlös');
   const einkauf = bereichAggregationen.filter(b => b.kostenarttTyp === 'Einkauf');
   
-  const months = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+  const monthKeys = ['', 'month.january', 'month.february', 'month.march', 'month.april', 'month.may', 'month.june', 'month.july', 'month.august', 'month.september', 'month.october', 'month.november', 'month.december'];
 
   function DiffIndicator({ diff, percent }: { diff: number | null; percent: number | null }) {
     if (diff === null) return <span className="text-muted-foreground text-sm">–</span>;
@@ -37,21 +39,21 @@ export function BereicheView() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <Header 
-        title="Bereichsanalyse" 
-        description={`Aggregierte Werte nach Geschäftsbereich – ${months[selectedMonth]} ${selectedYear}`} 
+        title={t('areas.title')} 
+        description={`${t('areas.description')} – ${t(monthKeys[selectedMonth])} ${selectedYear}`} 
       />
       
       <div className="flex-1 overflow-auto p-6">
         {bereichAggregationen.length === 0 ? (
           <div className="flex items-center justify-center h-64 text-muted-foreground">
-            Keine Daten vorhanden. Bitte Saldenlisten hochladen.
+            {t('areas.noData')}
           </div>
         ) : (
           <>
             {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              <BereichChart data={erlöse} title="Erlöse nach Bereich" type="erlös" />
-              <BereichChart data={einkauf} title="Aufwand nach Bereich" type="einkauf" />
+              <BereichChart data={erlöse} title={t('areas.revenueByArea')} type="erlös" />
+              <BereichChart data={einkauf} title={t('areas.expensesByArea')} type="einkauf" />
             </div>
             
             {/* Detail Tables */}
@@ -59,7 +61,7 @@ export function BereicheView() {
               {/* Erlöse Table */}
               <div className="glass-card rounded-xl border border-border overflow-hidden">
                 <div className="p-4 border-b border-border bg-success/5">
-                  <h3 className="font-medium text-foreground">Erlöse nach Bereich</h3>
+                  <h3 className="font-medium text-foreground">{t('areas.revenueByArea')}</h3>
                 </div>
                 <div className="divide-y divide-border">
                   {erlöse.map(b => (
@@ -81,7 +83,7 @@ export function BereicheView() {
                   ))}
                   {erlöse.length === 0 && (
                     <div className="p-4 text-center text-muted-foreground text-sm">
-                      Keine Erlösdaten
+                      {t('areas.noRevenueData')}
                     </div>
                   )}
                 </div>
@@ -90,7 +92,7 @@ export function BereicheView() {
               {/* Einkauf Table */}
               <div className="glass-card rounded-xl border border-border overflow-hidden">
                 <div className="p-4 border-b border-border bg-destructive/5">
-                  <h3 className="font-medium text-foreground">Aufwand nach Bereich</h3>
+                  <h3 className="font-medium text-foreground">{t('areas.expensesByArea')}</h3>
                 </div>
                 <div className="divide-y divide-border">
                   {einkauf.map(b => (
@@ -112,7 +114,7 @@ export function BereicheView() {
                   ))}
                   {einkauf.length === 0 && (
                     <div className="p-4 text-center text-muted-foreground text-sm">
-                      Keine Aufwanddaten
+                      {t('areas.noExpenseData')}
                     </div>
                   )}
                 </div>

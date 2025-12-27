@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { formatCurrency, formatPercent } from '@/lib/calculations';
 import { Bereich } from '@/types/finance';
 import { bereichColors } from '@/lib/bereichMapping';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const allBereiche: Bereich[] = [
   'Logis', 'F&B', 'Spa', 'Ärztin', 'Shop',
@@ -16,6 +17,7 @@ const allBereiche: Bereich[] = [
 
 export function VergleichView() {
   const { vergleiche, selectedYear, selectedMonth } = useFinanceStore();
+  const { t } = useLanguage();
   const [search, setSearch] = useState('');
   const [bereichFilter, setBereichFilter] = useState<string>('alle');
   const [typFilter, setTypFilter] = useState<string>('alle');
@@ -35,7 +37,7 @@ export function VergleichView() {
       .sort((a, b) => a.kontonummer.localeCompare(b.kontonummer, undefined, { numeric: true }));
   }, [vergleiche, search, bereichFilter, typFilter]);
   
-  const months = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+  const monthKeys = ['', 'month.january', 'month.february', 'month.march', 'month.april', 'month.may', 'month.june', 'month.july', 'month.august', 'month.september', 'month.october', 'month.november', 'month.december'];
 
   function DiffCell({ diff, percent }: { diff: number | null; percent: number | null }) {
     if (diff === null) return <span className="text-muted-foreground">–</span>;
@@ -60,8 +62,8 @@ export function VergleichView() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <Header 
-        title="Periodenvergleich" 
-        description={`Vergleich ${months[selectedMonth]} ${selectedYear} vs. Vormonat & Vorjahr`} 
+        title={t('comparison.title')} 
+        description={`${t('comparison.description')} ${t(monthKeys[selectedMonth])} ${selectedYear} ${t('comparison.vsPMAndPY')}`} 
       />
       
       <div className="flex-1 flex flex-col overflow-hidden p-6">
@@ -70,7 +72,7 @@ export function VergleichView() {
           <div className="relative flex-1 min-w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Konto suchen..."
+              placeholder={t('comparison.searchAccount')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10 bg-muted border-border"
@@ -79,10 +81,10 @@ export function VergleichView() {
           
           <Select value={bereichFilter} onValueChange={setBereichFilter}>
             <SelectTrigger className="w-48 bg-muted border-border">
-              <SelectValue placeholder="Bereich" />
+              <SelectValue placeholder={t('comparison.allAreas')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="alle">Alle Bereiche</SelectItem>
+              <SelectItem value="alle">{t('comparison.allAreas')}</SelectItem>
               {allBereiche.map(b => (
                 <SelectItem key={b} value={b}>{b}</SelectItem>
               ))}
@@ -91,12 +93,12 @@ export function VergleichView() {
           
           <Select value={typFilter} onValueChange={setTypFilter}>
             <SelectTrigger className="w-40 bg-muted border-border">
-              <SelectValue placeholder="Typ" />
+              <SelectValue placeholder={t('comparison.allTypes')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="alle">Alle Typen</SelectItem>
-              <SelectItem value="Erlös">Erlös</SelectItem>
-              <SelectItem value="Einkauf">Einkauf</SelectItem>
+              <SelectItem value="alle">{t('comparison.allTypes')}</SelectItem>
+              <SelectItem value="Erlös">{t('comparison.revenue')}</SelectItem>
+              <SelectItem value="Einkauf">{t('comparison.expense')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -106,13 +108,13 @@ export function VergleichView() {
           <table className="w-full">
             <thead className="bg-muted/50 sticky top-0">
               <tr className="text-left text-sm text-muted-foreground">
-                <th className="p-4 font-medium">Konto</th>
-                <th className="p-4 font-medium">Bezeichnung</th>
-                <th className="p-4 font-medium text-right">Aktuell</th>
-                <th className="p-4 font-medium text-right">Vormonat</th>
-                <th className="p-4 font-medium text-center">VM Δ</th>
-                <th className="p-4 font-medium text-right">Vorjahr</th>
-                <th className="p-4 font-medium text-center">VJ Δ</th>
+                <th className="p-4 font-medium">{t('comparison.account')}</th>
+                <th className="p-4 font-medium">{t('comparison.designation')}</th>
+                <th className="p-4 font-medium text-right">{t('comparison.current')}</th>
+                <th className="p-4 font-medium text-right">{t('comparison.prevMonth')}</th>
+                <th className="p-4 font-medium text-center">{t('comparison.pmDiff')}</th>
+                <th className="p-4 font-medium text-right">{t('comparison.prevYear')}</th>
+                <th className="p-4 font-medium text-center">{t('comparison.pyDiff')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -120,8 +122,8 @@ export function VergleichView() {
                 <tr>
                   <td colSpan={7} className="p-8 text-center text-muted-foreground">
                     {vergleiche.length === 0 
-                      ? 'Keine Vergleichsdaten. Bitte mehrere Perioden hochladen.'
-                      : 'Keine Daten gefunden mit diesen Filterkriterien.'}
+                      ? t('comparison.noData')
+                      : t('comparison.noDataFiltered')}
                   </td>
                 </tr>
               ) : (
@@ -166,7 +168,7 @@ export function VergleichView() {
         
         {filteredVergleiche.length > 0 && (
           <div className="mt-4 text-sm text-muted-foreground">
-            {filteredVergleiche.length} von {vergleiche.length} Positionen angezeigt
+            {filteredVergleiche.length} {t('comparison.ofPositions')} {vergleiche.length} {t('comparison.positionsShown')}
           </div>
         )}
       </div>
