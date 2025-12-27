@@ -15,9 +15,12 @@ import { HandbuchPreviewModal } from '@/components/modals/HandbuchPreviewModal';
 import { Euro, TrendingUp, ShoppingCart, Wallet, Users, UtensilsCrossed, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export function DashboardView() {
   const { bereichAggregationen, vergleiche, konten, selectedYear, selectedMonth, uploadedFiles } = useFinanceStore();
+  const { t, language } = useLanguage();
   const [schwellenwerte, setSchwellenwerte] = useState<any[]>([]);
   const [rohertragModalOpen, setRohertragModalOpen] = useState(false);
   const [erloeseModalOpen, setErloeseModalOpen] = useState(false);
@@ -25,6 +28,9 @@ export function DashboardView() {
   const [fbModalOpen, setFbModalOpen] = useState(false);
   const [aufwandModalOpen, setAufwandModalOpen] = useState(false);
   const [handbuchPreviewOpen, setHandbuchPreviewOpen] = useState(false);
+
+  // Localized months
+  const monthKeys = ['', 'month.january', 'month.february', 'month.march', 'month.april', 'month.may', 'month.june', 'month.july', 'month.august', 'month.september', 'month.october', 'month.november', 'month.december'];
 
   useEffect(() => {
     const loadSchwellenwerte = async () => {
@@ -168,25 +174,27 @@ export function DashboardView() {
     .filter(b => b.kostenarttTyp === 'Erlös' && fbBereiche.some(fb => b.bereich.includes(fb)))
     .reduce((sum, b) => sum + Math.abs(b.saldoVorjahr ?? 0), 0);
   
-  const months = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
-
   if (uploadedFiles.length === 0) {
     return (
       <div className="flex-1 flex flex-col">
-        <Header title="Dashboard" description="Übersicht Ihrer Finanzkennzahlen" />
+        <Header 
+          title={t('dashboard')} 
+          description={t('dashboard.description')}
+          actions={<LanguageSwitcher />}
+        />
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="text-center max-w-md animate-fade-in">
             <div className="w-20 h-20 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-6">
               <Euro className="h-10 w-10 text-muted-foreground" />
             </div>
             <h3 className="text-xl font-semibold text-foreground mb-2">
-              Keine Daten vorhanden
+              {t('dashboard.noData')}
             </h3>
             <p className="text-muted-foreground mb-4">
-              Laden Sie Ihre Saldenlisten hoch, um die Finanzanalyse zu starten.
+              {t('dashboard.uploadHint')}
             </p>
             <p className="text-sm text-muted-foreground">
-              Erwartetes Format: <code className="bg-muted px-2 py-0.5 rounded">Saldenliste-MM-YYYY.csv</code>
+              {t('dashboard.expectedFormat')}: <code className="bg-muted px-2 py-0.5 rounded">Saldenliste-MM-YYYY.csv</code>
             </p>
           </div>
         </div>
@@ -197,18 +205,21 @@ export function DashboardView() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <Header 
-        title="Dashboard" 
-        description={`Finanzübersicht ${months[selectedMonth]} ${selectedYear}`}
+        title={t('dashboard')} 
+        description={`${t('dashboard.financialOverview')} ${t(monthKeys[selectedMonth])} ${selectedYear}`}
         actions={
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setHandbuchPreviewOpen(true)}
-            className="gap-2"
-          >
-            <Eye className="h-4 w-4" />
-            <span className="hidden sm:inline">Handbuch</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setHandbuchPreviewOpen(true)}
+              className="gap-2"
+            >
+              <Eye className="h-4 w-4" />
+              <span className="hidden sm:inline">{t('common.handbook')}</span>
+            </Button>
+          </div>
         }
       />
       
