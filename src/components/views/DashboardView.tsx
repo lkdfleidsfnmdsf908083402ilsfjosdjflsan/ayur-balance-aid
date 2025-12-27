@@ -10,8 +10,11 @@ import { ErloesDetailModal } from '@/components/modals/ErloesDetailModal';
 import { PersonalkostenDetailModal } from '@/components/modals/PersonalkostenDetailModal';
 import { FBDetailModal } from '@/components/modals/FBDetailModal';
 import { AufwandDetailModal } from '@/components/modals/AufwandDetailModal';
-import { Euro, TrendingUp, ShoppingCart, Wallet, Users, UtensilsCrossed } from 'lucide-react';
+import { Euro, TrendingUp, ShoppingCart, Wallet, Users, UtensilsCrossed, BookOpen, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { exportHandbuch } from '@/lib/handbuchExport';
+import { toast } from 'sonner';
 
 export function DashboardView() {
   const { bereichAggregationen, vergleiche, konten, selectedYear, selectedMonth, uploadedFiles } = useFinanceStore();
