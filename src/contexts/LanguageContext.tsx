@@ -429,8 +429,18 @@ const translations: Record<Language, Record<string, string>> = {
     'guestMgmt.fbRevenue': 'F&B-Umsatz',
     'guestMgmt.otherRevenue': 'Sonstige Umsätze',
     'guestMgmt.status': 'Status',
+    'guestMgmt.guestList': 'Gästeliste',
+    'guestMgmt.contact': 'Kontakt',
+    'guestMgmt.noGuests': 'Keine Gäste gefunden',
+    'guestMgmt.showing': 'Zeige',
+    'guestMgmt.selectGuest': 'Gast auswählen',
+    'guestMgmt.info': 'Info',
+    'guestMgmt.preferences': 'Präferenzen',
+    'guestMgmt.firstVisit': 'Erstbesuch',
+    'guestMgmt.newStayFor': 'Neuer Aufenthalt für',
     
-    // ===== BUDGET PLANNING VIEW =====
+    // ===== KPI ALARMS VIEW =====
+    'kpiAlarm.noThresholdsConfig': 'Noch keine Schwellenwerte konfiguriert. Klicken Sie auf "Schwellenwert hinzufügen".',
     'budgetPlan.title': 'Budgetplanung',
     'budgetPlan.description': 'Soll-Ist-Vergleich',
     'budgetPlan.noData': 'Keine Daten vorhanden',
@@ -784,8 +794,18 @@ const translations: Record<Language, Record<string, string>> = {
     'guestMgmt.fbRevenue': 'F&B Revenue',
     'guestMgmt.otherRevenue': 'Other Revenue',
     'guestMgmt.status': 'Status',
+    'guestMgmt.guestList': 'Guest List',
+    'guestMgmt.contact': 'Contact',
+    'guestMgmt.noGuests': 'No guests found',
+    'guestMgmt.showing': 'Showing',
+    'guestMgmt.selectGuest': 'Select a guest',
+    'guestMgmt.info': 'Info',
+    'guestMgmt.preferences': 'Preferences',
+    'guestMgmt.firstVisit': 'First Visit',
+    'guestMgmt.newStayFor': 'New stay for',
     
-    // ===== BUDGET PLANNING VIEW =====
+    // ===== KPI ALARMS VIEW =====
+    'kpiAlarm.noThresholdsConfig': 'No thresholds configured yet. Click "Add Threshold".',
     'budgetPlan.title': 'Budget Planning',
     'budgetPlan.description': 'Target vs Actual Comparison',
     'budgetPlan.noData': 'No data available',
@@ -1273,8 +1293,18 @@ const translations: Record<Language, Record<string, string>> = {
     'guestMgmt.fbRevenue': 'F&B राजस्व',
     'guestMgmt.otherRevenue': 'अन्य राजस्व',
     'guestMgmt.status': 'स्थिति',
+    'guestMgmt.guestList': 'अतिथि सूची',
+    'guestMgmt.contact': 'संपर्क',
+    'guestMgmt.noGuests': 'कोई अतिथि नहीं मिला',
+    'guestMgmt.showing': 'दिखा रहे हैं',
+    'guestMgmt.selectGuest': 'अतिथि चुनें',
+    'guestMgmt.info': 'जानकारी',
+    'guestMgmt.preferences': 'प्राथमिकताएं',
+    'guestMgmt.firstVisit': 'पहली यात्रा',
+    'guestMgmt.newStayFor': 'नया ठहराव',
     
-    // ===== BUDGET PLANNING VIEW =====
+    // ===== KPI ALARMS VIEW =====
+    'kpiAlarm.noThresholdsConfig': 'अभी तक कोई सीमा कॉन्फ़िगर नहीं। "सीमा जोड़ें" पर क्लिक करें।',
     'budgetPlan.title': 'बजट योजना',
     'budgetPlan.description': 'लक्ष्य बनाम वास्तविक तुलना',
     'budgetPlan.noData': 'कोई डेटा उपलब्ध नहीं',
