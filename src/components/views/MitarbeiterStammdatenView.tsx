@@ -13,7 +13,8 @@ import { toast } from 'sonner';
 import { Plus, Pencil, Trash2, Users, Building2, Clock, Euro, Info, Search } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { format } from 'date-fns';
-import { de } from 'date-fns/locale';
+import { de, enUS } from 'date-fns/locale';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Employee {
   id: string;
@@ -60,6 +61,7 @@ const initialFormData: Omit<Employee, 'id'> = {
 };
 
 export function MitarbeiterStammdatenView() {
+  const { t, language } = useLanguage();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -68,20 +70,19 @@ export function MitarbeiterStammdatenView() {
   const [filter, setFilter] = useState({ abteilung: 'alle', aktiv: 'alle', suche: '' });
   const [lohnaufwandMonat, setLohnaufwandMonat] = useState<number>(0);
 
-  // Berechne Stundenlohn aus monatlichem Lohnaufwand (Österreich: 14 Monatsgehälter)
-  // Formel: (Monatslohn * 14) / (Wochenstunden * 52 Wochen/Jahr)
+  const dateLocale = language === 'de' ? de : enUS;
+
   const berechneStundenlohn = (monatslohn: number, wochenstunden: number): number => {
     if (wochenstunden <= 0) return 0;
-    const jahresbrutto = monatslohn * 14; // 14 Monatsgehälter in Österreich
-    const jahresstunden = wochenstunden * 52; // 52 Wochen pro Jahr
+    const jahresbrutto = monatslohn * 14;
+    const jahresstunden = wochenstunden * 52;
     return jahresbrutto / jahresstunden;
   };
 
-  // Berechne Lohnaufwand aus Stundenlohn (für Bearbeitung)
   const berechneLohnaufwand = (stundenlohn: number, wochenstunden: number): number => {
     const jahresstunden = wochenstunden * 52;
     const jahresbrutto = stundenlohn * jahresstunden;
-    return jahresbrutto / 14; // Zurück auf Monatslohn
+    return jahresbrutto / 14;
   };
 
   useEffect(() => {
@@ -96,7 +97,7 @@ export function MitarbeiterStammdatenView() {
       .order('nachname', { ascending: true });
 
     if (error) {
-      toast.error('Fehler beim Laden der Mitarbeiter');
+      toast.error(t('common.error'));
       console.error(error);
     } else {
       setEmployees(data || []);
@@ -106,17 +107,17 @@ export function MitarbeiterStammdatenView() {
 
   const handleSubmit = async () => {
     if (!formData.personalnummer || !formData.vorname || !formData.nachname) {
-      toast.error('Bitte alle Pflichtfelder ausfüllen');
+      toast.error(t('common.error'));
       return;
     }
 
     if (formData.wochenstunden_soll < 0 || formData.wochenstunden_soll > 60) {
-      toast.error('Wochenstunden müssen zwischen 0 und 60 liegen');
+      toast.error(t('common.error'));
       return;
     }
 
     if (formData.stundenlohn < 0) {
-      toast.error('Stundenlohn kann nicht negativ sein');
+      toast.error(t('common.error'));
       return;
     }
 
@@ -134,10 +135,10 @@ export function MitarbeiterStammdatenView() {
         .eq('id', editingEmployee.id);
 
       if (error) {
-        toast.error('Fehler beim Aktualisieren');
+        toast.error(t('common.error'));
         console.error(error);
       } else {
-        toast.success('Mitarbeiter aktualisiert');
+        toast.success(t('common.success'));
         loadEmployees();
       }
     } else {
@@ -147,13 +148,13 @@ export function MitarbeiterStammdatenView() {
 
       if (error) {
         if (error.code === '23505') {
-          toast.error('Personalnummer existiert bereits');
+          toast.error(t('common.error'));
         } else {
-          toast.error('Fehler beim Anlegen');
+          toast.error(t('common.error'));
           console.error(error);
         }
       } else {
-        toast.success('Mitarbeiter angelegt');
+        toast.success(t('common.success'));
         loadEmployees();
       }
     }
@@ -180,20 +181,19 @@ export function MitarbeiterStammdatenView() {
       austrittsdatum: employee.austrittsdatum,
       aktiv: employee.aktiv,
     });
-    // Berechne Lohnaufwand aus bestehendem Stundenlohn
     setLohnaufwandMonat(berechneLohnaufwand(employee.stundenlohn, employee.wochenstunden_soll));
     setDialogOpen(true);
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Mitarbeiter wirklich löschen?')) return;
+    if (!confirm(t('upload.confirmDelete'))) return;
 
     const { error } = await supabase.from('employees').delete().eq('id', id);
     if (error) {
-      toast.error('Fehler beim Löschen');
+      toast.error(t('common.error'));
       console.error(error);
     } else {
-      toast.success('Mitarbeiter gelöscht');
+      toast.success(t('common.success'));
       loadEmployees();
     }
   };
@@ -213,7 +213,6 @@ export function MitarbeiterStammdatenView() {
     return true;
   });
 
-  // Statistiken
   const stats = {
     gesamt: employees.length,
     aktiv: employees.filter(e => e.aktiv).length,
@@ -228,7 +227,7 @@ export function MitarbeiterStammdatenView() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-foreground">Mitarbeiter Stammdaten</h2>
+        <h2 className="text-2xl font-bold text-foreground">{t('employees.title')}</h2>
         <Dialog open={dialogOpen} onOpenChange={(open) => {
           setDialogOpen(open);
           if (!open) {
@@ -238,15 +237,15 @@ export function MitarbeiterStammdatenView() {
           }
         }}>
           <DialogTrigger asChild>
-            <Button><Plus className="w-4 h-4 mr-2" /> Neuer Mitarbeiter</Button>
+            <Button><Plus className="w-4 h-4 mr-2" /> {t('employees.addNew')}</Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>{editingEmployee ? 'Mitarbeiter bearbeiten' : 'Neuer Mitarbeiter'}</DialogTitle>
+              <DialogTitle>{editingEmployee ? t('common.edit') : t('employees.addNew')}</DialogTitle>
             </DialogHeader>
             <div className="grid grid-cols-2 gap-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="personalnummer">Personalnummer *</Label>
+                <Label htmlFor="personalnummer">{t('employees.personnelNumber')} *</Label>
                 <Input
                   id="personalnummer"
                   value={formData.personalnummer}
@@ -255,7 +254,7 @@ export function MitarbeiterStammdatenView() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="abteilung">Abteilung *</Label>
+                <Label htmlFor="abteilung">{t('employees.department')} *</Label>
                 <Select value={formData.abteilung} onValueChange={(v) => setFormData({ ...formData, abteilung: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -266,7 +265,7 @@ export function MitarbeiterStammdatenView() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="vorname">Vorname *</Label>
+                <Label htmlFor="vorname">{t('employees.firstName')} *</Label>
                 <Input
                   id="vorname"
                   value={formData.vorname}
@@ -274,7 +273,7 @@ export function MitarbeiterStammdatenView() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="nachname">Nachname *</Label>
+                <Label htmlFor="nachname">{t('employees.lastName')} *</Label>
                 <Input
                   id="nachname"
                   value={formData.nachname}
@@ -291,7 +290,7 @@ export function MitarbeiterStammdatenView() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="telefon">Telefon</Label>
+                <Label htmlFor="telefon">{t('guests.phone')}</Label>
                 <Input
                   id="telefon"
                   value={formData.telefon || ''}
@@ -299,16 +298,15 @@ export function MitarbeiterStammdatenView() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="position">Position</Label>
+                <Label htmlFor="position">{t('employees.position')}</Label>
                 <Input
                   id="position"
                   value={formData.position || ''}
                   onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                  placeholder="z.B. Rezeptionist"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="anstellungsart">Anstellungsart *</Label>
+                <Label htmlFor="anstellungsart">{t('employees.employmentType')} *</Label>
                 <Select 
                   value={formData.anstellungsart} 
                   onValueChange={(v) => setFormData({ ...formData, anstellungsart: v as Employee['anstellungsart'] })}
@@ -322,7 +320,7 @@ export function MitarbeiterStammdatenView() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="wochenstunden">Wochenstunden Soll *</Label>
+                <Label htmlFor="wochenstunden">{t('employees.weeklyHours')} *</Label>
                 <Input
                   id="wochenstunden"
                   type="number"
@@ -342,14 +340,14 @@ export function MitarbeiterStammdatenView() {
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Label htmlFor="lohnaufwand">Gesamter Lohnaufwand p.m. (€) *</Label>
+                  <Label htmlFor="lohnaufwand">Lohnaufwand p.m. (€) *</Label>
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Info className="h-4 w-4 text-muted-foreground cursor-help" />
                       </TooltipTrigger>
                       <TooltipContent className="max-w-xs">
-                        <p>Österreichisches System: Berechnung basiert auf 14 Monatsgehältern (inkl. Urlaubs- und Weihnachtsgeld im Juni und November).</p>
+                        <p>14 x</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -372,7 +370,7 @@ export function MitarbeiterStammdatenView() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="jahresbrutto">Jahresbrutto (€) - berechnet</Label>
+                <Label htmlFor="jahresbrutto">Jahresbrutto (€)</Label>
                 <Input
                   id="jahresbrutto"
                   type="text"
@@ -382,7 +380,7 @@ export function MitarbeiterStammdatenView() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="stundenlohn">Stundenlohn (€) - berechnet</Label>
+                <Label htmlFor="stundenlohn">{t('employees.hourlyRate')} (€)</Label>
                 <Input
                   id="stundenlohn"
                   type="number"
@@ -392,7 +390,7 @@ export function MitarbeiterStammdatenView() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="eintrittsdatum">Eintrittsdatum *</Label>
+                <Label htmlFor="eintrittsdatum">{t('employees.entryDate')} *</Label>
                 <Input
                   id="eintrittsdatum"
                   type="date"
@@ -415,12 +413,12 @@ export function MitarbeiterStammdatenView() {
                   checked={formData.aktiv}
                   onCheckedChange={(checked) => setFormData({ ...formData, aktiv: checked })}
                 />
-                <Label htmlFor="aktiv">Aktiv</Label>
+                <Label htmlFor="aktiv">{t('employees.active')}</Label>
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>Abbrechen</Button>
-              <Button onClick={handleSubmit}>{editingEmployee ? 'Speichern' : 'Anlegen'}</Button>
+              <Button variant="outline" onClick={() => setDialogOpen(false)}>{t('common.cancel')}</Button>
+              <Button onClick={handleSubmit}>{editingEmployee ? t('common.save') : t('common.add')}</Button>
             </div>
           </DialogContent>
         </Dialog>
@@ -432,7 +430,7 @@ export function MitarbeiterStammdatenView() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-primary" />
-              <span className="text-sm text-muted-foreground">Gesamt</span>
+              <span className="text-sm text-muted-foreground">{t('common.total')}</span>
             </div>
             <p className="text-2xl font-bold">{stats.gesamt}</p>
           </CardContent>
@@ -441,7 +439,7 @@ export function MitarbeiterStammdatenView() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-green-500" />
-              <span className="text-sm text-muted-foreground">Aktiv</span>
+              <span className="text-sm text-muted-foreground">{t('employees.active')}</span>
             </div>
             <p className="text-2xl font-bold text-green-600">{stats.aktiv}</p>
           </CardContent>
@@ -468,7 +466,7 @@ export function MitarbeiterStammdatenView() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-purple-500" />
-              <span className="text-sm text-muted-foreground">Wochenstunden</span>
+              <span className="text-sm text-muted-foreground">{t('employees.weeklyHours')}</span>
             </div>
             <p className="text-2xl font-bold">{stats.gesamtStunden.toFixed(0)}h</p>
           </CardContent>
@@ -477,7 +475,7 @@ export function MitarbeiterStammdatenView() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <Euro className="h-4 w-4 text-yellow-500" />
-              <span className="text-sm text-muted-foreground">Ø Stundenlohn</span>
+              <span className="text-sm text-muted-foreground">Ø {t('employees.hourlyRate')}</span>
             </div>
             <p className="text-2xl font-bold">{stats.durchschnittLohn.toFixed(2)}€</p>
           </CardContent>
@@ -487,16 +485,16 @@ export function MitarbeiterStammdatenView() {
       {/* Filter */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg">Filter</CardTitle>
+          <CardTitle className="text-lg">{t('common.filter')}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4 flex-wrap items-end">
             <div className="min-w-[250px] flex-1 max-w-md">
-              <Label>Suche</Label>
+              <Label>{t('common.search')}</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Name, Personalnummer oder E-Mail..."
+                  placeholder={t('employees.search')}
                   value={filter.suche}
                   onChange={(e) => setFilter({ ...filter, suche: e.target.value })}
                   className="pl-9"
@@ -504,11 +502,11 @@ export function MitarbeiterStammdatenView() {
               </div>
             </div>
             <div className="min-w-[200px]">
-              <Label>Abteilung</Label>
+              <Label>{t('employees.department')}</Label>
               <Select value={filter.abteilung} onValueChange={(v) => setFilter({ ...filter, abteilung: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="alle">Alle Abteilungen</SelectItem>
+                  <SelectItem value="alle">{t('accounts.all')}</SelectItem>
                   {ABTEILUNGEN.map((a) => (
                     <SelectItem key={a} value={a}>{a}</SelectItem>
                   ))}
@@ -516,13 +514,13 @@ export function MitarbeiterStammdatenView() {
               </Select>
             </div>
             <div className="min-w-[150px]">
-              <Label>Status</Label>
+              <Label>{t('common.status')}</Label>
               <Select value={filter.aktiv} onValueChange={(v) => setFilter({ ...filter, aktiv: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="alle">Alle</SelectItem>
-                  <SelectItem value="aktiv">Nur Aktive</SelectItem>
-                  <SelectItem value="inaktiv">Nur Inaktive</SelectItem>
+                  <SelectItem value="alle">{t('accounts.all')}</SelectItem>
+                  <SelectItem value="aktiv">{t('employees.active')}</SelectItem>
+                  <SelectItem value="inaktiv">{t('employees.inactive')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -533,27 +531,27 @@ export function MitarbeiterStammdatenView() {
       {/* Mitarbeiter-Tabelle */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Mitarbeiterliste ({filteredEmployees.length})</CardTitle>
+          <CardTitle className="text-lg">{t('nav.employees')} ({filteredEmployees.length})</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
-            <p className="text-muted-foreground p-6">Laden...</p>
+            <p className="text-muted-foreground p-6">{t('common.loading')}</p>
           ) : (
             <div className="overflow-auto max-h-[500px]">
               <Table>
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
-                    <TableHead>Nr.</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Abteilung</TableHead>
-                    <TableHead>Position</TableHead>
-                    <TableHead>Art</TableHead>
-                    <TableHead className="text-right">Std/Woche</TableHead>
-                    <TableHead className="text-right">€/Std</TableHead>
+                    <TableHead>{t('employees.personnelNumber')}</TableHead>
+                    <TableHead>{t('guests.name')}</TableHead>
+                    <TableHead>{t('employees.department')}</TableHead>
+                    <TableHead>{t('employees.position')}</TableHead>
+                    <TableHead>{t('employees.employmentType')}</TableHead>
+                    <TableHead className="text-right">{t('employees.weeklyHours')}</TableHead>
+                    <TableHead className="text-right">€/h</TableHead>
                     <TableHead className="text-right">Lohnaufwand p.m.</TableHead>
-                    <TableHead>Eintritt</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Aktionen</TableHead>
+                    <TableHead>{t('employees.entryDate')}</TableHead>
+                    <TableHead>{t('common.status')}</TableHead>
+                    <TableHead className="text-right">{t('common.actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -575,10 +573,10 @@ export function MitarbeiterStammdatenView() {
                       <TableCell className="text-right font-medium">
                         {lohnaufwandPM.toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
                       </TableCell>
-                      <TableCell>{format(new Date(e.eintrittsdatum), 'dd.MM.yyyy', { locale: de })}</TableCell>
+                      <TableCell>{format(new Date(e.eintrittsdatum), 'dd.MM.yyyy', { locale: dateLocale })}</TableCell>
                       <TableCell>
                         <Badge variant={e.aktiv ? 'default' : 'destructive'}>
-                          {e.aktiv ? 'Aktiv' : 'Inaktiv'}
+                          {e.aktiv ? t('employees.active') : t('employees.inactive')}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -597,14 +595,14 @@ export function MitarbeiterStammdatenView() {
                   {filteredEmployees.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={11} className="text-center text-muted-foreground py-8">
-                        Keine Mitarbeiter gefunden
+                        {t('common.noData')}
                       </TableCell>
                     </TableRow>
                   )}
                   {/* Summenzeile */}
                   {filteredEmployees.length > 0 && (
                     <TableRow className="bg-muted/50 font-semibold border-t-2">
-                      <TableCell colSpan={5} className="text-right">Summe ({filteredEmployees.length} Mitarbeiter)</TableCell>
+                      <TableCell colSpan={5} className="text-right">{t('common.total')} ({filteredEmployees.length})</TableCell>
                       <TableCell className="text-right">
                         {filteredEmployees.reduce((sum, e) => sum + e.wochenstunden_soll, 0).toFixed(1)}h
                       </TableCell>
