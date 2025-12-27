@@ -16,6 +16,7 @@ import { Bereich } from '@/types/finance';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { exportKpiDocumentation } from '@/lib/pdfExport';
+import { KpiSchwellenwerteExportButton } from '@/components/KpiSchwellenwerteExportButton';
 import {
   Bell,
   BellOff,
@@ -486,6 +487,7 @@ export function KpiAlarmeView() {
             )}
           </div>
           <div className="flex items-center gap-2">
+            <KpiSchwellenwerteExportButton />
             <Button 
               variant="outline" 
               className="gap-2"
