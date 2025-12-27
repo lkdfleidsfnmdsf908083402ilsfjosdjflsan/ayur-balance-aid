@@ -11,6 +11,7 @@ interface HandbuchData {
   abteilungsleiter: any[];
   employees: any[];
   guests: any[];
+  budgetPlanung: any[];
 }
 
 // KPI Typ Labels für bessere Lesbarkeit
@@ -72,11 +73,12 @@ const abteilungLabels: Record<string, string> = {
 
 export async function exportHandbuch(): Promise<void> {
   // Lade alle relevanten Daten
-  const [schwellenwerteRes, abteilungsleiterRes, employeesRes, guestsRes] = await Promise.all([
+  const [schwellenwerteRes, abteilungsleiterRes, employeesRes, guestsRes, budgetRes] = await Promise.all([
     supabase.from('kpi_schwellenwerte').select('*').order('abteilung'),
     supabase.from('abteilungsleiter').select('*').eq('aktiv', true),
     supabase.from('employees').select('*').eq('aktiv', true),
     supabase.from('guests').select('id, gast_nummer, vorname, nachname, vip_status').limit(100),
+    supabase.from('budget_planung').select('*').order('jahr', { ascending: false }).order('monat', { ascending: false }),
   ]);
 
   const data: HandbuchData = {
@@ -84,6 +86,7 @@ export async function exportHandbuch(): Promise<void> {
     abteilungsleiter: abteilungsleiterRes.data || [],
     employees: employeesRes.data || [],
     guests: guestsRes.data || [],
+    budgetPlanung: budgetRes.data || [],
   };
 
   const doc = new jsPDF();
@@ -136,12 +139,13 @@ export async function exportHandbuch(): Promise<void> {
     { title: '2. Finanz-KPIs', page: 4 },
     { title: '3. Operative KPIs nach Abteilung', page: 5 },
     { title: '4. Konfigurierte Schwellenwerte', page: 7 },
-    { title: '5. Branchenübliche Benchmarks', page: 9 },
-    { title: '6. Organisationsstruktur', page: 11 },
-    { title: '7. Mitarbeiterübersicht', page: 12 },
-    { title: '8. Gästeverwaltung', page: 13 },
-    { title: '9. Formeln & Berechnungen', page: 14 },
-    { title: '10. Glossar', page: 15 },
+    { title: '5. Budget-Planung & Soll-Ist-Vergleich', page: 9 },
+    { title: '6. Branchenübliche Benchmarks', page: 10 },
+    { title: '7. Organisationsstruktur', page: 12 },
+    { title: '8. Mitarbeiterübersicht', page: 13 },
+    { title: '9. Gästeverwaltung', page: 14 },
+    { title: '10. Formeln & Berechnungen', page: 15 },
+    { title: '11. Glossar', page: 16 },
   ];
   
   let tocY = 45;
@@ -189,6 +193,8 @@ Zielgruppe: Geschäftsführung, Controlling, Abteilungsleiter`;
   doc.text(`• ${data.schwellenwerte.length} konfigurierte KPI-Schwellenwerte`, 25, 142);
   doc.text(`• ${data.abteilungsleiter.length} aktive Abteilungsleiter`, 25, 150);
   doc.text(`• ${data.employees.length} aktive Mitarbeiter`, 25, 158);
+  doc.text(`• ${data.guests.length} registrierte Gäste (Auszug)`, 25, 166);
+  doc.text(`• ${data.budgetPlanung.length} Budget-Planungseinträge`, 25, 174);
   doc.text(`• ${data.guests.length} registrierte Gäste (Auszug)`, 25, 166);
 
   // ═══════════════════════════════════════════════════════════════
@@ -395,10 +401,80 @@ Zielgruppe: Geschäftsführung, Controlling, Abteilungsleiter`;
   });
 
   // ═══════════════════════════════════════════════════════════════
-  // 5. BRANCHENBENCHMARKS
+  // 5. BUDGET-PLANUNG & SOLL-IST-VERGLEICH
   // ═══════════════════════════════════════════════════════════════
   doc.addPage();
-  addSectionHeader(doc, '5. Branchenübliche Benchmarks');
+  addSectionHeader(doc, '5. Budget-Planung & Soll-Ist-Vergleich');
+  
+  doc.setFontSize(10);
+  doc.setTextColor(80, 80, 80);
+  doc.text(`Stand: ${currentDateTime()} | ${data.budgetPlanung.length} Budget-Einträge`, 15, 45);
+  
+  if (data.budgetPlanung.length > 0) {
+    // Group by department
+    const budgetByDept = data.budgetPlanung.reduce((acc: any, b: any) => {
+      if (!acc[b.abteilung]) acc[b.abteilung] = [];
+      acc[b.abteilung].push(b);
+      return acc;
+    }, {});
+
+    const months = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+    
+    y = 55;
+    Object.entries(budgetByDept).forEach(([abt, items]: [string, any]) => {
+      if (y > 250) {
+        doc.addPage();
+        y = 20;
+      }
+      
+      // Sort by year/month descending, take last 6 entries
+      const sortedItems = items
+        .sort((a: any, b: any) => (b.jahr * 12 + b.monat) - (a.jahr * 12 + a.monat))
+        .slice(0, 6);
+      
+      const tableData = sortedItems.map((b: any) => [
+        `${months[b.monat]} ${b.jahr}`,
+        `€${(b.umsatz_budget || 0).toLocaleString('de-DE')}`,
+        `€${(b.personal_budget || 0).toLocaleString('de-DE')}`,
+        `€${(b.wareneinsatz_budget || 0).toLocaleString('de-DE')}`,
+        `€${(b.db1_budget || 0).toLocaleString('de-DE')}`,
+        `€${(b.db2_budget || 0).toLocaleString('de-DE')}`,
+      ]);
+
+      doc.setFontSize(10);
+      doc.setTextColor(40, 40, 40);
+      doc.text(abteilungLabels[abt] || abt, 15, y);
+
+      autoTable(doc, {
+        startY: y + 3,
+        head: [['Periode', 'Umsatz-Budget', 'Personal-Budget', 'WES-Budget', 'DB1-Budget', 'DB2-Budget']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold', fontSize: 7 },
+        bodyStyles: { fontSize: 7 },
+        columnStyles: { 
+          0: { cellWidth: 28 }, 
+          1: { cellWidth: 28 }, 
+          2: { cellWidth: 28 },
+          3: { cellWidth: 28 },
+          4: { cellWidth: 28 },
+          5: { cellWidth: 28 }
+        },
+        margin: { left: 15, right: 15 },
+        tableWidth: 'auto',
+      });
+      
+      y = (doc as any).lastAutoTable?.finalY + 10 || y + 50;
+    });
+  } else {
+    doc.text('Keine Budget-Planungsdaten vorhanden.', 15, 55);
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // 6. BRANCHENBENCHMARKS
+  // ═══════════════════════════════════════════════════════════════
+  doc.addPage();
+  addSectionHeader(doc, '6. Branchenübliche Benchmarks');
   
   doc.setFontSize(10);
   doc.setTextColor(80, 80, 80);
@@ -430,7 +506,10 @@ Zielgruppe: Geschäftsführung, Controlling, Abteilungsleiter`;
   });
 
   // ═══════════════════════════════════════════════════════════════
-  // 6. ORGANISATIONSSTRUKTUR
+  // 7. ORGANISATIONSSTRUKTUR
+  // ═══════════════════════════════════════════════════════════════
+  doc.addPage();
+  addSectionHeader(doc, '7. Organisationsstruktur');
   // ═══════════════════════════════════════════════════════════════
   doc.addPage();
   addSectionHeader(doc, '6. Organisationsstruktur');
@@ -459,8 +538,10 @@ Zielgruppe: Geschäftsführung, Controlling, Abteilungsleiter`;
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // 7. MITARBEITER
+  // 8. MITARBEITER
   // ═══════════════════════════════════════════════════════════════
+  doc.addPage();
+  addSectionHeader(doc, '8. Mitarbeiterübersicht');
   doc.addPage();
   addSectionHeader(doc, '7. Mitarbeiterübersicht');
   
@@ -494,8 +575,10 @@ Zielgruppe: Geschäftsführung, Controlling, Abteilungsleiter`;
   });
 
   // ═══════════════════════════════════════════════════════════════
-  // 8. GÄSTEVERWALTUNG
+  // 9. GÄSTEVERWALTUNG
   // ═══════════════════════════════════════════════════════════════
+  doc.addPage();
+  addSectionHeader(doc, '9. Gästeverwaltung');
   doc.addPage();
   addSectionHeader(doc, '8. Gästeverwaltung');
   
@@ -522,8 +605,10 @@ Zielgruppe: Geschäftsführung, Controlling, Abteilungsleiter`;
   });
 
   // ═══════════════════════════════════════════════════════════════
-  // 9. FORMELN
+  // 10. FORMELN
   // ═══════════════════════════════════════════════════════════════
+  doc.addPage();
+  addSectionHeader(doc, '10. Formeln & Berechnungen');
   doc.addPage();
   addSectionHeader(doc, '9. Formeln & Berechnungen');
   
@@ -554,8 +639,10 @@ Zielgruppe: Geschäftsführung, Controlling, Abteilungsleiter`;
   });
 
   // ═══════════════════════════════════════════════════════════════
-  // 10. GLOSSAR
+  // 11. GLOSSAR
   // ═══════════════════════════════════════════════════════════════
+  doc.addPage();
+  addSectionHeader(doc, '11. Glossar');
   doc.addPage();
   addSectionHeader(doc, '10. Glossar');
   

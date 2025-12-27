@@ -695,11 +695,11 @@ export function AbteilungSchichtplanungView() {
               Keine Mitarbeiter in dieser Abteilung gefunden
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto max-h-[500px] overflow-y-auto border rounded-md">
               <Table>
-                <TableHeader>
+                <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
-                    <TableHead className="w-48 sticky left-0 bg-background">Mitarbeiter</TableHead>
+                    <TableHead className="w-48 sticky left-0 bg-background z-20">Mitarbeiter</TableHead>
                     {weekDays.map((day) => (
                       <TableHead key={day.toISOString()} className="text-center min-w-28">
                         <div className="font-medium">{format(day, "EEE", { locale: de })}</div>
@@ -719,7 +719,7 @@ export function AbteilungSchichtplanungView() {
 
                     return (
                       <TableRow key={employee.id}>
-                        <TableCell className="font-medium sticky left-0 bg-background">
+                        <TableCell className="font-medium sticky left-0 bg-background z-10">
                           <div>{employee.vorname} {employee.nachname}</div>
                           <div className="text-xs text-muted-foreground">
                             Soll: {employee.wochenstunden_soll}h/Woche

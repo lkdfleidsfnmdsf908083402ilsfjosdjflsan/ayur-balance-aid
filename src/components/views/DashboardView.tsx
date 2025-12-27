@@ -10,11 +10,10 @@ import { ErloesDetailModal } from '@/components/modals/ErloesDetailModal';
 import { PersonalkostenDetailModal } from '@/components/modals/PersonalkostenDetailModal';
 import { FBDetailModal } from '@/components/modals/FBDetailModal';
 import { AufwandDetailModal } from '@/components/modals/AufwandDetailModal';
-import { Euro, TrendingUp, ShoppingCart, Wallet, Users, UtensilsCrossed, BookOpen, Loader2 } from 'lucide-react';
+import { HandbuchPreviewModal } from '@/components/modals/HandbuchPreviewModal';
+import { Euro, TrendingUp, ShoppingCart, Wallet, Users, UtensilsCrossed, BookOpen, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { exportHandbuch } from '@/lib/handbuchExport';
-import { toast } from 'sonner';
 
 export function DashboardView() {
   const { bereichAggregationen, vergleiche, konten, selectedYear, selectedMonth, uploadedFiles } = useFinanceStore();
@@ -24,20 +23,7 @@ export function DashboardView() {
   const [personalkostenModalOpen, setPersonalkostenModalOpen] = useState(false);
   const [fbModalOpen, setFbModalOpen] = useState(false);
   const [aufwandModalOpen, setAufwandModalOpen] = useState(false);
-  const [isExportingHandbuch, setIsExportingHandbuch] = useState(false);
-
-  const handleExportHandbuch = async () => {
-    setIsExportingHandbuch(true);
-    try {
-      await exportHandbuch();
-      toast.success('Handbuch erfolgreich exportiert');
-    } catch (error) {
-      console.error('Fehler beim Exportieren:', error);
-      toast.error('Fehler beim Exportieren des Handbuchs');
-    } finally {
-      setIsExportingHandbuch(false);
-    }
-  };
+  const [handbuchPreviewOpen, setHandbuchPreviewOpen] = useState(false);
 
   useEffect(() => {
     const loadSchwellenwerte = async () => {
@@ -216,18 +202,18 @@ export function DashboardView() {
           <Button
             variant="outline"
             size="sm"
-            onClick={handleExportHandbuch}
-            disabled={isExportingHandbuch}
+            onClick={() => setHandbuchPreviewOpen(true)}
             className="gap-2"
           >
-            {isExportingHandbuch ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <BookOpen className="h-4 w-4" />
-            )}
-            Handbuch exportieren
+            <Eye className="h-4 w-4" />
+            <span className="hidden sm:inline">Handbuch</span>
           </Button>
         }
+      />
+      
+      <HandbuchPreviewModal 
+        open={handbuchPreviewOpen} 
+        onOpenChange={setHandbuchPreviewOpen} 
       />
       
       <div className="flex-1 overflow-auto p-6">
