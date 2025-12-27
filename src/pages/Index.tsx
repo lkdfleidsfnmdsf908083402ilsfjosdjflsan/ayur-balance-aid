@@ -26,6 +26,7 @@ import { DatenqualitaetView } from '@/components/views/DatenqualitaetView';
 import { BenutzerVerwaltungView } from '@/components/views/BenutzerVerwaltungView';
 import { MobileSchichtplanungView } from '@/components/views/MobileSchichtplanungView';
 import { AbteilungsleiterDashboardView } from '@/components/views/AbteilungsleiterDashboardView';
+import { GaesteVerwaltungView } from '@/components/views/GaesteVerwaltungView';
 import { useFinanceStore } from '@/store/financeStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -102,6 +103,8 @@ const Index = () => {
         return <BereicheView />;
       case 'datenqualitaet':
         return <DatenqualitaetView />;
+      case 'gaeste':
+        return <GaesteVerwaltungView />;
       default:
         return <DashboardView />;
     }

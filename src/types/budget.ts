@@ -71,11 +71,21 @@ export type KpiTyp =
   | 'admin_open_positions_rate'
   | 'admin_turnover_rate'
   | 'admin_it_availability'
-  | 'admin_payment_compliance';
+  | 'admin_payment_compliance'
+  // Guest KPIs (Gäste)
+  | 'guest_occupancy_rate'
+  | 'guest_adr'
+  | 'guest_revpar'
+  | 'guest_revenue_per_guest'
+  | 'guest_returning_rate'
+  | 'guest_no_show_rate'
+  | 'guest_cancellation_rate'
+  | 'guest_avg_rating'
+  | 'guest_avg_stay_duration';
 
 export interface KpiSchwellenwert {
   id?: string;
-  abteilung: Bereich | 'Gesamt' | 'Housekeeping' | 'Kitchen' | 'Service' | 'FrontOffice' | 'Technical' | 'Admin';
+  abteilung: Bereich | 'Gesamt' | 'Housekeeping' | 'Kitchen' | 'Service' | 'FrontOffice' | 'Technical' | 'Admin' | 'Guests';
   kpiTyp: KpiTyp;
   schwellenwertMin?: number;
   schwellenwertMax?: number;
@@ -146,6 +156,17 @@ export const kpiTypLabels: Record<KpiTyp, string> = {
   admin_turnover_rate: 'Fluktuation %',
   admin_it_availability: 'IT-Verfügbarkeit %',
   admin_payment_compliance: 'Zahlungstreue %',
+  
+  // Guests
+  guest_occupancy_rate: 'Belegungsrate %',
+  guest_adr: 'ADR (Ø Zimmerpreis)',
+  guest_revpar: 'RevPAR',
+  guest_revenue_per_guest: 'Umsatz pro Gast',
+  guest_returning_rate: 'Wiederkehrerquote %',
+  guest_no_show_rate: 'No-Show-Rate %',
+  guest_cancellation_rate: 'Stornierungsrate %',
+  guest_avg_rating: 'Ø Gästebewertung',
+  guest_avg_stay_duration: 'Ø Aufenthaltsdauer',
 };
 
 // Gruppierung der KPI-Typen nach Bereich für bessere UX
@@ -159,6 +180,7 @@ export const kpiTypGroups: Record<string, KpiTyp[]> = {
   'Front Office': ['fo_avg_checkin_time', 'fo_complaint_rate', 'fo_upsell_conversion', 'fo_fcr_rate', 'fo_avg_rating'],
   'Technik': ['tech_ticket_backlog', 'tech_same_day_resolution', 'tech_preventive_maintenance', 'tech_emergency_rate', 'tech_energy_per_room'],
   'Verwaltung/HR': ['admin_sick_rate', 'admin_open_positions_rate', 'admin_turnover_rate', 'admin_it_availability', 'admin_payment_compliance'],
+  'Gäste': ['guest_occupancy_rate', 'guest_adr', 'guest_revpar', 'guest_revenue_per_guest', 'guest_returning_rate', 'guest_no_show_rate', 'guest_cancellation_rate', 'guest_avg_rating', 'guest_avg_stay_duration'],
 };
 
 // Abteilungen für Daily Reports
