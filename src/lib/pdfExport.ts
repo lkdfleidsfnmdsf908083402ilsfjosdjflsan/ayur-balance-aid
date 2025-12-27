@@ -1359,3 +1359,271 @@ export function exportPersonalkostenToPdf(
 
   doc.save(`Personalkosten-Report_${jahr}-${String(monat).padStart(2, '0')}.pdf`);
 }
+
+// ═══════════════════════════════════════════════════════════════
+// F&B ERLÖSE EXPORT
+// ═══════════════════════════════════════════════════════════════
+interface FBBereich {
+  bereich: string;
+  value: number;
+  valueVormonat: number;
+  valueVorjahr: number;
+}
+
+export function exportFBToPdf(
+  fbGesamt: number,
+  fbVormonat: number,
+  fbVorjahr: number,
+  fbBereiche: FBBereich[],
+  jahr: number,
+  monat: number
+) {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  
+  // Header
+  doc.setFontSize(20);
+  doc.setTextColor(40, 40, 40);
+  doc.text('F&B Erlöse Report', pageWidth / 2, 20, { align: 'center' });
+  
+  doc.setFontSize(12);
+  doc.setTextColor(100, 100, 100);
+  doc.text(`${months[monat]} ${jahr}`, pageWidth / 2, 28, { align: 'center' });
+  
+  doc.setFontSize(10);
+  doc.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, pageWidth - 15, 15, { align: 'right' });
+  
+  // Übersicht Box
+  doc.setFillColor(255, 247, 237);
+  doc.roundedRect(15, 38, pageWidth - 30, 35, 3, 3, 'F');
+  
+  doc.setFontSize(14);
+  doc.setTextColor(40, 40, 40);
+  doc.text('Übersicht', 20, 48);
+  
+  doc.setFontSize(11);
+  doc.setTextColor(80, 80, 80);
+  doc.text(`F&B Erlöse Gesamt: ${formatCurrency(fbGesamt)}`, 25, 58);
+  doc.text(`Vormonat: ${formatCurrency(fbVormonat)}`, 25, 66);
+  doc.text(`Vorjahr: ${formatCurrency(fbVorjahr)}`, 110, 66);
+  
+  const diffVm = fbGesamt - fbVormonat;
+  const diffVj = fbGesamt - fbVorjahr;
+  doc.setTextColor(diffVm >= 0 ? 34 : 185, diffVm >= 0 ? 139 : 28, 28);
+  doc.text(`Δ VM: ${diffVm >= 0 ? '+' : ''}${formatCurrency(diffVm)}`, 110, 58);
+  
+  // Nach Bereich
+  doc.setFontSize(14);
+  doc.setTextColor(40, 40, 40);
+  doc.text('F&B Erlöse nach Bereich', 15, 90);
+  
+  const sortedBereiche = [...fbBereiche]
+    .filter(b => b.value > 0)
+    .sort((a, b) => b.value - a.value);
+  
+  const bereichTableData = sortedBereiche.map(b => {
+    const prozent = fbGesamt > 0 ? (b.value / fbGesamt) * 100 : 0;
+    const changeVm = b.valueVormonat > 0 ? ((b.value - b.valueVormonat) / b.valueVormonat) * 100 : 0;
+    const changeVj = b.valueVorjahr > 0 ? ((b.value - b.valueVorjahr) / b.valueVorjahr) * 100 : 0;
+    return [
+      b.bereich,
+      formatCurrency(b.value),
+      `${prozent.toFixed(1)}%`,
+      formatCurrency(b.valueVormonat),
+      `${changeVm >= 0 ? '+' : ''}${changeVm.toFixed(1)}%`,
+      formatCurrency(b.valueVorjahr),
+      `${changeVj >= 0 ? '+' : ''}${changeVj.toFixed(1)}%`,
+    ];
+  });
+  
+  bereichTableData.push([
+    'Gesamt',
+    formatCurrency(fbGesamt),
+    '100%',
+    formatCurrency(fbVormonat),
+    '',
+    formatCurrency(fbVorjahr),
+    '',
+  ]);
+
+  autoTable(doc, {
+    startY: 95,
+    head: [['Bereich', 'Aktuell', 'Anteil', 'Vormonat', 'Δ VM', 'Vorjahr', 'Δ VJ']],
+    body: bereichTableData,
+    theme: 'striped',
+    headStyles: {
+      fillColor: [234, 179, 8],
+      textColor: [40, 40, 40],
+      fontStyle: 'bold',
+      fontSize: 9,
+    },
+    bodyStyles: { fontSize: 9 },
+    alternateRowStyles: { fillColor: [254, 252, 232] },
+    columnStyles: {
+      0: { fontStyle: 'bold', cellWidth: 35 },
+      1: { halign: 'right', cellWidth: 28 },
+      2: { halign: 'right', cellWidth: 20 },
+      3: { halign: 'right', cellWidth: 28 },
+      4: { halign: 'right', cellWidth: 22 },
+      5: { halign: 'right', cellWidth: 28 },
+      6: { halign: 'right', cellWidth: 22 },
+    },
+    margin: { left: 15, right: 15 },
+    didParseCell: (data) => {
+      if (data.row.index === bereichTableData.length - 1) {
+        data.cell.styles.fontStyle = 'bold';
+        data.cell.styles.fillColor = [254, 243, 199];
+      }
+    },
+  });
+
+  // Footer
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text(
+      `Seite ${i} von ${pageCount}`,
+      pageWidth / 2,
+      doc.internal.pageSize.getHeight() - 10,
+      { align: 'center' }
+    );
+  }
+
+  doc.save(`FB-Erloese-Report_${jahr}-${String(monat).padStart(2, '0')}.pdf`);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GESAMTAUFWAND EXPORT
+// ═══════════════════════════════════════════════════════════════
+interface AufwandExportKlasse {
+  name: string;
+  value: number;
+  valueVormonat: number;
+  valueVorjahr: number;
+}
+
+export function exportAufwandToPdf(
+  aufwandGesamt: number,
+  aufwandVormonat: number,
+  aufwandVorjahr: number,
+  aufwandNachKlassen: AufwandExportKlasse[],
+  jahr: number,
+  monat: number
+) {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  
+  // Header
+  doc.setFontSize(20);
+  doc.setTextColor(40, 40, 40);
+  doc.text('Gesamtaufwand Report', pageWidth / 2, 20, { align: 'center' });
+  
+  doc.setFontSize(12);
+  doc.setTextColor(100, 100, 100);
+  doc.text(`${months[monat]} ${jahr}`, pageWidth / 2, 28, { align: 'center' });
+  
+  doc.setFontSize(10);
+  doc.text(`Erstellt am: ${new Date().toLocaleDateString('de-DE')}`, pageWidth - 15, 15, { align: 'right' });
+  
+  // Übersicht Box
+  doc.setFillColor(254, 242, 242);
+  doc.roundedRect(15, 38, pageWidth - 30, 35, 3, 3, 'F');
+  
+  doc.setFontSize(14);
+  doc.setTextColor(40, 40, 40);
+  doc.text('Übersicht', 20, 48);
+  
+  doc.setFontSize(11);
+  doc.setTextColor(80, 80, 80);
+  doc.text(`Gesamtaufwand: ${formatCurrency(aufwandGesamt)}`, 25, 58);
+  doc.text(`Vormonat: ${formatCurrency(aufwandVormonat)}`, 25, 66);
+  doc.text(`Vorjahr: ${formatCurrency(aufwandVorjahr)}`, 110, 66);
+  
+  const diffVm = aufwandGesamt - aufwandVormonat;
+  // Bei Aufwand ist Steigerung negativ (rot)
+  doc.setTextColor(diffVm > 0 ? 185 : 34, diffVm > 0 ? 28 : 139, 28);
+  doc.text(`Δ VM: ${diffVm >= 0 ? '+' : ''}${formatCurrency(diffVm)}`, 110, 58);
+  
+  // Nach Kontoklasse
+  doc.setFontSize(14);
+  doc.setTextColor(40, 40, 40);
+  doc.text('Aufwand nach Kontoklasse', 15, 90);
+  
+  const sortedKlassen = [...aufwandNachKlassen]
+    .filter(k => k.value > 0)
+    .sort((a, b) => b.value - a.value);
+  
+  const klassenTableData = sortedKlassen.map(k => {
+    const prozent = aufwandGesamt > 0 ? (k.value / aufwandGesamt) * 100 : 0;
+    const changeVm = k.valueVormonat > 0 ? ((k.value - k.valueVormonat) / k.valueVormonat) * 100 : 0;
+    const changeVj = k.valueVorjahr > 0 ? ((k.value - k.valueVorjahr) / k.valueVorjahr) * 100 : 0;
+    return [
+      k.name,
+      formatCurrency(k.value),
+      `${prozent.toFixed(1)}%`,
+      formatCurrency(k.valueVormonat),
+      `${changeVm >= 0 ? '+' : ''}${changeVm.toFixed(1)}%`,
+      formatCurrency(k.valueVorjahr),
+      `${changeVj >= 0 ? '+' : ''}${changeVj.toFixed(1)}%`,
+    ];
+  });
+  
+  klassenTableData.push([
+    'Gesamt',
+    formatCurrency(aufwandGesamt),
+    '100%',
+    formatCurrency(aufwandVormonat),
+    '',
+    formatCurrency(aufwandVorjahr),
+    '',
+  ]);
+
+  autoTable(doc, {
+    startY: 95,
+    head: [['Kontoklasse', 'Aktuell', 'Anteil', 'Vormonat', 'Δ VM', 'Vorjahr', 'Δ VJ']],
+    body: klassenTableData,
+    theme: 'striped',
+    headStyles: {
+      fillColor: [239, 68, 68],
+      textColor: 255,
+      fontStyle: 'bold',
+      fontSize: 9,
+    },
+    bodyStyles: { fontSize: 9 },
+    alternateRowStyles: { fillColor: [254, 242, 242] },
+    columnStyles: {
+      0: { fontStyle: 'bold', cellWidth: 35 },
+      1: { halign: 'right', cellWidth: 28 },
+      2: { halign: 'right', cellWidth: 20 },
+      3: { halign: 'right', cellWidth: 28 },
+      4: { halign: 'right', cellWidth: 22 },
+      5: { halign: 'right', cellWidth: 28 },
+      6: { halign: 'right', cellWidth: 22 },
+    },
+    margin: { left: 15, right: 15 },
+    didParseCell: (data) => {
+      if (data.row.index === klassenTableData.length - 1) {
+        data.cell.styles.fontStyle = 'bold';
+        data.cell.styles.fillColor = [254, 226, 226];
+      }
+    },
+  });
+
+  // Footer
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text(
+      `Seite ${i} von ${pageCount}`,
+      pageWidth / 2,
+      doc.internal.pageSize.getHeight() - 10,
+      { align: 'center' }
+    );
+  }
+
+  doc.save(`Gesamtaufwand-Report_${jahr}-${String(monat).padStart(2, '0')}.pdf`);
+}
