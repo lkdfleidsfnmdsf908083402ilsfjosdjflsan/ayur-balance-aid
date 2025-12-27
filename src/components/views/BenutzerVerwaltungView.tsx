@@ -30,9 +30,9 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, UserCog, User, Users, Trash2, Edit, Plus, Search, Mail, Loader2, UserPlus, KeyRound } from 'lucide-react';
+import { Shield, UserCog, User, Users, Trash2, Edit, Plus, Search, Mail, Loader2, UserPlus, KeyRound, Eye } from 'lucide-react';
 
-type AppRole = 'admin' | 'abteilungsleiter' | 'mitarbeiter';
+type AppRole = 'admin' | 'abteilungsleiter' | 'mitarbeiter' | 'readonly';
 
 interface UserWithRole {
   id: string;
@@ -58,6 +58,11 @@ const ROLE_LABELS: Record<AppRole, { label: string; icon: React.ReactNode; color
     label: 'Mitarbeiter',
     icon: <User className="h-4 w-4" />,
     color: 'bg-muted text-muted-foreground border-muted-foreground/30',
+  },
+  readonly: {
+    label: 'Nur-Lesen',
+    icon: <Eye className="h-4 w-4" />,
+    color: 'bg-blue-500/20 text-blue-600 border-blue-500/30',
   },
 };
 
@@ -319,6 +324,7 @@ export function BenutzerVerwaltungView() {
     admin: users.filter((u) => u.role === 'admin').length,
     abteilungsleiter: users.filter((u) => u.role === 'abteilungsleiter').length,
     mitarbeiter: users.filter((u) => u.role === 'mitarbeiter').length,
+    readonly: users.filter((u) => u.role === 'readonly').length,
   };
 
   if (!isAdmin) {
@@ -346,7 +352,7 @@ export function BenutzerVerwaltungView() {
 
       <div className="flex-1 overflow-auto p-6 space-y-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card className="glass-card">
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
@@ -388,6 +394,20 @@ export function BenutzerVerwaltungView() {
               </div>
             </CardContent>
           </Card>
+
+          <Card className="glass-card">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-lg bg-blue-500/10">
+                  <Eye className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{roleStats.readonly}</p>
+                  <p className="text-sm text-muted-foreground">Nur-Lesen</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Filters */}
@@ -412,6 +432,7 @@ export function BenutzerVerwaltungView() {
                   <SelectItem value="admin">Administrator</SelectItem>
                   <SelectItem value="abteilungsleiter">Abteilungsleiter</SelectItem>
                   <SelectItem value="mitarbeiter">Mitarbeiter</SelectItem>
+                  <SelectItem value="readonly">Nur-Lesen</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -550,6 +571,12 @@ export function BenutzerVerwaltungView() {
                         Mitarbeiter
                       </div>
                     </SelectItem>
+                    <SelectItem value="readonly">
+                      <div className="flex items-center gap-2">
+                        <Eye className="h-4 w-4" />
+                        Nur-Lesen
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -640,6 +667,12 @@ export function BenutzerVerwaltungView() {
                     <div className="flex items-center gap-2">
                       <User className="h-4 w-4" />
                       Mitarbeiter
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="readonly">
+                    <div className="flex items-center gap-2">
+                      <Eye className="h-4 w-4" />
+                      Nur-Lesen
                     </div>
                   </SelectItem>
                 </SelectContent>

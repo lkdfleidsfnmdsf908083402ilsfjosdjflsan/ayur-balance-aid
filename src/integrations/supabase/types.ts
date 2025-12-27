@@ -1579,6 +1579,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_readonly: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       absence_reason:
