@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { MandiraLogo } from '@/components/MandiraLogo';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface SidebarProps {
   activeView: string;
@@ -39,13 +40,13 @@ interface SidebarProps {
 
 interface NavItem {
   id: string;
-  label: string;
+  labelKey: string;
   icon: LucideIcon;
 }
 
 interface NavGroup {
   id: string;
-  label: string;
+  labelKey: string;
   icon: LucideIcon;
   items: NavItem[];
 }
@@ -59,63 +60,64 @@ const isNavGroup = (entry: NavEntry): entry is NavGroup => {
 const SIDEBAR_STORAGE_KEY = 'sidebar-open-groups';
 
 const navStructure: NavEntry[] = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'gaeste', label: 'Gästeverwaltung', icon: Heart },
+  { id: 'dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard },
+  { id: 'gaeste', labelKey: 'nav.guestManagement', icon: Heart },
   { 
     id: 'abteilung-kpis',
-    label: 'Abteilungs-KPIs',
+    labelKey: 'nav.departmentKpis',
     icon: PieChart,
     items: [
-      { id: 'abteilung-kpi', label: 'Übersicht', icon: PieChart },
-      { id: 'kpi-trends', label: 'KPI-Trends', icon: TrendingUp },
-      { id: 'housekeeping', label: 'Housekeeping', icon: Sparkles },
-      { id: 'kitchen', label: 'Küche', icon: ChefHat },
-      { id: 'service', label: 'Service', icon: UtensilsCrossed },
-      { id: 'frontoffice', label: 'Rezeption', icon: ConciergeBell },
-      { id: 'spa', label: 'Spa', icon: Flower2 },
-      { id: 'technical', label: 'Technik', icon: Wrench },
-      { id: 'admin', label: 'Verwaltung', icon: Building2 },
+      { id: 'abteilung-kpi', labelKey: 'nav.overview', icon: PieChart },
+      { id: 'kpi-trends', labelKey: 'nav.kpiTrends', icon: TrendingUp },
+      { id: 'housekeeping', labelKey: 'nav.housekeeping', icon: Sparkles },
+      { id: 'kitchen', labelKey: 'nav.kitchen', icon: ChefHat },
+      { id: 'service', labelKey: 'nav.service', icon: UtensilsCrossed },
+      { id: 'frontoffice', labelKey: 'nav.frontoffice', icon: ConciergeBell },
+      { id: 'spa', labelKey: 'nav.spa', icon: Flower2 },
+      { id: 'technical', labelKey: 'nav.technical', icon: Wrench },
+      { id: 'admin', labelKey: 'nav.admin', icon: Building2 },
     ]
   },
   {
     id: 'personal-gruppe',
-    label: 'Personalmanagement',
+    labelKey: 'nav.personnelManagement',
     icon: Users,
     items: [
-      { id: 'mitarbeiter', label: 'Mitarbeiter', icon: UserCircle },
-      { id: 'schichtplanung', label: 'Schichtplanung (Alle)', icon: CalendarDays },
-      { id: 'abteilung-schichtplanung', label: 'Abteilungs-Schichtplan', icon: ClipboardList },
-      { id: 'zeitkonten', label: 'Zeitkonten', icon: Clock },
-      { id: 'personal-kpis', label: 'Personal-KPIs', icon: Users },
+      { id: 'mitarbeiter', labelKey: 'nav.employees', icon: UserCircle },
+      { id: 'schichtplanung', labelKey: 'nav.shiftPlanningAll', icon: CalendarDays },
+      { id: 'abteilung-schichtplanung', labelKey: 'nav.departmentShiftPlan', icon: ClipboardList },
+      { id: 'zeitkonten', labelKey: 'nav.timeAccounts', icon: Clock },
+      { id: 'personal-kpis', labelKey: 'nav.personnelKpis', icon: Users },
     ]
   },
   {
     id: 'planung-gruppe',
-    label: 'Planung & Alarme',
+    labelKey: 'nav.planningAlarms',
     icon: Target,
     items: [
-      { id: 'budget', label: 'Budgetplanung', icon: Target },
-      { id: 'alarme', label: 'KPI-Alarme', icon: Bell },
-      { id: 'abteilungsleiter', label: 'Abteilungsleiter', icon: Users },
-      { id: 'benutzerverwaltung', label: 'Benutzerverwaltung', icon: ShieldCheck },
+      { id: 'budget', labelKey: 'nav.budgetPlanning', icon: Target },
+      { id: 'alarme', labelKey: 'nav.kpiAlarms', icon: Bell },
+      { id: 'abteilungsleiter', labelKey: 'nav.departmentHeads', icon: Users },
+      { id: 'benutzerverwaltung', labelKey: 'nav.userManagement', icon: ShieldCheck },
     ]
   },
   {
     id: 'daten-gruppe',
-    label: 'Daten & Analysen',
+    labelKey: 'nav.dataAnalysis',
     icon: BarChart3,
     items: [
-      { id: 'upload', label: 'Datenimport', icon: Upload },
-      { id: 'konten', label: 'Kontenstamm', icon: Table2 },
-      { id: 'vergleich', label: 'Periodenvergleich', icon: GitCompare },
-      { id: 'bereiche', label: 'Bereichsanalyse', icon: BarChart3 },
-      { id: 'datenqualitaet', label: 'Datenqualität', icon: ShieldCheck },
+      { id: 'upload', labelKey: 'nav.dataImport', icon: Upload },
+      { id: 'konten', labelKey: 'nav.accountMaster', icon: Table2 },
+      { id: 'vergleich', labelKey: 'nav.periodComparison', icon: GitCompare },
+      { id: 'bereiche', labelKey: 'nav.areaAnalysis', icon: BarChart3 },
+      { id: 'datenqualitaet', labelKey: 'nav.dataQuality', icon: ShieldCheck },
     ]
   },
 ];
 
 export function Sidebar({ activeView, onViewChange }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const { t } = useLanguage();
   
   // Load saved state from LocalStorage
   const [openGroups, setOpenGroups] = useState<string[]>(() => {
@@ -177,7 +179,7 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
             "text-sm font-medium animate-fade-in truncate",
             isActive && "text-foreground"
           )}>
-            {item.label}
+            {t(item.labelKey)}
           </span>
         )}
       </button>
@@ -205,7 +207,7 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
                 ? "bg-sidebar-accent text-sidebar-accent-foreground" 
                 : "text-sidebar-foreground/70"
             )}
-            title={group.label}
+            title={t(group.labelKey)}
           >
             <Icon className={cn(
               "h-5 w-5 shrink-0",
@@ -240,7 +242,7 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
               "text-sm font-medium flex-1 text-left truncate",
               hasActiveItem && "text-foreground"
             )}>
-              {group.label}
+              {t(group.labelKey)}
             </span>
             <ChevronDown className={cn(
               "h-4 w-4 shrink-0 transition-transform duration-200",
@@ -267,8 +269,8 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
         <MandiraLogo className="h-8 w-8 text-primary shrink-0" />
         {!collapsed && (
           <div className="ml-3 animate-fade-in">
-            <h1 className="text-lg font-semibold text-sidebar-foreground">FinanzAnalyse</h1>
-            <p className="text-xs text-muted-foreground">Hotel Saldenlisten</p>
+            <h1 className="text-lg font-semibold text-sidebar-foreground">{t('nav.financialAnalysis')}</h1>
+            <p className="text-xs text-muted-foreground">{t('nav.hotelBalanceLists')}</p>
           </div>
         )}
       </div>
