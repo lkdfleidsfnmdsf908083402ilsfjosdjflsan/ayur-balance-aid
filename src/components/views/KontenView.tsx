@@ -11,6 +11,7 @@ import { Bereich, KostenarttTyp, KpiKategorie } from '@/types/finance';
 import { bereichColors, kpiKategorieColors } from '@/lib/bereichMapping';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const allBereiche: Bereich[] = [
   'Logis', 'F&B', 'Rezeption', 'Spa', 'Ärztin', 'Shop',
@@ -29,6 +30,7 @@ interface EditedKonto {
 
 export function KontenView() {
   const { konten, initialize } = useFinanceStore();
+  const { t } = useLanguage();
   const [search, setSearch] = useState('');
   const [bereichFilter, setBereichFilter] = useState<string>('alle');
   const [typFilter, setTypFilter] = useState<string>('alle');
@@ -52,7 +54,6 @@ export function KontenView() {
       .sort((a, b) => a.kontonummer.localeCompare(b.kontonummer, undefined, { numeric: true }));
   }, [konten, search, bereichFilter, typFilter, kpiFilter]);
   
-  // Statistik für Qualitätsprüfung
   const sonstigeKonten = konten.filter(k => k.bereich === 'Sonstiges');
   const hasChanges = Object.keys(editedKonten).length > 0;
   const changesCount = Object.values(editedKonten).reduce((sum, e) => 
@@ -65,7 +66,6 @@ export function KontenView() {
     setEditedKonten(prev => {
       const existing = prev[kontonummer] || {};
       
-      // Prüfe ob auf Original zurückgesetzt
       if (originalKonto?.bereich === newBereich) {
         const { bereich, ...rest } = existing;
         if (Object.keys(rest).length === 0) {
@@ -85,7 +85,6 @@ export function KontenView() {
     setEditedKonten(prev => {
       const existing = prev[kontonummer] || {};
       
-      // Prüfe ob auf Original zurückgesetzt
       if (originalKonto?.kpiKategorie === newKpiKategorie) {
         const { kpiKategorie, ...rest } = existing;
         if (Object.keys(rest).length === 0) {
@@ -119,21 +118,21 @@ export function KontenView() {
           .eq('kontonummer', kontonummer);
         
         if (error) {
-          console.error('Fehler beim Speichern:', error);
-          toast.error(`Fehler bei Konto ${kontonummer}`);
+          console.error('Error saving:', error);
+          toast.error(`${t('common.error')}: ${kontonummer}`);
         } else {
           successCount++;
         }
       }
       
       if (successCount > 0) {
-        toast.success(`${successCount} Kontozuordnung${successCount > 1 ? 'en' : ''} gespeichert`);
+        toast.success(`${successCount} ${t('common.save')}`);
         setEditedKonten({});
         await initialize();
       }
     } catch (error) {
-      console.error('Fehler beim Speichern:', error);
-      toast.error('Fehler beim Speichern der Änderungen');
+      console.error('Error saving:', error);
+      toast.error(t('common.error'));
     } finally {
       setIsSaving(false);
     }
@@ -154,8 +153,8 @@ export function KontenView() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <Header 
-        title="Kontenstamm" 
-        description={`${konten.length} Konten mit Bereich- und KPI-Zuordnung`} 
+        title={t('accounts.title')} 
+        description={`${konten.length} ${t('accounts.totalAccounts')}`} 
       />
       
       <div className="flex-1 flex flex-col overflow-hidden p-6">
@@ -164,7 +163,7 @@ export function KontenView() {
           <div className="relative flex-1 min-w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Konto suchen..."
+              placeholder={t('accounts.search')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10 bg-muted border-border"
@@ -174,10 +173,10 @@ export function KontenView() {
           <Select value={bereichFilter} onValueChange={setBereichFilter}>
             <SelectTrigger className="w-44 bg-muted border-border">
               <Filter className="h-4 w-4 mr-2" />
-              <SelectValue placeholder="Bereich" />
+              <SelectValue placeholder={t('accounts.area')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="alle">Alle Bereiche</SelectItem>
+              <SelectItem value="alle">{t('accounts.all')} {t('accounts.area')}</SelectItem>
               {allBereiche.map(b => (
                 <SelectItem key={b} value={b}>{b}</SelectItem>
               ))}
@@ -186,10 +185,10 @@ export function KontenView() {
 
           <Select value={kpiFilter} onValueChange={setKpiFilter}>
             <SelectTrigger className="w-44 bg-muted border-border">
-              <SelectValue placeholder="KPI-Kategorie" />
+              <SelectValue placeholder={t('accounts.kpiCategory')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="alle">Alle KPI-Kategorien</SelectItem>
+              <SelectItem value="alle">{t('accounts.all')} {t('accounts.kpiCategory')}</SelectItem>
               {allKpiKategorien.map(k => (
                 <SelectItem key={k} value={k}>{k}</SelectItem>
               ))}
@@ -198,10 +197,10 @@ export function KontenView() {
           
           <Select value={typFilter} onValueChange={setTypFilter}>
             <SelectTrigger className="w-36 bg-muted border-border">
-              <SelectValue placeholder="Typ" />
+              <SelectValue placeholder={t('accounts.type')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="alle">Alle Typen</SelectItem>
+              <SelectItem value="alle">{t('accounts.all')}</SelectItem>
               <SelectItem value="Erlös">Erlös</SelectItem>
               <SelectItem value="Einkauf">Einkauf</SelectItem>
               <SelectItem value="Neutral">Neutral</SelectItem>
@@ -215,7 +214,7 @@ export function KontenView() {
               className="gap-2"
             >
               <Save className="h-4 w-4" />
-              {isSaving ? 'Speichern...' : `${changesCount} Änderung${changesCount > 1 ? 'en' : ''} speichern`}
+              {isSaving ? `${t('common.loading')}` : `${changesCount} ${t('common.save')}`}
             </Button>
           )}
         </div>
@@ -223,34 +222,24 @@ export function KontenView() {
         {/* Quality Alert */}
         {sonstigeKonten.length > 0 && bereichFilter === 'alle' && (
           <div className="mb-4 p-4 rounded-lg bg-warning/10 border border-warning/20 text-sm">
-            <span className="font-medium text-warning">Qualitätshinweis:</span>
+            <span className="font-medium text-warning">{t('dataQuality.incomplete')}:</span>
             <span className="text-muted-foreground ml-2">
-              {sonstigeKonten.length} Konten ohne spezifische Bereichszuordnung (Sonstiges) - 
-              Klicken Sie auf den Bereich oder die KPI-Kategorie, um sie manuell zu ändern.
+              {sonstigeKonten.length} {t('accounts.totalAccounts')}
             </span>
           </div>
         )}
 
-        {/* Info Box */}
-        <div className="mb-4 p-4 rounded-lg bg-primary/5 border border-primary/20 text-sm">
-          <span className="font-medium text-primary">Tipp:</span>
-          <span className="text-muted-foreground ml-2">
-            Wählen Sie in den Spalten "Bereich" oder "KPI-Kategorie" einen neuen Wert aus dem Dropdown. 
-            Änderungen werden erst gespeichert, wenn Sie auf "Änderungen speichern" klicken.
-          </span>
-        </div>
-        
         {/* Table */}
         <div className="flex-1 overflow-auto rounded-xl border border-border">
           <table className="w-full">
             <thead className="bg-muted/50 sticky top-0">
               <tr className="text-left text-sm text-muted-foreground">
-                <th className="p-4 font-medium">Konto-Nr</th>
-                <th className="p-4 font-medium">Bezeichnung</th>
-                <th className="p-4 font-medium">Klasse</th>
-                <th className="p-4 font-medium">Bereich</th>
-                <th className="p-4 font-medium">KPI-Kategorie</th>
-                <th className="p-4 font-medium">Typ</th>
+                <th className="p-4 font-medium">{t('accounts.accountNumber')}</th>
+                <th className="p-4 font-medium">{t('accounts.description2')}</th>
+                <th className="p-4 font-medium">{t('accounts.class')}</th>
+                <th className="p-4 font-medium">{t('accounts.area')}</th>
+                <th className="p-4 font-medium">{t('accounts.kpiCategory')}</th>
+                <th className="p-4 font-medium">{t('accounts.type')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -258,8 +247,8 @@ export function KontenView() {
                 <tr>
                   <td colSpan={6} className="p-8 text-center text-muted-foreground">
                     {konten.length === 0 
-                      ? 'Keine Konten vorhanden. Bitte Saldenlisten hochladen.'
-                      : 'Keine Konten gefunden mit diesen Filterkriterien.'}
+                      ? t('common.noData')
+                      : t('common.noData')}
                   </td>
                 </tr>
               ) : (
@@ -377,10 +366,10 @@ export function KontenView() {
         
         {filteredKonten.length > 0 && (
           <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
-            <span>{filteredKonten.length} von {konten.length} Konten angezeigt</span>
+            <span>{filteredKonten.length} / {konten.length}</span>
             {hasChanges && (
               <span className="text-primary font-medium">
-                {changesCount} ungespeicherte Änderung{changesCount > 1 ? 'en' : ''}
+                {changesCount} {t('common.save')}
               </span>
             )}
           </div>

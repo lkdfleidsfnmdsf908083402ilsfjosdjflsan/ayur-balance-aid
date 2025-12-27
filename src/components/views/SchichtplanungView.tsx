@@ -12,9 +12,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Calendar, Clock, Users, TrendingUp, TrendingDown, ChevronLeft, ChevronRight, Search, Sun, Moon } from 'lucide-react';
-import { format, startOfWeek, endOfWeek, addDays, addWeeks, subWeeks, eachDayOfInterval, isSameDay } from 'date-fns';
-import { de } from 'date-fns/locale';
+import { format, startOfWeek, endOfWeek, addWeeks, subWeeks, eachDayOfInterval, isSameDay } from 'date-fns';
+import { de, enUS } from 'date-fns/locale';
 import { Database } from '@/integrations/supabase/types';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 type AbsenceReason = Database["public"]["Enums"]["absence_reason"];
 
@@ -49,17 +50,6 @@ interface Shift {
   pause_minuten: number;
 }
 
-const ABWESENHEIT_OPTIONS: { value: AbsenceReason; label: string; color: string }[] = [
-  { value: 'Arbeit', label: 'Arbeit', color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' },
-  { value: 'Urlaub', label: 'Urlaub', color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100' },
-  { value: 'Krank', label: 'Krank', color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100' },
-  { value: 'Fortbildung', label: 'Fortbildung', color: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100' },
-  { value: 'Frei', label: 'Frei', color: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100' },
-  { value: 'Überstundenabbau', label: 'Überstundenabbau', color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100' },
-  { value: 'Elternzeit', label: 'Elternzeit', color: 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-100' },
-  { value: 'Sonstiges', label: 'Sonstiges', color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100' },
-];
-
 const ABTEILUNGEN = [
   'Logis', 'F&B', 'Spa', 'Ärztin', 'Shop', 
   'Verwaltung', 'Technik', 'Energie', 'Marketing', 
@@ -85,6 +75,20 @@ interface FormData {
 }
 
 export function SchichtplanungView() {
+  const { t, language } = useLanguage();
+  const dateLocale = language === 'de' ? de : enUS;
+
+  const ABWESENHEIT_OPTIONS: { value: AbsenceReason; label: string; color: string }[] = [
+    { value: 'Arbeit', label: t('shifts.work'), color: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' },
+    { value: 'Urlaub', label: t('shifts.vacation'), color: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100' },
+    { value: 'Krank', label: t('shifts.sick'), color: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100' },
+    { value: 'Fortbildung', label: t('shifts.training'), color: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100' },
+    { value: 'Frei', label: t('shifts.free'), color: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100' },
+    { value: 'Überstundenabbau', label: t('shifts.overtime'), color: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100' },
+    { value: 'Elternzeit', label: t('shifts.parentalLeave'), color: 'bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-100' },
+    { value: 'Sonstiges', label: t('shifts.other'), color: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100' },
+  ];
+
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [loading, setLoading] = useState(true);
@@ -240,10 +244,10 @@ export function SchichtplanungView() {
         .eq('id', existingShift.id);
       
       if (error) {
-        toast.error('Fehler beim Aktualisieren');
+        toast.error(t('common.error'));
         console.error(error);
       } else {
-        toast.success('Schicht aktualisiert');
+        toast.success(t('common.success'));
         loadData();
       }
     } else {
@@ -252,10 +256,10 @@ export function SchichtplanungView() {
         .insert([payload]);
       
       if (error) {
-        toast.error('Fehler beim Speichern');
+        toast.error(t('common.error'));
         console.error(error);
       } else {
-        toast.success('Schicht gespeichert');
+        toast.success(t('common.success'));
         loadData();
       }
     }
@@ -330,25 +334,25 @@ export function SchichtplanungView() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center flex-wrap gap-4">
-        <h2 className="text-2xl font-bold text-foreground">Schichtplanung</h2>
+        <h2 className="text-2xl font-bold text-foreground">{t('shifts.title')}</h2>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" onClick={() => setCurrentWeek(subWeeks(currentWeek, 1))}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <span className="font-medium min-w-[200px] text-center">
-            {format(weekStart, 'dd.MM.', { locale: de })} - {format(weekEnd, 'dd.MM.yyyy', { locale: de })}
+            {format(weekStart, 'dd.MM.', { locale: dateLocale })} - {format(weekEnd, 'dd.MM.yyyy', { locale: dateLocale })}
           </span>
           <Button variant="outline" size="icon" onClick={() => setCurrentWeek(addWeeks(currentWeek, 1))}>
             <ChevronRight className="h-4 w-4" />
           </Button>
-          <Button variant="outline" onClick={() => setCurrentWeek(new Date())}>Heute</Button>
+          <Button variant="outline" onClick={() => setCurrentWeek(new Date())}>{t('common.date')}</Button>
         </div>
       </div>
 
       {/* Farblegende */}
       <Card>
         <CardHeader className="py-3">
-          <CardTitle className="text-sm">Legende</CardTitle>
+          <CardTitle className="text-sm">{t('shifts.legend')}</CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="flex flex-wrap gap-2">
@@ -367,7 +371,7 @@ export function SchichtplanungView() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-primary" />
-              <span className="text-sm text-muted-foreground">Soll-Stunden</span>
+              <span className="text-sm text-muted-foreground">{t('shifts.plannedHours')}</span>
             </div>
             <p className="text-2xl font-bold">{weekStats.totalSoll.toFixed(1)}h</p>
           </CardContent>
@@ -376,7 +380,7 @@ export function SchichtplanungView() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-green-500" />
-              <span className="text-sm text-muted-foreground">Ist-Stunden</span>
+              <span className="text-sm text-muted-foreground">{t('shifts.actualHours')}</span>
             </div>
             <p className="text-2xl font-bold">{weekStats.totalIst.toFixed(1)}h</p>
           </CardContent>
@@ -389,7 +393,7 @@ export function SchichtplanungView() {
               ) : (
                 <TrendingDown className="h-4 w-4 text-blue-500" />
               )}
-              <span className="text-sm text-muted-foreground">Überstunden</span>
+              <span className="text-sm text-muted-foreground">{t('shifts.overtimeHours')}</span>
             </div>
             <p className={`text-2xl font-bold ${weekStats.totalUeberstunden >= 0 ? 'text-orange-600' : 'text-blue-600'}`}>
               {weekStats.totalUeberstunden >= 0 ? '+' : ''}{weekStats.totalUeberstunden.toFixed(1)}h
@@ -400,7 +404,7 @@ export function SchichtplanungView() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-red-500" />
-              <span className="text-sm text-muted-foreground">Krankheitstage</span>
+              <span className="text-sm text-muted-foreground">{t('shifts.sickDays')}</span>
             </div>
             <p className="text-2xl font-bold text-red-600">{weekStats.totalKrank}</p>
           </CardContent>
@@ -409,7 +413,7 @@ export function SchichtplanungView() {
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-blue-500" />
-              <span className="text-sm text-muted-foreground">Urlaubstage</span>
+              <span className="text-sm text-muted-foreground">{t('shifts.vacationDays')}</span>
             </div>
             <p className="text-2xl font-bold text-blue-600">{weekStats.totalUrlaub}</p>
           </CardContent>
@@ -421,11 +425,11 @@ export function SchichtplanungView() {
         <CardContent className="pt-4">
           <div className="flex gap-4 items-end flex-wrap">
             <div className="min-w-[250px] flex-1 max-w-md">
-              <Label>Suche</Label>
+              <Label>{t('common.search')}</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Name oder Personalnummer..."
+                  placeholder={t('employees.search')}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-9"
@@ -433,11 +437,11 @@ export function SchichtplanungView() {
               </div>
             </div>
             <div className="min-w-[200px]">
-              <Label>Abteilung</Label>
+              <Label>{t('employees.department')}</Label>
               <Select value={filterAbteilung} onValueChange={setFilterAbteilung}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="alle">Alle Abteilungen</SelectItem>
+                  <SelectItem value="alle">{t('accounts.all')}</SelectItem>
                   {ABTEILUNGEN.map((a) => (
                     <SelectItem key={a} value={a}>{a}</SelectItem>
                   ))}
@@ -445,7 +449,7 @@ export function SchichtplanungView() {
               </Select>
             </div>
             <span className="text-sm text-muted-foreground pb-2">
-              {filteredEmployees.length} Mitarbeiter
+              {filteredEmployees.length} {t('nav.employees')}
             </span>
           </div>
         </CardContent>
@@ -454,26 +458,26 @@ export function SchichtplanungView() {
       {/* Schichtplan-Tabelle */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Wochenplan</CardTitle>
+          <CardTitle className="text-lg">{t('shifts.week')}</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
-            <p className="text-muted-foreground p-6">Laden...</p>
+            <p className="text-muted-foreground p-6">{t('common.loading')}</p>
           ) : (
             <div className="overflow-auto max-h-[500px]">
               <Table>
                 <TableHeader className="sticky top-0 bg-background z-20">
                   <TableRow>
-                    <TableHead className="sticky left-0 bg-background z-30 min-w-[150px]">Mitarbeiter</TableHead>
-                    <TableHead className="sticky left-[150px] bg-background z-30">Abteilung</TableHead>
+                    <TableHead className="sticky left-0 bg-background z-30 min-w-[150px]">{t('shifts.employee')}</TableHead>
+                    <TableHead className="sticky left-[150px] bg-background z-30">{t('employees.department')}</TableHead>
                     {weekDays.map((day) => (
                       <TableHead key={day.toISOString()} className="text-center min-w-[100px]">
-                        <div>{format(day, 'EEE', { locale: de })}</div>
+                        <div>{format(day, 'EEE', { locale: dateLocale })}</div>
                         <div className="text-xs">{format(day, 'dd.MM.')}</div>
                       </TableHead>
                     ))}
-                    <TableHead className="text-right">Σ Soll</TableHead>
-                    <TableHead className="text-right">Σ Ist</TableHead>
+                    <TableHead className="text-right">Σ {t('shifts.plannedHours').split('-')[0]}</TableHead>
+                    <TableHead className="text-right">Σ {t('shifts.actualHours').split('-')[0]}</TableHead>
                     <TableHead className="text-right">+/-</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -514,7 +518,7 @@ export function SchichtplanungView() {
                   {filteredEmployees.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
-                        Keine Mitarbeiter gefunden
+                        {t('common.noData')}
                       </TableCell>
                     </TableRow>
                   )}
@@ -530,15 +534,15 @@ export function SchichtplanungView() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              Schicht: {selectedEmployee?.vorname} {selectedEmployee?.nachname}
-              {selectedDate && ` - ${format(selectedDate, 'EEEE, dd.MM.yyyy', { locale: de })}`}
+              {selectedEmployee?.vorname} {selectedEmployee?.nachname}
+              {selectedDate && ` - ${format(selectedDate, 'EEEE, dd.MM.yyyy', { locale: dateLocale })}`}
             </DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
             {/* Status-Auswahl mit Farblegende */}
             <div className="space-y-2">
-              <Label>Status / Abwesenheit</Label>
+              <Label>{t('common.status')}</Label>
               <div className="grid grid-cols-2 gap-2">
                 {ABWESENHEIT_OPTIONS.map((option) => (
                   <Button
@@ -558,20 +562,20 @@ export function SchichtplanungView() {
               <>
                 {/* Schichttyp-Auswahl */}
                 <div className="space-y-2">
-                  <Label>Schichttyp</Label>
+                  <Label>Typ</Label>
                   <Tabs 
                     value={formData.schichtTyp} 
                     onValueChange={(v) => setFormData({ ...formData, schichtTyp: v as 'einfach' | 'geteilt' })}
                   >
                     <TabsList className="grid w-full grid-cols-2">
                       <TabsTrigger value="einfach">Durchgehend</TabsTrigger>
-                      <TabsTrigger value="geteilt">Geteilt (Vormittag/Nachmittag)</TabsTrigger>
+                      <TabsTrigger value="geteilt">Geteilt</TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="einfach" className="space-y-4 mt-4">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label>Schicht Beginn</Label>
+                          <Label>Start</Label>
                           <Input
                             type="time"
                             value={formData.schicht_beginn || ''}
@@ -579,7 +583,7 @@ export function SchichtplanungView() {
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label>Schicht Ende</Label>
+                          <Label>Ende</Label>
                           <Input
                             type="time"
                             value={formData.schicht_ende || ''}
@@ -593,11 +597,11 @@ export function SchichtplanungView() {
                       <div className="space-y-3">
                         <div className="flex items-center gap-2 text-sm font-medium">
                           <Sun className="h-4 w-4 text-yellow-500" />
-                          Vormittag
+                          AM
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label>Beginn</Label>
+                            <Label>Start</Label>
                             <Input
                               type="time"
                               value={formData.vormittag_beginn || ''}
@@ -618,11 +622,11 @@ export function SchichtplanungView() {
                       <div className="space-y-3">
                         <div className="flex items-center gap-2 text-sm font-medium">
                           <Moon className="h-4 w-4 text-indigo-500" />
-                          Nachmittag
+                          PM
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label>Beginn</Label>
+                            <Label>Start</Label>
                             <Input
                               type="time"
                               value={formData.nachmittag_beginn || ''}
@@ -645,7 +649,7 @@ export function SchichtplanungView() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Soll-Stunden</Label>
+                    <Label>{t('shifts.plannedHours')}</Label>
                     <Input
                       type="number"
                       min={0}
@@ -656,7 +660,7 @@ export function SchichtplanungView() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Pause (Minuten)</Label>
+                    <Label>Pause (min)</Label>
                     <Input
                       type="number"
                       min={0}
@@ -668,10 +672,10 @@ export function SchichtplanungView() {
                 </div>
 
                 <div className="border-t pt-4">
-                  <h4 className="font-medium mb-2">Ist-Zeiten (tatsächlich gearbeitet)</h4>
+                  <h4 className="font-medium mb-2">{t('shifts.actualHours')}</h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>Ist Beginn</Label>
+                      <Label>Start</Label>
                       <Input
                         type="time"
                         value={formData.ist_beginn || ''}
@@ -679,7 +683,7 @@ export function SchichtplanungView() {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Ist Ende</Label>
+                      <Label>Ende</Label>
                       <Input
                         type="time"
                         value={formData.ist_ende || ''}
@@ -688,7 +692,7 @@ export function SchichtplanungView() {
                     </div>
                   </div>
                   <div className="mt-2 space-y-2">
-                    <Label>Ist-Stunden (gesamt)</Label>
+                    <Label>{t('shifts.actualHours')} ({t('common.total')})</Label>
                     <Input
                       type="number"
                       min={0}
@@ -696,7 +700,6 @@ export function SchichtplanungView() {
                       step={0.25}
                       value={formData.ist_stunden ?? ''}
                       onChange={(e) => setFormData({ ...formData, ist_stunden: e.target.value ? parseFloat(e.target.value) : null })}
-                      placeholder="Automatisch berechnet oder manuell eingeben"
                     />
                   </div>
                 </div>
@@ -705,11 +708,11 @@ export function SchichtplanungView() {
 
             {formData.abwesenheit !== 'Arbeit' && (
               <div className="space-y-2">
-                <Label>Notiz / Begründung</Label>
+                <Label>{t('common.details')}</Label>
                 <Textarea
                   value={formData.abwesenheit_notiz || ''}
                   onChange={(e) => setFormData({ ...formData, abwesenheit_notiz: e.target.value })}
-                  placeholder={`Optionale Bemerkung zur ${getAbwesenheitLabel(formData.abwesenheit)}...`}
+                  placeholder={`${getAbwesenheitLabel(formData.abwesenheit)}...`}
                   rows={3}
                 />
               </div>
@@ -717,8 +720,8 @@ export function SchichtplanungView() {
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Abbrechen</Button>
-            <Button onClick={handleSaveShift}>Speichern</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>{t('common.cancel')}</Button>
+            <Button onClick={handleSaveShift}>{t('common.save')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
