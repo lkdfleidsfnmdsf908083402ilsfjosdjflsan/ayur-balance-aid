@@ -1590,7 +1590,7 @@ export type Database = {
         | "Überstundenabbau"
         | "Elternzeit"
         | "Sonstiges"
-      app_role: "admin" | "abteilungsleiter" | "mitarbeiter"
+      app_role: "admin" | "abteilungsleiter" | "mitarbeiter" | "readonly"
       booking_channel:
         | "Website"
         | "Telefon"
@@ -1772,7 +1772,7 @@ export const Constants = {
         "Elternzeit",
         "Sonstiges",
       ],
-      app_role: ["admin", "abteilungsleiter", "mitarbeiter"],
+      app_role: ["admin", "abteilungsleiter", "mitarbeiter", "readonly"],
       booking_channel: [
         "Website",
         "Telefon",
