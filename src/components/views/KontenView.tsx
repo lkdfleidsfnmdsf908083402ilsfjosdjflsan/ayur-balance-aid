@@ -12,6 +12,7 @@ import { bereichColors, kpiKategorieColors } from '@/lib/bereichMapping';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { translateBereich, translateKpiKategorie, translateKostenarttTyp } from '@/lib/translationMappings';
 
 const allBereiche: Bereich[] = [
   'Logis', 'F&B', 'Rezeption', 'Spa', 'Ärztin', 'Shop',
@@ -178,7 +179,7 @@ export function KontenView() {
             <SelectContent>
               <SelectItem value="alle">{t('accounts.all')} {t('accounts.area')}</SelectItem>
               {allBereiche.map(b => (
-                <SelectItem key={b} value={b}>{b}</SelectItem>
+                <SelectItem key={b} value={b}>{translateBereich(b, t)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -190,7 +191,7 @@ export function KontenView() {
             <SelectContent>
               <SelectItem value="alle">{t('accounts.all')} {t('accounts.kpiCategory')}</SelectItem>
               {allKpiKategorien.map(k => (
-                <SelectItem key={k} value={k}>{k}</SelectItem>
+                <SelectItem key={k} value={k}>{translateKpiKategorie(k, t)}</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -201,9 +202,9 @@ export function KontenView() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="alle">{t('accounts.all')}</SelectItem>
-              <SelectItem value="Erlös">Erlös</SelectItem>
-              <SelectItem value="Einkauf">Einkauf</SelectItem>
-              <SelectItem value="Neutral">Neutral</SelectItem>
+              <SelectItem value="Erlös">{translateKostenarttTyp('Erlös', t)}</SelectItem>
+              <SelectItem value="Einkauf">{translateKostenarttTyp('Einkauf', t)}</SelectItem>
+              <SelectItem value="Neutral">{translateKostenarttTyp('Neutral', t)}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -303,7 +304,7 @@ export function KontenView() {
                                     className="w-2 h-2 rounded-full"
                                     style={{ backgroundColor: bereichColors[b] }}
                                   />
-                                  {b}
+                                  {translateBereich(b, t)}
                                 </div>
                               </SelectItem>
                             ))}
@@ -336,7 +337,7 @@ export function KontenView() {
                                     className="w-2 h-2 rounded-full"
                                     style={{ backgroundColor: kpiKategorieColors[k] }}
                                   />
-                                  {k}
+                                  {translateKpiKategorie(k, t)}
                                 </div>
                               </SelectItem>
                             ))}
@@ -353,7 +354,7 @@ export function KontenView() {
                             konto.kostenarttTyp === 'Neutral' && "text-muted-foreground"
                           )}
                         >
-                          {konto.kostenarttTyp}
+                          {translateKostenarttTyp(konto.kostenarttTyp, t)}
                         </Badge>
                       </td>
                     </tr>

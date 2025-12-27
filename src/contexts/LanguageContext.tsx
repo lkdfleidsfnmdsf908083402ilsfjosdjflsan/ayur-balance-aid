@@ -507,6 +507,37 @@ const translations: Record<Language, Record<string, string>> = {
     'expense.share': 'Anteil',
     'expense.diffPM': 'Differenz zum Vormonat',
     'expense.diffPY': 'Differenz zum Vorjahr',
+    
+    // ===== BEREICHE (AREAS/DEPARTMENTS) =====
+    'area.logis': 'Logis',
+    'area.fb': 'F&B',
+    'area.rezeption': 'Rezeption',
+    'area.spa': 'Spa',
+    'area.aerztin': 'Ärztin',
+    'area.shop': 'Shop',
+    'area.verwaltung': 'Verwaltung',
+    'area.technik': 'Technik',
+    'area.energie': 'Energie',
+    'area.marketing': 'Marketing',
+    'area.personal': 'Personal',
+    'area.finanzierung': 'Finanzierung',
+    'area.sonstiges': 'Sonstiges',
+    
+    // ===== KPI-KATEGORIEN =====
+    'kpiCat.erlos': 'Erlös',
+    'kpiCat.wareneinsatz': 'Wareneinsatz',
+    'kpiCat.personal': 'Personal',
+    'kpiCat.betriebsaufwand': 'Betriebsaufwand',
+    'kpiCat.energie': 'Energie',
+    'kpiCat.marketing': 'Marketing',
+    'kpiCat.abschreibung': 'Abschreibung',
+    'kpiCat.zins': 'Zins',
+    'kpiCat.sonstiges': 'Sonstiges',
+    
+    // ===== KOSTENART-TYPEN =====
+    'costType.erlos': 'Erlös',
+    'costType.einkauf': 'Einkauf',
+    'costType.neutral': 'Neutral',
   },
   en: {
     // ===== NAVIGATION & SIDEBAR =====
@@ -1006,6 +1037,37 @@ const translations: Record<Language, Record<string, string>> = {
     'expense.share': 'Share',
     'expense.diffPM': 'Difference to Previous Month',
     'expense.diffPY': 'Difference to Previous Year',
+    
+    // ===== BEREICHE (AREAS/DEPARTMENTS) =====
+    'area.logis': 'Accommodation',
+    'area.fb': 'F&B',
+    'area.rezeption': 'Front Office',
+    'area.spa': 'Spa',
+    'area.aerztin': 'Medical',
+    'area.shop': 'Shop',
+    'area.verwaltung': 'Administration',
+    'area.technik': 'Technical',
+    'area.energie': 'Energy',
+    'area.marketing': 'Marketing',
+    'area.personal': 'Personnel',
+    'area.finanzierung': 'Financing',
+    'area.sonstiges': 'Other',
+    
+    // ===== KPI-KATEGORIEN =====
+    'kpiCat.erlos': 'Revenue',
+    'kpiCat.wareneinsatz': 'Cost of Goods',
+    'kpiCat.personal': 'Personnel',
+    'kpiCat.betriebsaufwand': 'Operating Expenses',
+    'kpiCat.energie': 'Energy',
+    'kpiCat.marketing': 'Marketing',
+    'kpiCat.abschreibung': 'Depreciation',
+    'kpiCat.zins': 'Interest',
+    'kpiCat.sonstiges': 'Other',
+    
+    // ===== KOSTENART-TYPEN =====
+    'costType.erlos': 'Revenue',
+    'costType.einkauf': 'Expense',
+    'costType.neutral': 'Neutral',
   },
   hi: {
     // ===== NAVIGATION & SIDEBAR =====
@@ -1505,6 +1567,37 @@ const translations: Record<Language, Record<string, string>> = {
     'expense.share': 'हिस्सा',
     'expense.diffPM': 'पिछले महीने से अंतर',
     'expense.diffPY': 'पिछले वर्ष से अंतर',
+    
+    // ===== BEREICHE (AREAS/DEPARTMENTS) =====
+    'area.logis': 'आवास',
+    'area.fb': 'एफ&बी',
+    'area.rezeption': 'रिसेप्शन',
+    'area.spa': 'स्पा',
+    'area.aerztin': 'चिकित्सा',
+    'area.shop': 'दुकान',
+    'area.verwaltung': 'प्रशासन',
+    'area.technik': 'तकनीक',
+    'area.energie': 'ऊर्जा',
+    'area.marketing': 'विपणन',
+    'area.personal': 'कर्मचारी',
+    'area.finanzierung': 'वित्तपोषण',
+    'area.sonstiges': 'अन्य',
+    
+    // ===== KPI-KATEGORIEN =====
+    'kpiCat.erlos': 'राजस्व',
+    'kpiCat.wareneinsatz': 'माल की लागत',
+    'kpiCat.personal': 'कर्मचारी',
+    'kpiCat.betriebsaufwand': 'परिचालन व्यय',
+    'kpiCat.energie': 'ऊर्जा',
+    'kpiCat.marketing': 'विपणन',
+    'kpiCat.abschreibung': 'मूल्यह्रास',
+    'kpiCat.zins': 'ब्याज',
+    'kpiCat.sonstiges': 'अन्य',
+    
+    // ===== KOSTENART-TYPEN =====
+    'costType.erlos': 'राजस्व',
+    'costType.einkauf': 'व्यय',
+    'costType.neutral': 'तटस्थ',
   },
 };
 
