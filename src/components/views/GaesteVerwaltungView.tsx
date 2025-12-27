@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Guest {
   id: string;
@@ -106,6 +107,7 @@ export function GaesteVerwaltungView() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isStayDialogOpen, setIsStayDialogOpen] = useState(false);
   const { toast } = useToast();
+  const { t } = useLanguage();
 
   // Form state for new guest
   const [newGuest, setNewGuest] = useState({
@@ -169,8 +171,8 @@ export function GaesteVerwaltungView() {
     } catch (error) {
       console.error('Error loading guests:', error);
       toast({
-        title: 'Fehler',
-        description: 'Gäste konnten nicht geladen werden',
+        title: t('common.error'),
+        description: t('guestMgmt.loadError'),
         variant: 'destructive'
       });
     } finally {
@@ -234,8 +236,8 @@ export function GaesteVerwaltungView() {
       if (error) throw error;
 
       toast({
-        title: 'Erfolg',
-        description: 'Gast wurde erfolgreich angelegt'
+        title: t('common.success'),
+        description: t('guestMgmt.guestCreated')
       });
 
       setIsAddDialogOpen(false);
@@ -244,8 +246,8 @@ export function GaesteVerwaltungView() {
     } catch (error) {
       console.error('Error adding guest:', error);
       toast({
-        title: 'Fehler',
-        description: 'Gast konnte nicht angelegt werden',
+        title: t('common.error'),
+        description: t('guestMgmt.loadError'),
         variant: 'destructive'
       });
     }
@@ -287,8 +289,8 @@ export function GaesteVerwaltungView() {
         .eq('id', selectedGuest.id);
 
       toast({
-        title: 'Erfolg',
-        description: 'Aufenthalt wurde erfolgreich angelegt'
+        title: t('common.success'),
+        description: t('guestMgmt.stayCreated')
       });
 
       setIsStayDialogOpen(false);
@@ -298,23 +300,23 @@ export function GaesteVerwaltungView() {
     } catch (error) {
       console.error('Error adding stay:', error);
       toast({
-        title: 'Fehler',
-        description: 'Aufenthalt konnte nicht angelegt werden',
+        title: t('common.error'),
+        description: t('guestMgmt.loadError'),
         variant: 'destructive'
       });
     }
   };
 
   const handleDeleteGuest = async (guestId: string) => {
-    if (!confirm('Möchten Sie diesen Gast wirklich löschen?')) return;
+    if (!confirm(t('guestMgmt.confirmDelete'))) return;
 
     try {
       const { error } = await supabase.from('guests').delete().eq('id', guestId);
       if (error) throw error;
 
       toast({
-        title: 'Erfolg',
-        description: 'Gast wurde gelöscht'
+        title: t('common.success'),
+        description: t('guestMgmt.guestDeleted')
       });
 
       loadGuests();
@@ -322,8 +324,8 @@ export function GaesteVerwaltungView() {
     } catch (error) {
       console.error('Error deleting guest:', error);
       toast({
-        title: 'Fehler',
-        description: 'Gast konnte nicht gelöscht werden',
+        title: t('common.error'),
+        description: t('guestMgmt.loadError'),
         variant: 'destructive'
       });
     }
@@ -433,22 +435,22 @@ export function GaesteVerwaltungView() {
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
             <Users className="h-8 w-8 text-primary" />
-            Gästeverwaltung
+            {t('guestMgmt.title')}
           </h1>
-          <p className="text-muted-foreground mt-1">Verwalten Sie Ihre Gäste und deren Aufenthalte</p>
+          <p className="text-muted-foreground mt-1">{t('guestMgmt.description')}</p>
         </div>
         
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2">
               <Plus className="h-4 w-4" />
-              Neuer Gast
+              {t('guestMgmt.newGuest')}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Neuen Gast anlegen</DialogTitle>
-              <DialogDescription>Erfassen Sie die Stammdaten des Gastes</DialogDescription>
+              <DialogTitle>{t('guestMgmt.addGuest')}</DialogTitle>
+              <DialogDescription>{t('guestMgmt.addGuestDesc')}</DialogDescription>
             </DialogHeader>
             
             <div className="grid grid-cols-2 gap-4 py-4">

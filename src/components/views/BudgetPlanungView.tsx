@@ -14,6 +14,7 @@ import { BudgetPlanung } from '@/types/budget';
 import { Bereich } from '@/types/finance';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Target,
   Save,
@@ -34,13 +35,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-const months = ['', 'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
-
 export function BudgetPlanungView() {
   const { konten, salden, selectedYear, selectedMonth, uploadedFiles } = useFinanceStore();
+  const { t } = useLanguage();
   const [budgets, setBudgets] = useState<Map<string, BudgetPlanung>>(new Map());
   const [isLoading, setIsLoading] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  
+  const monthKeys = ['', 'month.january', 'month.february', 'month.march', 'month.april', 'month.may', 'month.june', 'month.july', 'month.august', 'month.september', 'month.october', 'month.november', 'month.december'];
 
   // Lade aktuelle KPIs
   const abteilungKpis = useMemo(() => {
@@ -134,11 +136,11 @@ export function BudgetPlanungView() {
 
         if (error) throw error;
       }
-      toast.success('Budgets erfolgreich gespeichert');
+      toast.success(t('budgetPlan.saved'));
       setHasChanges(false);
     } catch (error) {
       console.error('Fehler beim Speichern:', error);
-      toast.error('Fehler beim Speichern der Budgets');
+      toast.error(t('budgetPlan.saveError'));
     } finally {
       setIsLoading(false);
     }
@@ -178,17 +180,17 @@ export function BudgetPlanungView() {
   if (uploadedFiles.length === 0) {
     return (
       <div className="flex-1 flex flex-col">
-        <Header title="Budgetplanung" description="Soll-Ist-Vergleich für KPIs" />
+        <Header title={t('budgetPlan.title')} description={t('budgetPlan.description')} />
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="text-center max-w-md animate-fade-in">
             <div className="w-20 h-20 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-6">
               <Target className="h-10 w-10 text-muted-foreground" />
             </div>
             <h3 className="text-xl font-semibold text-foreground mb-2">
-              Keine Daten vorhanden
+              {t('budgetPlan.noData')}
             </h3>
             <p className="text-muted-foreground">
-              Laden Sie Ihre Saldenlisten hoch, um Budgets zu planen.
+              {t('budgetPlan.uploadHint')}
             </p>
           </div>
         </div>
@@ -206,8 +208,8 @@ export function BudgetPlanungView() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <Header 
-        title="Budgetplanung" 
-        description={`Soll-Ist-Vergleich ${months[selectedMonth]} ${selectedYear}`}
+        title={t('budgetPlan.title')} 
+        description={`${t('budgetPlan.description')} ${t(monthKeys[selectedMonth])} ${selectedYear}`}
       />
       
       <div className="flex-1 overflow-auto p-6 space-y-6">
