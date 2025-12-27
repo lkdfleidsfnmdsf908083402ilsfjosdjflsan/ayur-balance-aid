@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
 import { LucideIcon, TrendingUp, TrendingDown, Minus, Info } from 'lucide-react';
 import { formatCurrency, formatPercent } from '@/lib/calculations';
+import { useLanguage } from '@/contexts/LanguageContext';
 import {
   Tooltip,
   TooltipContent,
@@ -32,6 +33,8 @@ export function KPICard({
   tooltip,
   invertTrend = false
 }: KPICardProps) {
+  const { t } = useLanguage();
+  
   // Vormonats-Trend
   const diffVormonat = previousValue !== null && previousValue !== undefined 
     ? value - previousValue 
@@ -107,7 +110,7 @@ export function KPICard({
             )}>
               <VormonatTrendIcon className="h-3 w-3" />
               <span>{formatPercent(diffPercentVormonat)}</span>
-              <span className="text-muted-foreground/60">VM</span>
+              <span className="text-muted-foreground/60">{t('kpi.pm')}</span>
             </div>
           )}
           {diffPercentVorjahr !== null && (
@@ -117,7 +120,7 @@ export function KPICard({
             )}>
               <VorjahrTrendIcon className="h-3 w-3" />
               <span>{formatPercent(diffPercentVorjahr)}</span>
-              <span className="text-muted-foreground/60">VJ</span>
+              <span className="text-muted-foreground/60">{t('kpi.py')}</span>
             </div>
           )}
         </div>
@@ -146,11 +149,11 @@ export function KPICard({
         {(previousValue !== null && previousValue !== undefined) && (
           <div className="flex flex-col gap-0.5 mt-1">
             <p className="text-xs text-muted-foreground">
-              Vormonat: {formatCurrency(previousValue)}
+              {t('kpi.previousMonth')}: {formatCurrency(previousValue)}
             </p>
             {previousYearValue !== null && previousYearValue !== undefined && (
               <p className="text-xs text-muted-foreground">
-                Vorjahr: {formatCurrency(previousYearValue)}
+                {t('kpi.previousYear')}: {formatCurrency(previousYearValue)}
               </p>
             )}
           </div>
