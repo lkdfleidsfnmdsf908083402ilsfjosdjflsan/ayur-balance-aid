@@ -20,6 +20,16 @@ const ABTEILUNGEN = [
   'Spa & Wellness',
   'Technik',
   'Administration',
+  'F&B',
+  'Restaurant',
+  'Bar',
+  'Rezeption',
+  'Buchhaltung',
+  'Personal',
+  'Marketing',
+  'Einkauf',
+  'Lager',
+  'Gästebetreuung',
 ];
 
 const Auth = () => {
