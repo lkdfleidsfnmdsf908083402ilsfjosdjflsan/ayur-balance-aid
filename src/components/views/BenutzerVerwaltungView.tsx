@@ -306,9 +306,15 @@ ${userProfile?.name || 'Das Mandira Team'}`;
     }
     formattedPhone = formattedPhone.replace('+', '');
 
-    // Open WhatsApp with pre-filled message
+    // Open WhatsApp with pre-filled message - use location.href for better iframe compatibility
     const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
-    window.open(whatsappUrl, '_blank');
+    
+    // Try window.open first, fallback to location.href for iframe environments
+    const newWindow = window.open(whatsappUrl, '_blank');
+    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+      // Popup was blocked or we're in an iframe, use direct navigation
+      window.location.href = whatsappUrl;
+    }
 
     toast({
       title: 'WhatsApp geöffnet',
