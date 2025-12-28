@@ -78,6 +78,7 @@ const ABTEILUNGEN = [
   'Energie',
   'Marketing',
   'Personal',
+  'Geschäftsführung',
 ];
 
 export function BenutzerVerwaltungView() {
