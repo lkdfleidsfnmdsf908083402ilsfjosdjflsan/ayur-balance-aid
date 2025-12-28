@@ -107,6 +107,8 @@ export function BenutzerVerwaltungView() {
     role: 'mitarbeiter' as AppRole,
     abteilung: '',
   });
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [deletingUser, setDeletingUser] = useState(false);
 
   const { isAdmin, user: currentUser, userProfile } = useAuth();
   const { toast } = useToast();
@@ -378,6 +380,41 @@ ${userProfile?.name || 'Das Mandira Team'}`;
     });
   };
 
+  const handleDeleteUser = (user: UserWithRole) => {
+    setSelectedUser(user);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDeleteUser = async () => {
+    if (!selectedUser) return;
+
+    setDeletingUser(true);
+    try {
+      const { error } = await supabase.functions.invoke('admin-delete-user', {
+        body: { userId: selectedUser.id },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: 'Benutzer gelöscht',
+        description: `${selectedUser.name || selectedUser.email} wurde erfolgreich gelöscht.`,
+      });
+
+      setIsDeleteDialogOpen(false);
+      loadUsers();
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Fehler',
+        description: error.message || 'Benutzer konnte nicht gelöscht werden',
+      });
+    } finally {
+      setDeletingUser(false);
+    }
+  };
+
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -582,6 +619,16 @@ ${userProfile?.name || 'Das Mandira Team'}`;
                               title="Passwort zurücksetzen"
                             >
                               <KeyRound className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteUser(user)}
+                              disabled={user.id === currentUser?.id}
+                              title="Benutzer löschen"
+                              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </TableCell>
@@ -939,6 +986,61 @@ ${userProfile?.name || 'Das Mandira Team'}`;
                 <>
                   <KeyRound className="h-4 w-4 mr-2" />
                   Passwort ändern
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete User Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="h-5 w-5" />
+              Benutzer löschen
+            </DialogTitle>
+          </DialogHeader>
+
+          {selectedUser && (
+            <div className="space-y-4">
+              <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <p className="text-destructive font-medium">Achtung!</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Diese Aktion kann nicht rückgängig gemacht werden. Der Benutzer wird vollständig aus dem System entfernt.
+                </p>
+              </div>
+
+              <div className="p-4 bg-muted/50 rounded-lg">
+                <p className="font-medium">{selectedUser.name || 'Unbekannt'}</p>
+                <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
+                <Badge variant="outline" className={`mt-2 ${ROLE_LABELS[selectedUser.role].color}`}>
+                  {ROLE_LABELS[selectedUser.role].icon}
+                  <span className="ml-1">{ROLE_LABELS[selectedUser.role].label}</span>
+                </Badge>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              Abbrechen
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleConfirmDeleteUser} 
+              disabled={deletingUser}
+            >
+              {deletingUser ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Wird gelöscht...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Endgültig löschen
                 </>
               )}
             </Button>
