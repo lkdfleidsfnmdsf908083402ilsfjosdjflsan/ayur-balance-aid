@@ -464,7 +464,7 @@ export function SchichtplanungView() {
           {loading ? (
             <p className="text-muted-foreground p-6">{t('common.loading')}</p>
           ) : (
-            <div className="overflow-auto max-h-[500px]">
+            <div className="overflow-auto max-h-[500px] touch-pan-x touch-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
               <Table>
                 <TableHeader className="sticky top-0 bg-background z-20">
                   <TableRow>
