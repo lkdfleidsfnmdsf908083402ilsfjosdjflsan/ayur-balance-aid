@@ -30,7 +30,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, UserCog, User, Users, Trash2, Edit, Plus, Search, Mail, Loader2, UserPlus, KeyRound, Eye } from 'lucide-react';
+import { Shield, UserCog, User, Users, Trash2, Edit, Plus, Search, MessageCircle, Loader2, UserPlus, KeyRound, Eye } from 'lucide-react';
 
 type AppRole = 'admin' | 'abteilungsleiter' | 'mitarbeiter' | 'readonly';
 
@@ -89,7 +89,7 @@ export function BenutzerVerwaltungView() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [isResetPasswordDialogOpen, setIsResetPasswordDialogOpen] = useState(false);
-  const [sendingInvite, setSendingInvite] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [resettingPassword, setResettingPassword] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
@@ -269,8 +269,8 @@ export function BenutzerVerwaltungView() {
     }
   };
 
-  const handleSendInvite = async () => {
-    if (!inviteForm.email || !inviteForm.abteilung) {
+  const handleSendWhatsAppInvite = () => {
+    if (!phoneNumber || !inviteForm.abteilung) {
       toast({
         variant: 'destructive',
         title: 'Fehler',
@@ -279,37 +279,45 @@ export function BenutzerVerwaltungView() {
       return;
     }
 
-    setSendingInvite(true);
-    try {
-      const { error } = await supabase.functions.invoke('send-invitation', {
-        body: {
-          recipientEmail: inviteForm.email,
-          recipientName: inviteForm.name,
-          abteilung: inviteForm.abteilung,
-          role: inviteForm.role,
-          inviterName: userProfile?.name || 'Administrator',
-        },
-      });
+    // Prepare WhatsApp message
+    const appUrl = window.location.origin;
+    const roleName = ROLE_LABELS[inviteForm.role].label;
+    const name = inviteForm.name ? `Hallo ${inviteForm.name}!` : 'Hallo!';
+    
+    const message = `${name}
 
-      if (error) throw error;
+Du wurdest zum Hotel Mandira KPI Dashboard eingeladen.
 
-      toast({
-        title: 'Einladung gesendet',
-        description: `Einladung wurde an ${inviteForm.email} gesendet.`,
-      });
+📊 *Deine Rolle:* ${roleName}
+🏢 *Abteilung:* ${inviteForm.abteilung}
 
-      setIsInviteDialogOpen(false);
-      setInviteForm({ email: '', name: '', role: 'abteilungsleiter', abteilung: '' });
-    } catch (error: any) {
-      console.error('Error sending invitation:', error);
-      toast({
-        variant: 'destructive',
-        title: 'Fehler',
-        description: 'Einladung konnte nicht gesendet werden: ' + error.message,
-      });
-    } finally {
-      setSendingInvite(false);
+Um dich zu registrieren, öffne bitte diesen Link:
+${appUrl}/auth
+
+Bei Fragen melde dich gerne!
+
+Viele Grüße,
+${userProfile?.name || 'Das Mandira Team'}`;
+
+    // Format phone number (remove spaces, add country code if needed)
+    let formattedPhone = phoneNumber.replace(/\s+/g, '').replace(/^0/, '43');
+    if (!formattedPhone.startsWith('+') && !formattedPhone.startsWith('43')) {
+      formattedPhone = '43' + formattedPhone;
     }
+    formattedPhone = formattedPhone.replace('+', '');
+
+    // Open WhatsApp with pre-filled message
+    const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+
+    toast({
+      title: 'WhatsApp geöffnet',
+      description: 'Die Einladung wurde in WhatsApp vorbereitet.',
+    });
+
+    setIsInviteDialogOpen(false);
+    setInviteForm({ email: '', name: '', role: 'abteilungsleiter', abteilung: '' });
+    setPhoneNumber('');
   };
 
   const filteredUsers = users.filter((user) => {
@@ -616,20 +624,23 @@ export function BenutzerVerwaltungView() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Mail className="h-5 w-5" />
-              Benutzer einladen
+              <MessageCircle className="h-5 w-5 text-green-600" />
+              Per WhatsApp einladen
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>E-Mail-Adresse *</Label>
+              <Label>Telefonnummer *</Label>
               <Input
-                type="email"
-                placeholder="name@hotel-mandira.de"
-                value={inviteForm.email}
-                onChange={(e) => setInviteForm((prev) => ({ ...prev, email: e.target.value }))}
+                type="tel"
+                placeholder="+43 664 1234567"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
               />
+              <p className="text-xs text-muted-foreground">
+                Österreichische Nummer ohne Landesvorwahl wird automatisch erkannt
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -698,12 +709,12 @@ export function BenutzerVerwaltungView() {
               </Select>
             </div>
 
-            <div className="p-4 bg-muted/50 rounded-lg text-sm text-muted-foreground">
-              <p>Die eingeladene Person erhält eine E-Mail mit:</p>
-              <ul className="list-disc list-inside mt-2 space-y-1">
+            <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg text-sm">
+              <p className="text-green-700 dark:text-green-400 font-medium">WhatsApp öffnet sich mit:</p>
+              <ul className="list-disc list-inside mt-2 space-y-1 text-muted-foreground">
+                <li>Persönliche Begrüßung</li>
                 <li>Link zur Registrierung</li>
-                <li>Informationen zur zugewiesenen Rolle</li>
-                <li>Anleitung zur App-Nutzung</li>
+                <li>Zugewiesene Rolle & Abteilung</li>
               </ul>
             </div>
           </div>
@@ -712,18 +723,9 @@ export function BenutzerVerwaltungView() {
             <Button variant="outline" onClick={() => setIsInviteDialogOpen(false)}>
               Abbrechen
             </Button>
-            <Button onClick={handleSendInvite} disabled={sendingInvite}>
-              {sendingInvite ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Wird gesendet...
-                </>
-              ) : (
-                <>
-                  <Mail className="h-4 w-4 mr-2" />
-                  Einladung senden
-                </>
-              )}
+            <Button onClick={handleSendWhatsAppInvite} className="bg-green-600 hover:bg-green-700">
+              <MessageCircle className="h-4 w-4 mr-2" />
+              In WhatsApp öffnen
             </Button>
           </DialogFooter>
         </DialogContent>
