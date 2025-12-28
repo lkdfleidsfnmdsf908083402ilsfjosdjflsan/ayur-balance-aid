@@ -294,7 +294,7 @@ export function DatenqualitaetView() {
               {report.kontoklassenAbstimmung.length === 0 ? (
                 <p className="text-muted-foreground">Keine Salden vorhanden.</p>
               ) : (
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto touch-pan-x touch-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -368,7 +368,7 @@ export function DatenqualitaetView() {
                   <span>Alle Konten sind einem Bereich zugeordnet.</span>
                 </div>
               ) : (
-                <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                <div className="overflow-x-auto max-h-96 overflow-y-auto touch-pan-x touch-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -410,7 +410,7 @@ export function DatenqualitaetView() {
                   <span>Alle Konten haben eine Kostenart-Zuordnung.</span>
                 </div>
               ) : (
-                <div className="overflow-x-auto max-h-96 overflow-y-auto">
+                <div className="overflow-x-auto max-h-96 overflow-y-auto touch-pan-x touch-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
                   <Table>
                     <TableHeader>
                       <TableRow>
