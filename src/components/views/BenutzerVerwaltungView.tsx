@@ -755,7 +755,7 @@ ${userProfile?.name || 'Das Mandira Team'}`;
                   <SelectTrigger>
                     <SelectValue placeholder="Auswählen..." />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-[300px] overflow-y-auto">
                     {ABTEILUNGEN.map((abt) => (
                       <SelectItem key={abt} value={abt}>
                         {abt}
