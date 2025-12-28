@@ -30,7 +30,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
-import { Shield, UserCog, User, Users, Trash2, Edit, Plus, Search, MessageCircle, Loader2, UserPlus, KeyRound, Eye } from 'lucide-react';
+import { Shield, UserCog, User, Users, Trash2, Edit, Plus, Search, MessageCircle, Loader2, UserPlus, KeyRound, Eye, Copy, CheckCircle, Link } from 'lucide-react';
 
 type AppRole = 'admin' | 'abteilungsleiter' | 'mitarbeiter' | 'readonly';
 
@@ -88,6 +88,9 @@ export function BenutzerVerwaltungView() {
   const [selectedUser, setSelectedUser] = useState<UserWithRole | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+  const [isInviteLinkDialogOpen, setIsInviteLinkDialogOpen] = useState(false);
+  const [generatedInviteUrl, setGeneratedInviteUrl] = useState('');
+  const [linkCopied, setLinkCopied] = useState(false);
   const [isResetPasswordDialogOpen, setIsResetPasswordDialogOpen] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   const [resettingPassword, setResettingPassword] = useState(false);
@@ -296,13 +299,20 @@ export function BenutzerVerwaltungView() {
         throw new Error(inviteError.message);
       }
 
-      // Prepare WhatsApp message with token link
+      // Prepare invite URL
       const appUrl = window.location.origin;
       const inviteUrl = `${appUrl}/invite/${invitation.token}`;
-      const roleName = ROLE_LABELS[inviteForm.role].label;
-      const greeting = inviteForm.name ? `Hallo ${inviteForm.name}!` : 'Hallo!';
       
-      const message = `${greeting}
+      // Store the URL for the link dialog
+      setGeneratedInviteUrl(inviteUrl);
+      setLinkCopied(false);
+
+      if (phoneNumber) {
+        // Prepare WhatsApp message with token link
+        const roleName = ROLE_LABELS[inviteForm.role].label;
+        const greeting = inviteForm.name ? `Hallo ${inviteForm.name}!` : 'Hallo!';
+        
+        const message = `${greeting}
 
 Du wurdest zum Hotel Mandira KPI Dashboard eingeladen.
 
@@ -318,7 +328,6 @@ Bei Fragen melde dich gerne!
 Viele Grüße,
 ${userProfile?.name || 'Das Mandira Team'}`;
 
-      if (phoneNumber) {
         // Format phone number (remove spaces, add country code if needed)
         let formattedPhone = phoneNumber.replace(/\s+/g, '').replace(/^0/, '43');
         if (!formattedPhone.startsWith('+') && !formattedPhone.startsWith('43')) {
@@ -338,16 +347,11 @@ ${userProfile?.name || 'Das Mandira Team'}`;
           title: 'Einladung erstellt',
           description: 'WhatsApp wurde mit dem Einladungslink geöffnet.',
         });
-      } else {
-        // Copy link to clipboard if no phone number
-        await navigator.clipboard.writeText(inviteUrl);
-        toast({
-          title: 'Einladungslink kopiert',
-          description: 'Der Link wurde in die Zwischenablage kopiert. Sie können ihn jetzt versenden.',
-        });
       }
 
+      // Close invite dialog and show link dialog
       setIsInviteDialogOpen(false);
+      setIsInviteLinkDialogOpen(true);
       setInviteForm({ email: '', name: '', role: 'mitarbeiter', abteilung: '' });
       setPhoneNumber('');
 
@@ -359,6 +363,15 @@ ${userProfile?.name || 'Das Mandira Team'}`;
         description: error.message || 'Einladung konnte nicht erstellt werden',
       });
     }
+  };
+
+  const handleCopyInviteLink = async () => {
+    await navigator.clipboard.writeText(generatedInviteUrl);
+    setLinkCopied(true);
+    toast({
+      title: 'Link kopiert!',
+      description: 'Der Einladungslink wurde in die Zwischenablage kopiert.',
+    });
   };
 
   const filteredUsers = users.filter((user) => {
@@ -791,6 +804,70 @@ ${userProfile?.name || 'Das Mandira Team'}`;
                   Einladungslink erstellen
                 </>
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Invite Link Dialog */}
+      <Dialog open={isInviteLinkDialogOpen} onOpenChange={setIsInviteLinkDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-500" />
+              Einladung erstellt!
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+              <p className="text-green-600 dark:text-green-400 font-medium mb-2">
+                Der Einladungslink wurde erfolgreich erstellt.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Senden Sie diesen Link an den neuen Benutzer. Er muss nur noch seinen Namen und ein Passwort eingeben.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2">
+                <Link className="h-4 w-4" />
+                Einladungslink
+              </Label>
+              <div className="flex gap-2">
+                <Input
+                  value={generatedInviteUrl}
+                  readOnly
+                  className="font-mono text-sm"
+                />
+                <Button
+                  variant={linkCopied ? 'default' : 'outline'}
+                  size="icon"
+                  onClick={handleCopyInviteLink}
+                  className={linkCopied ? 'bg-green-500 hover:bg-green-600' : ''}
+                >
+                  {linkCopied ? (
+                    <CheckCircle className="h-4 w-4" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg text-sm">
+              <p className="text-amber-600 dark:text-amber-400 font-medium">Wichtig:</p>
+              <ul className="text-muted-foreground mt-1 space-y-1 list-disc list-inside">
+                <li>Der Link ist 7 Tage gültig</li>
+                <li>Der Link kann nur einmal verwendet werden</li>
+                <li>Kopieren Sie den Link und senden Sie ihn per E-Mail, SMS oder WhatsApp</li>
+              </ul>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button onClick={() => setIsInviteLinkDialogOpen(false)}>
+              Fertig
             </Button>
           </DialogFooter>
         </DialogContent>
