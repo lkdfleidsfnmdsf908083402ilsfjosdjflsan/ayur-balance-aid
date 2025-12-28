@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const RESEND_FROM = Deno.env.get("RESEND_FROM") || "Hotel Mandira <onboarding@resend.dev>";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -46,7 +47,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Hotel Mandira <onboarding@resend.dev>",
+        from: RESEND_FROM,
         to: [recipientEmail],
         subject: `Einladung zum Hotel Mandira KPI Dashboard`,
         html: `
@@ -101,8 +102,33 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     if (!res.ok) {
-      const error = await res.text();
-      throw new Error(`Failed to send email: ${error}`);
+      const errorText = await res.text();
+      let resendMessage = errorText;
+      try {
+        const parsed = JSON.parse(errorText);
+        resendMessage = parsed?.message ?? parsed?.error?.message ?? errorText;
+      } catch {
+        // keep raw text
+      }
+
+      const needsDomainVerification =
+        res.status === 403 &&
+        typeof resendMessage === 'string' &&
+        resendMessage.includes('verify a domain');
+
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: `E-Mail konnte nicht gesendet werden: ${resendMessage}`,
+          hint: needsDomainVerification
+            ? 'Resend ist noch im Testmodus: Bitte Domain bei resend.com/domains verifizieren und eine Absenderadresse dieser Domain verwenden.'
+            : undefined,
+        }),
+        {
+          status: needsDomainVerification ? 400 : res.status,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
     }
 
     const emailResponse = await res.json();
