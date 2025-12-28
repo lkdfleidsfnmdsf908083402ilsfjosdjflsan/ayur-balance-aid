@@ -269,61 +269,96 @@ export function BenutzerVerwaltungView() {
     }
   };
 
-  const handleSendWhatsAppInvite = () => {
-    if (!phoneNumber || !inviteForm.abteilung) {
+  const handleSendWhatsAppInvite = async () => {
+    if (!inviteForm.email || !inviteForm.abteilung) {
       toast({
         variant: 'destructive',
         title: 'Fehler',
-        description: 'Bitte füllen Sie alle Pflichtfelder aus.',
+        description: 'Bitte füllen Sie E-Mail und Abteilung aus.',
       });
       return;
     }
 
-    // Prepare WhatsApp message
-    const appUrl = window.location.origin;
-    const roleName = ROLE_LABELS[inviteForm.role].label;
-    const name = inviteForm.name ? `Hallo ${inviteForm.name}!` : 'Hallo!';
-    
-    const message = `${name}
+    try {
+      // Create invitation in database
+      const { data: invitation, error: inviteError } = await supabase
+        .from('invitations')
+        .insert({
+          email: inviteForm.email.trim().toLowerCase(),
+          role: inviteForm.role,
+          abteilung: inviteForm.abteilung,
+          invited_by: currentUser?.id,
+        })
+        .select()
+        .single();
+
+      if (inviteError) {
+        throw new Error(inviteError.message);
+      }
+
+      // Prepare WhatsApp message with token link
+      const appUrl = window.location.origin;
+      const inviteUrl = `${appUrl}/invite/${invitation.token}`;
+      const roleName = ROLE_LABELS[inviteForm.role].label;
+      const greeting = inviteForm.name ? `Hallo ${inviteForm.name}!` : 'Hallo!';
+      
+      const message = `${greeting}
 
 Du wurdest zum Hotel Mandira KPI Dashboard eingeladen.
 
 📊 *Deine Rolle:* ${roleName}
 🏢 *Abteilung:* ${inviteForm.abteilung}
 
-Um dich zu registrieren, öffne bitte diesen Link:
-${appUrl}/auth
+Klicke einfach auf diesen Link, gib deinen Namen und ein Passwort ein – fertig!
+
+👉 ${inviteUrl}
 
 Bei Fragen melde dich gerne!
 
 Viele Grüße,
 ${userProfile?.name || 'Das Mandira Team'}`;
 
-    // Format phone number (remove spaces, add country code if needed)
-    let formattedPhone = phoneNumber.replace(/\s+/g, '').replace(/^0/, '43');
-    if (!formattedPhone.startsWith('+') && !formattedPhone.startsWith('43')) {
-      formattedPhone = '43' + formattedPhone;
+      if (phoneNumber) {
+        // Format phone number (remove spaces, add country code if needed)
+        let formattedPhone = phoneNumber.replace(/\s+/g, '').replace(/^0/, '43');
+        if (!formattedPhone.startsWith('+') && !formattedPhone.startsWith('43')) {
+          formattedPhone = '43' + formattedPhone;
+        }
+        formattedPhone = formattedPhone.replace('+', '');
+
+        // Open WhatsApp with pre-filled message
+        const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
+        
+        const newWindow = window.open(whatsappUrl, '_blank');
+        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+          window.location.href = whatsappUrl;
+        }
+
+        toast({
+          title: 'Einladung erstellt',
+          description: 'WhatsApp wurde mit dem Einladungslink geöffnet.',
+        });
+      } else {
+        // Copy link to clipboard if no phone number
+        await navigator.clipboard.writeText(inviteUrl);
+        toast({
+          title: 'Einladungslink kopiert',
+          description: 'Der Link wurde in die Zwischenablage kopiert. Sie können ihn jetzt versenden.',
+        });
+      }
+
+      setIsInviteDialogOpen(false);
+      setInviteForm({ email: '', name: '', role: 'mitarbeiter', abteilung: '' });
+      setPhoneNumber('');
+
+    } catch (error: any) {
+      console.error('Error creating invitation:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Fehler',
+        description: error.message || 'Einladung konnte nicht erstellt werden',
+      });
     }
-    formattedPhone = formattedPhone.replace('+', '');
-
-    // Open WhatsApp with pre-filled message - use location.href for better iframe compatibility
-    const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
-    
-    // Try window.open first, fallback to location.href for iframe environments
-    const newWindow = window.open(whatsappUrl, '_blank');
-    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-      // Popup was blocked or we're in an iframe, use direct navigation
-      window.location.href = whatsappUrl;
-    }
-
-    toast({
-      title: 'WhatsApp geöffnet',
-      description: 'Die Einladung wurde in WhatsApp vorbereitet.',
-    });
-
-    setIsInviteDialogOpen(false);
-    setInviteForm({ email: '', name: '', role: 'abteilungsleiter', abteilung: '' });
-    setPhoneNumber('');
   };
 
   const filteredUsers = users.filter((user) => {
@@ -627,17 +662,98 @@ ${userProfile?.name || 'Das Mandira Team'}`;
 
       {/* Invite Dialog */}
       <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <MessageCircle className="h-5 w-5 text-green-600" />
-              Per WhatsApp einladen
+              <UserPlus className="h-5 w-5 text-primary" />
+              Neuen Benutzer einladen
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Telefonnummer *</Label>
+              <Label>E-Mail-Adresse *</Label>
+              <Input
+                type="email"
+                placeholder="name@mandira-ayurveda.at"
+                value={inviteForm.email}
+                onChange={(e) => setInviteForm((prev) => ({ ...prev, email: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Name (optional)</Label>
+              <Input
+                placeholder="Vor- und Nachname"
+                value={inviteForm.name}
+                onChange={(e) => setInviteForm((prev) => ({ ...prev, name: e.target.value }))}
+              />
+              <p className="text-xs text-muted-foreground">
+                Für die persönliche Begrüßung in der Einladung
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Rolle *</Label>
+                <Select
+                  value={inviteForm.role}
+                  onValueChange={(value: AppRole) => setInviteForm((prev) => ({ ...prev, role: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="mitarbeiter">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        Mitarbeiter
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="abteilungsleiter">
+                      <div className="flex items-center gap-2">
+                        <UserCog className="h-4 w-4" />
+                        Abteilungsleiter
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="admin">
+                      <div className="flex items-center gap-2">
+                        <Shield className="h-4 w-4" />
+                        Administrator
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="readonly">
+                      <div className="flex items-center gap-2">
+                        <Eye className="h-4 w-4" />
+                        Nur-Lesen
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Abteilung *</Label>
+                <Select
+                  value={inviteForm.abteilung}
+                  onValueChange={(value) => setInviteForm((prev) => ({ ...prev, abteilung: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Auswählen..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ABTEILUNGEN.map((abt) => (
+                      <SelectItem key={abt} value={abt}>
+                        {abt}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Telefonnummer (optional)</Label>
               <Input
                 type="tel"
                 placeholder="+43 664 1234567"
@@ -645,93 +761,36 @@ ${userProfile?.name || 'Das Mandira Team'}`;
                 onChange={(e) => setPhoneNumber(e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                Österreichische Nummer ohne Landesvorwahl wird automatisch erkannt
+                Wenn angegeben, öffnet sich WhatsApp mit der Einladung
               </p>
             </div>
 
-            <div className="space-y-2">
-              <Label>Name</Label>
-              <Input
-                placeholder="Vor- und Nachname"
-                value={inviteForm.name}
-                onChange={(e) => setInviteForm((prev) => ({ ...prev, name: e.target.value }))}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Rolle</Label>
-              <Select
-                value={inviteForm.role}
-                onValueChange={(value: AppRole) => setInviteForm((prev) => ({ ...prev, role: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="abteilungsleiter">
-                    <div className="flex items-center gap-2">
-                      <UserCog className="h-4 w-4" />
-                      Abteilungsleiter
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="admin">
-                    <div className="flex items-center gap-2">
-                      <Shield className="h-4 w-4" />
-                      Administrator
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="mitarbeiter">
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      Mitarbeiter
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="readonly">
-                    <div className="flex items-center gap-2">
-                      <Eye className="h-4 w-4" />
-                      Nur-Lesen
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Abteilung *</Label>
-              <Select
-                value={inviteForm.abteilung}
-                onValueChange={(value) => setInviteForm((prev) => ({ ...prev, abteilung: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Abteilung auswählen..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {ABTEILUNGEN.map((abt) => (
-                    <SelectItem key={abt} value={abt}>
-                      {abt}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-lg text-sm">
-              <p className="text-green-700 dark:text-green-400 font-medium">WhatsApp öffnet sich mit:</p>
-              <ul className="list-disc list-inside mt-2 space-y-1 text-muted-foreground">
-                <li>Persönliche Begrüßung</li>
-                <li>Link zur Registrierung</li>
-                <li>Zugewiesene Rolle & Abteilung</li>
-              </ul>
+            <div className="p-4 bg-primary/10 border border-primary/20 rounded-lg text-sm">
+              <p className="text-primary font-medium">So funktioniert's:</p>
+              <ol className="list-decimal list-inside mt-2 space-y-1 text-muted-foreground">
+                <li>Einladungslink wird erstellt (7 Tage gültig)</li>
+                <li>Empfänger gibt nur Name + Passwort ein</li>
+                <li>Account mit korrekter Rolle & Abteilung wird erstellt</li>
+              </ol>
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={() => setIsInviteDialogOpen(false)}>
               Abbrechen
             </Button>
-            <Button onClick={handleSendWhatsAppInvite} className="bg-green-600 hover:bg-green-700">
-              <MessageCircle className="h-4 w-4 mr-2" />
-              In WhatsApp öffnen
+            <Button onClick={handleSendWhatsAppInvite}>
+              {phoneNumber ? (
+                <>
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Per WhatsApp einladen
+                </>
+              ) : (
+                <>
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Einladungslink erstellen
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
