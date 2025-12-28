@@ -304,6 +304,9 @@ export function BenutzerVerwaltungView() {
       const appUrl = window.location.origin;
       const inviteUrl = `${appUrl}/invite/${invitation.token}`;
       
+      console.log('WhatsApp Invite URL:', inviteUrl);
+      console.log('Invitation token:', invitation.token);
+      
       // Store the URL for the link dialog
       setGeneratedInviteUrl(inviteUrl);
       setLinkCopied(false);
