@@ -35,19 +35,24 @@ import { useNavigation } from '@/contexts/NavigationContext';
 const Index = () => {
   const { activeView, setActiveView } = useNavigation();
   const { initialize, isInitialized, isLoading } = useFinanceStore();
-  const { isAdmin, isAbteilungsleiter } = useAuth();
+  const { isAdmin, isAbteilungsleiter, userRole } = useAuth();
   const isMobile = useIsMobile();
 
   useEffect(() => {
     initialize();
   }, [initialize]);
 
-  // Auto-switch to abteilungsleiter dashboard for Abteilungsleiter
+  // Auto-switch view based on role
   useEffect(() => {
-    if (isAbteilungsleiter && !isAdmin && activeView === 'dashboard') {
+    // Mitarbeiter: redirect to department shift plan
+    if (userRole === 'mitarbeiter' && activeView === 'dashboard') {
+      setActiveView('abteilung-schichtplanung');
+    }
+    // Abteilungsleiter: redirect to abteilungsleiter dashboard
+    else if (isAbteilungsleiter && !isAdmin && activeView === 'dashboard') {
       setActiveView('abteilungsleiter-dashboard');
     }
-  }, [isAbteilungsleiter, isAdmin, activeView]);
+  }, [userRole, isAbteilungsleiter, isAdmin, activeView]);
 
   const renderView = () => {
     switch (activeView) {

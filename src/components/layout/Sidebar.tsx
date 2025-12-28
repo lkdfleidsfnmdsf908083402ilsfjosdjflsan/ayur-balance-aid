@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { 
   LayoutDashboard, 
@@ -32,6 +32,7 @@ import {
 import { MandiraLogo } from '@/components/MandiraLogo';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/hooks/useAuth';
 
 interface SidebarProps {
   activeView: string;
@@ -42,6 +43,7 @@ interface NavItem {
   id: string;
   labelKey: string;
   icon: LucideIcon;
+  requiredRole?: 'admin' | 'abteilungsleiter' | 'mitarbeiter';
 }
 
 interface NavGroup {
@@ -49,6 +51,7 @@ interface NavGroup {
   labelKey: string;
   icon: LucideIcon;
   items: NavItem[];
+  requiredRole?: 'admin' | 'abteilungsleiter' | 'mitarbeiter';
 }
 
 type NavEntry = NavItem | NavGroup;
@@ -57,18 +60,32 @@ const isNavGroup = (entry: NavEntry): entry is NavGroup => {
   return 'items' in entry;
 };
 
+// Map abteilung to KPI view ID
+const abteilungToKpiView: Record<string, string> = {
+  'Housekeeping': 'housekeeping',
+  'Küche': 'kitchen',
+  'Service': 'service',
+  'Front Office': 'frontoffice',
+  'Rezeption': 'frontoffice',
+  'Spa & Wellness': 'spa',
+  'Spa': 'spa',
+  'Technik': 'technical',
+  'Administration': 'admin',
+  'Verwaltung': 'admin',
+};
+
 const SIDEBAR_STORAGE_KEY = 'sidebar-open-groups';
 
 const navStructure: NavEntry[] = [
-  { id: 'dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard },
-  { id: 'gaeste', labelKey: 'nav.guestManagement', icon: Heart },
+  { id: 'dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard, requiredRole: 'abteilungsleiter' },
+  { id: 'gaeste', labelKey: 'nav.guestManagement', icon: Heart, requiredRole: 'abteilungsleiter' },
   { 
     id: 'abteilung-kpis',
     labelKey: 'nav.departmentKpis',
     icon: PieChart,
     items: [
-      { id: 'abteilung-kpi', labelKey: 'nav.overview', icon: PieChart },
-      { id: 'kpi-trends', labelKey: 'nav.kpiTrends', icon: TrendingUp },
+      { id: 'abteilung-kpi', labelKey: 'nav.overview', icon: PieChart, requiredRole: 'abteilungsleiter' },
+      { id: 'kpi-trends', labelKey: 'nav.kpiTrends', icon: TrendingUp, requiredRole: 'abteilungsleiter' },
       { id: 'housekeeping', labelKey: 'nav.housekeeping', icon: Sparkles },
       { id: 'kitchen', labelKey: 'nav.kitchen', icon: ChefHat },
       { id: 'service', labelKey: 'nav.service', icon: UtensilsCrossed },
@@ -83,28 +100,30 @@ const navStructure: NavEntry[] = [
     labelKey: 'nav.personnelManagement',
     icon: Users,
     items: [
-      { id: 'mitarbeiter', labelKey: 'nav.employees', icon: UserCircle },
-      { id: 'schichtplanung', labelKey: 'nav.shiftPlanningAll', icon: CalendarDays },
+      { id: 'mitarbeiter', labelKey: 'nav.employees', icon: UserCircle, requiredRole: 'abteilungsleiter' },
+      { id: 'schichtplanung', labelKey: 'nav.shiftPlanningAll', icon: CalendarDays, requiredRole: 'abteilungsleiter' },
       { id: 'abteilung-schichtplanung', labelKey: 'nav.departmentShiftPlan', icon: ClipboardList },
-      { id: 'zeitkonten', labelKey: 'nav.timeAccounts', icon: Clock },
-      { id: 'personal-kpis', labelKey: 'nav.personnelKpis', icon: Users },
+      { id: 'zeitkonten', labelKey: 'nav.timeAccounts', icon: Clock, requiredRole: 'abteilungsleiter' },
+      { id: 'personal-kpis', labelKey: 'nav.personnelKpis', icon: Users, requiredRole: 'abteilungsleiter' },
     ]
   },
   {
     id: 'planung-gruppe',
     labelKey: 'nav.planningAlarms',
     icon: Target,
+    requiredRole: 'abteilungsleiter',
     items: [
       { id: 'budget', labelKey: 'nav.budgetPlanning', icon: Target },
       { id: 'alarme', labelKey: 'nav.kpiAlarms', icon: Bell },
-      { id: 'abteilungsleiter', labelKey: 'nav.departmentHeads', icon: Users },
-      { id: 'benutzerverwaltung', labelKey: 'nav.userManagement', icon: ShieldCheck },
+      { id: 'abteilungsleiter', labelKey: 'nav.departmentHeads', icon: Users, requiredRole: 'admin' },
+      { id: 'benutzerverwaltung', labelKey: 'nav.userManagement', icon: ShieldCheck, requiredRole: 'admin' },
     ]
   },
   {
     id: 'daten-gruppe',
     labelKey: 'nav.dataAnalysis',
     icon: BarChart3,
+    requiredRole: 'admin',
     items: [
       { id: 'upload', labelKey: 'nav.dataImport', icon: Upload },
       { id: 'konten', labelKey: 'nav.accountMaster', icon: Table2 },
@@ -118,6 +137,55 @@ const navStructure: NavEntry[] = [
 export function Sidebar({ activeView, onViewChange }: SidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const { t } = useLanguage();
+  const { userRole, userProfile, isAdmin, isAbteilungsleiter } = useAuth();
+  
+  // Get the user's department KPI view
+  const userAbteilungKpiView = userProfile?.abteilung 
+    ? abteilungToKpiView[userProfile.abteilung] 
+    : null;
+
+  // Role hierarchy check
+  const hasRole = (requiredRole?: 'admin' | 'abteilungsleiter' | 'mitarbeiter') => {
+    if (!requiredRole) return true;
+    const roleHierarchy = { admin: 3, abteilungsleiter: 2, mitarbeiter: 1, readonly: 1 };
+    const userRoleLevel = roleHierarchy[userRole as keyof typeof roleHierarchy] || 1;
+    const requiredRoleLevel = roleHierarchy[requiredRole];
+    return userRoleLevel >= requiredRoleLevel;
+  };
+
+  // Filter navigation based on role and department
+  const filteredNavStructure = useMemo(() => {
+    return navStructure
+      .filter(entry => {
+        // Check group-level permission
+        if (isNavGroup(entry)) {
+          if (!hasRole(entry.requiredRole)) return false;
+        } else {
+          if (!hasRole(entry.requiredRole)) return false;
+        }
+        return true;
+      })
+      .map(entry => {
+        if (isNavGroup(entry)) {
+          // Filter items within the group
+          let filteredItems = entry.items.filter(item => hasRole(item.requiredRole));
+          
+          // For mitarbeiter: only show their department's KPI
+          if (userRole === 'mitarbeiter' && entry.id === 'abteilung-kpis') {
+            filteredItems = filteredItems.filter(item => 
+              item.id === userAbteilungKpiView
+            );
+          }
+          
+          // Don't show empty groups
+          if (filteredItems.length === 0) return null;
+          
+          return { ...entry, items: filteredItems };
+        }
+        return entry;
+      })
+      .filter(Boolean) as NavEntry[];
+  }, [userRole, userAbteilungKpiView, isAdmin, isAbteilungsleiter]);
   
   // Load saved state from LocalStorage
   const [openGroups, setOpenGroups] = useState<string[]>(() => {
@@ -275,9 +343,8 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
         )}
       </div>
       
-      {/* Navigation */}
       <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-        {navStructure.map((entry) => {
+        {filteredNavStructure.map((entry) => {
           if (isNavGroup(entry)) {
             return renderNavGroup(entry);
           }
