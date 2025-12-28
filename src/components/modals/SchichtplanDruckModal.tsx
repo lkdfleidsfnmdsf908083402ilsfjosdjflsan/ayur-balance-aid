@@ -244,7 +244,7 @@ export function SchichtplanDruckModal({
           </div>
 
           {/* Table */}
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto touch-pan-x touch-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="bg-primary text-primary-foreground print:bg-blue-500 print:text-white">

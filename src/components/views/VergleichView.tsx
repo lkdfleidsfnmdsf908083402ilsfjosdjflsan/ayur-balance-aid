@@ -105,7 +105,7 @@ export function VergleichView() {
         </div>
         
         {/* Table */}
-        <div className="flex-1 overflow-auto rounded-xl border border-border">
+        <div className="flex-1 overflow-auto rounded-xl border border-border touch-pan-x touch-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
           <table className="w-full">
             <thead className="bg-muted/50 sticky top-0">
               <tr className="text-left text-sm text-muted-foreground">

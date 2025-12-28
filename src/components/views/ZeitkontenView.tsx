@@ -396,7 +396,7 @@ export function ZeitkontenView() {
           {loading ? (
             <p className="text-muted-foreground">Laden...</p>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto touch-pan-x touch-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
               <Table>
                 <TableHeader>
                   <TableRow>

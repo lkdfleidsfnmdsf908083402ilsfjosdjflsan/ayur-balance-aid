@@ -706,7 +706,7 @@ export function AbteilungSchichtplanungView() {
               Keine Mitarbeiter in dieser Abteilung gefunden
             </div>
           ) : (
-            <div className="overflow-x-auto max-h-[500px] overflow-y-auto border rounded-md">
+            <div className="overflow-x-auto max-h-[500px] overflow-y-auto border rounded-md touch-pan-x touch-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
               <Table>
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>

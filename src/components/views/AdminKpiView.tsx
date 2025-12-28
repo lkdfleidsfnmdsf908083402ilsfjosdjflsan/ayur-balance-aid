@@ -651,7 +651,7 @@ export function AdminKpiView() {
               <CardTitle className="text-lg">Letzte Tagesberichte</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto touch-pan-x touch-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b">
