@@ -30,6 +30,7 @@ const App = () => (
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/auth/reset" element={<ResetPassword />} />
                   <Route path="/invite/:token" element={<InviteRegister />} />
+                  <Route path="/invite" element={<InviteRegister />} />
                   <Route
                     path="/"
                     element={
