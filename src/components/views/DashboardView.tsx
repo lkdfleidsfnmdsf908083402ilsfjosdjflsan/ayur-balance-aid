@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useFinanceStore } from '@/store/financeStore';
 import { Header } from '@/components/layout/Header';
 import { KPICard } from '@/components/cards/KPICard';
+import { YTDKPICard } from '@/components/cards/YTDKPICard';
 import { BereichChart } from '@/components/charts/BereichChart';
 import { AufwandKlassenChart } from '@/components/charts/AufwandKlassenChart';
 import { AlarmWidget } from '@/components/widgets/AlarmWidget';
@@ -19,7 +20,7 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export function DashboardView() {
-  const { bereichAggregationen, vergleiche, konten, selectedYear, selectedMonth, uploadedFiles } = useFinanceStore();
+  const { bereichAggregationen, vergleiche, konten, salden, selectedYear, selectedMonth, uploadedFiles } = useFinanceStore();
   const { t, language } = useLanguage();
   const [schwellenwerte, setSchwellenwerte] = useState<any[]>([]);
   const [rohertragModalOpen, setRohertragModalOpen] = useState(false);
@@ -173,6 +174,85 @@ export function DashboardView() {
   const fbErloeseVorjahr = bereichAggregationen
     .filter(b => b.kostenarttTyp === 'Erlös' && fbBereiche.some(fb => b.bereich.includes(fb)))
     .reduce((sum, b) => sum + Math.abs(b.saldoVorjahr ?? 0), 0);
+
+  // YTD-Berechnung (Januar bis ausgewähltem Monat)
+  const ytdData = useMemo(() => {
+    const monthNames = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
+    const periodLabel = `${monthNames[0]}-${monthNames[selectedMonth - 1]} ${selectedYear}`;
+    const periodLabelVorjahr = `${monthNames[0]}-${monthNames[selectedMonth - 1]} ${selectedYear - 1}`;
+    
+    // Sammle alle Salden für das aktuelle Jahr (Januar bis selectedMonth)
+    const ytdSalden = salden.filter(s => 
+      s.jahr === selectedYear && s.monat >= 1 && s.monat <= selectedMonth
+    );
+    
+    // Sammle alle Salden für das Vorjahr (Januar bis selectedMonth)
+    const ytdSaldenVorjahr = salden.filter(s => 
+      s.jahr === selectedYear - 1 && s.monat >= 1 && s.monat <= selectedMonth
+    );
+    
+    // Hilfsfunktion um YTD-Summe pro Konto zu berechnen
+    const sumByKonten = (saldenList: typeof salden) => {
+      return saldenList.reduce((sum, s) => sum + s.saldoMonat, 0);
+    };
+    
+    // YTD Erlöse (Klasse 4 - Erlöskonten)
+    const erlösKontonummern = konten
+      .filter(k => k.kostenarttTyp === 'Erlös')
+      .map(k => k.kontonummer);
+    
+    const ytdErloese = Math.abs(sumByKonten(ytdSalden.filter(s => erlösKontonummern.includes(s.kontonummer))));
+    const ytdErloeseVorjahr = Math.abs(sumByKonten(ytdSaldenVorjahr.filter(s => erlösKontonummern.includes(s.kontonummer))));
+    
+    // YTD F&B Erlöse
+    const fbKontonummern = konten
+      .filter(k => k.kostenarttTyp === 'Erlös' && fbBereiche.some(fb => k.bereich.includes(fb)))
+      .map(k => k.kontonummer);
+    
+    const ytdFbErloese = Math.abs(sumByKonten(ytdSalden.filter(s => fbKontonummern.includes(s.kontonummer))));
+    const ytdFbErloeseVorjahr = Math.abs(sumByKonten(ytdSaldenVorjahr.filter(s => fbKontonummern.includes(s.kontonummer))));
+    
+    // YTD Aufwand (Klassen 5, 6, 7, 8)
+    const aufwandKontonummern = konten
+      .filter(k => aufwandsKlassen.includes(k.kontoklasse))
+      .map(k => k.kontonummer);
+    
+    const ytdAufwand = Math.abs(sumByKonten(ytdSalden.filter(s => aufwandKontonummern.includes(s.kontonummer))));
+    const ytdAufwandVorjahr = Math.abs(sumByKonten(ytdSaldenVorjahr.filter(s => aufwandKontonummern.includes(s.kontonummer))));
+    
+    // YTD Personalkosten (Klasse 6)
+    const personalKontonummern = konten
+      .filter(k => k.kontoklasse === '6')
+      .map(k => k.kontonummer);
+    
+    const ytdPersonal = Math.abs(sumByKonten(ytdSalden.filter(s => personalKontonummern.includes(s.kontonummer))));
+    const ytdPersonalVorjahr = Math.abs(sumByKonten(ytdSaldenVorjahr.filter(s => personalKontonummern.includes(s.kontonummer))));
+    
+    // YTD Rohertrag
+    const ytdRohertrag = ytdErloese - ytdAufwand;
+    const ytdRohertragVorjahr = ytdErloeseVorjahr - ytdAufwandVorjahr;
+    
+    // YTD Rohmarge
+    const ytdRohmarge = ytdErloese !== 0 ? (ytdRohertrag / ytdErloese) * 100 : 0;
+    const ytdRohmargeVorjahr = ytdErloeseVorjahr !== 0 ? (ytdRohertragVorjahr / ytdErloeseVorjahr) * 100 : 0;
+    
+    return {
+      periodLabel,
+      periodLabelVorjahr,
+      erloese: ytdErloese,
+      erloeseVorjahr: ytdErloeseVorjahr,
+      fbErloese: ytdFbErloese,
+      fbErloeseVorjahr: ytdFbErloeseVorjahr,
+      aufwand: ytdAufwand,
+      aufwandVorjahr: ytdAufwandVorjahr,
+      personal: ytdPersonal,
+      personalVorjahr: ytdPersonalVorjahr,
+      rohertrag: ytdRohertrag,
+      rohertragVorjahr: ytdRohertragVorjahr,
+      rohmarge: ytdRohmarge,
+      rohmargeVorjahr: ytdRohmargeVorjahr,
+    };
+  }, [salden, konten, selectedYear, selectedMonth, fbBereiche, aufwandsKlassen]);
   
   if (uploadedFiles.length === 0) {
     return (
@@ -312,7 +392,66 @@ export function DashboardView() {
           />
         </div>
         
-        {/* Alarm Widget */}
+        {/* YTD KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 mb-6">
+          <YTDKPICard
+            title={t('kpi.totalRevenue')}
+            value={ytdData.erloese}
+            previousYearValue={ytdData.erloeseVorjahr || null}
+            icon={Euro}
+            variant="accent"
+            periodLabel={ytdData.periodLabel}
+            tooltip={`Kumulierte Erlöse von Januar bis ${selectedMonth}. ${selectedYear}`}
+          />
+          <YTDKPICard
+            title={t('kpi.fbRevenue')}
+            value={ytdData.fbErloese}
+            previousYearValue={ytdData.fbErloeseVorjahr || null}
+            icon={UtensilsCrossed}
+            variant="accent"
+            periodLabel={ytdData.periodLabel}
+            tooltip={`Kumulierte F&B Erlöse von Januar bis ${selectedMonth}. ${selectedYear}`}
+          />
+          <YTDKPICard
+            title={t('kpi.totalExpenses')}
+            value={ytdData.aufwand}
+            previousYearValue={ytdData.aufwandVorjahr || null}
+            icon={ShoppingCart}
+            variant="default"
+            invertTrend
+            periodLabel={ytdData.periodLabel}
+            tooltip={`Kumulierter Gesamtaufwand von Januar bis ${selectedMonth}. ${selectedYear}`}
+          />
+          <YTDKPICard
+            title={t('kpi.personnelCosts')}
+            value={ytdData.personal}
+            previousYearValue={ytdData.personalVorjahr || null}
+            icon={Users}
+            variant="default"
+            invertTrend
+            periodLabel={ytdData.periodLabel}
+            tooltip={`Kumulierte Personalkosten von Januar bis ${selectedMonth}. ${selectedYear}`}
+          />
+          <YTDKPICard
+            title={t('kpi.grossProfit')}
+            value={ytdData.rohertrag}
+            previousYearValue={ytdData.rohertragVorjahr || null}
+            icon={TrendingUp}
+            variant={ytdData.rohertrag > 0 ? 'success' : 'warning'}
+            periodLabel={ytdData.periodLabel}
+            tooltip={`Kumulierter Rohertrag von Januar bis ${selectedMonth}. ${selectedYear}`}
+          />
+          <YTDKPICard
+            title={t('kpi.grossMargin')}
+            value={ytdData.rohmarge}
+            previousYearValue={ytdData.rohmargeVorjahr || null}
+            icon={Wallet}
+            variant="default"
+            periodLabel={ytdData.periodLabel}
+            tooltip={`Durchschnittliche Rohmarge von Januar bis ${selectedMonth}. ${selectedYear}`}
+          />
+        </div>
+        
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <AlarmWidget schwellenwerte={schwellenwerte} />
           <BudgetAbweichungWidget jahr={selectedYear} monat={selectedMonth} />
