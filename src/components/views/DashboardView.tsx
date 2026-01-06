@@ -11,13 +11,17 @@ import { RohertragDetailModal } from '@/components/modals/RohertragDetailModal';
 import { ErloesDetailModal } from '@/components/modals/ErloesDetailModal';
 import { PersonalkostenDetailModal } from '@/components/modals/PersonalkostenDetailModal';
 import { FBDetailModal } from '@/components/modals/FBDetailModal';
+import { FBAufwandDetailModal } from '@/components/modals/FBAufwandDetailModal';
 import { AufwandDetailModal } from '@/components/modals/AufwandDetailModal';
 import { HandbuchPreviewModal } from '@/components/modals/HandbuchPreviewModal';
-import { Euro, TrendingUp, ShoppingCart, Wallet, Users, UtensilsCrossed, Eye } from 'lucide-react';
+import { Euro, TrendingUp, ShoppingCart, Wallet, Users, UtensilsCrossed, Eye, Percent } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { useLanguage } from '@/contexts/LanguageContext';
+
+// Standard F&B-Bereiche
+const DEFAULT_FB_BEREICHE = ['Restaurant', 'Küche', 'Bar', 'Bankett', 'F&B'];
 
 export function DashboardView() {
   const { bereichAggregationen, vergleiche, konten, salden, selectedYear, selectedMonth, uploadedFiles } = useFinanceStore();
@@ -27,8 +31,30 @@ export function DashboardView() {
   const [erloeseModalOpen, setErloeseModalOpen] = useState(false);
   const [personalkostenModalOpen, setPersonalkostenModalOpen] = useState(false);
   const [fbModalOpen, setFbModalOpen] = useState(false);
+  const [fbAufwandModalOpen, setFbAufwandModalOpen] = useState(false);
   const [aufwandModalOpen, setAufwandModalOpen] = useState(false);
   const [handbuchPreviewOpen, setHandbuchPreviewOpen] = useState(false);
+  
+  // Konfigurierbare F&B-Bereiche (persistent im localStorage)
+  const [aktiveFbBereiche, setAktiveFbBereiche] = useState<string[]>(() => {
+    const saved = localStorage.getItem('fbBereiche');
+    return saved ? JSON.parse(saved) : DEFAULT_FB_BEREICHE;
+  });
+  
+  // Alle verfügbaren Bereiche aus den Daten ermitteln
+  const alleBereiche = useMemo(() => {
+    const bereiche = new Set<string>();
+    konten.forEach(k => {
+      if (k.bereich) bereiche.add(k.bereich);
+    });
+    return Array.from(bereiche).sort();
+  }, [konten]);
+  
+  // F&B-Bereiche ändern und speichern
+  const handleFbBereicheChange = (bereiche: string[]) => {
+    setAktiveFbBereiche(bereiche);
+    localStorage.setItem('fbBereiche', JSON.stringify(bereiche));
+  };
 
   // Localized months
   const monthKeys = ['', 'month.january', 'month.february', 'month.march', 'month.april', 'month.may', 'month.june', 'month.july', 'month.august', 'month.september', 'month.october', 'month.november', 'month.december'];
@@ -163,45 +189,74 @@ export function DashboardView() {
   const rohertragVormonat = Math.abs(erlöseVormonat) - aufwandVormonat;
   const rohertragVorjahr = Math.abs(erlöseVorjahr) - aufwandVorjahr;
 
-  // F&B Bereich (Restaurant, Küche, Bar, Bankett)
-  const fbBereiche = ['Restaurant', 'Küche', 'Bar', 'Bankett', 'F&B'];
+  // F&B Bereich (konfigurierbar)
   const fbErloese = bereichAggregationen
-    .filter(b => b.kostenarttTyp === 'Erlös' && fbBereiche.some(fb => b.bereich.includes(fb)))
+    .filter(b => b.kostenarttTyp === 'Erlös' && aktiveFbBereiche.some(fb => b.bereich.includes(fb)))
     .reduce((sum, b) => sum + Math.abs(b.saldoAktuell), 0);
   const fbErloeseVormonat = bereichAggregationen
-    .filter(b => b.kostenarttTyp === 'Erlös' && fbBereiche.some(fb => b.bereich.includes(fb)))
+    .filter(b => b.kostenarttTyp === 'Erlös' && aktiveFbBereiche.some(fb => b.bereich.includes(fb)))
     .reduce((sum, b) => sum + Math.abs(b.saldoVormonat ?? 0), 0);
   const fbErloeseVorjahr = bereichAggregationen
-    .filter(b => b.kostenarttTyp === 'Erlös' && fbBereiche.some(fb => b.bereich.includes(fb)))
+    .filter(b => b.kostenarttTyp === 'Erlös' && aktiveFbBereiche.some(fb => b.bereich.includes(fb)))
     .reduce((sum, b) => sum + Math.abs(b.saldoVorjahr ?? 0), 0);
 
-  // F&B Aufwand (Wareneinsatz Klasse 5 für F&B-Bereiche)
+  // F&B Aufwand (Wareneinsatz Klasse 5 für konfigurierbare F&B-Bereiche)
   const fbAufwand = useMemo(() => {
     return vergleiche
       .filter(v => {
         const konto = kontenMap.get(v.kontonummer);
-        return konto && konto.kontoklasse === '5' && fbBereiche.some(fb => konto.bereich.includes(fb));
+        return konto && konto.kontoklasse === '5' && aktiveFbBereiche.some(fb => konto.bereich.includes(fb));
       })
       .reduce((sum, v) => sum + Math.abs(v.saldoAktuell), 0);
-  }, [vergleiche, kontenMap]);
+  }, [vergleiche, kontenMap, aktiveFbBereiche]);
   
   const fbAufwandVormonat = useMemo(() => {
     return vergleiche
       .filter(v => {
         const konto = kontenMap.get(v.kontonummer);
-        return konto && konto.kontoklasse === '5' && fbBereiche.some(fb => konto.bereich.includes(fb));
+        return konto && konto.kontoklasse === '5' && aktiveFbBereiche.some(fb => konto.bereich.includes(fb));
       })
       .reduce((sum, v) => sum + Math.abs(v.saldoVormonat ?? 0), 0);
-  }, [vergleiche, kontenMap]);
+  }, [vergleiche, kontenMap, aktiveFbBereiche]);
   
   const fbAufwandVorjahr = useMemo(() => {
     return vergleiche
       .filter(v => {
         const konto = kontenMap.get(v.kontonummer);
-        return konto && konto.kontoklasse === '5' && fbBereiche.some(fb => konto.bereich.includes(fb));
+        return konto && konto.kontoklasse === '5' && aktiveFbBereiche.some(fb => konto.bereich.includes(fb));
       })
       .reduce((sum, v) => sum + Math.abs(v.saldoVorjahr ?? 0), 0);
-  }, [vergleiche, kontenMap]);
+  }, [vergleiche, kontenMap, aktiveFbBereiche]);
+  
+  // Food Cost % berechnen
+  const foodCostPct = fbErloese > 0 ? (fbAufwand / fbErloese) * 100 : 0;
+  const foodCostPctVormonat = fbErloeseVormonat > 0 ? (fbAufwandVormonat / fbErloeseVormonat) * 100 : 0;
+  const foodCostPctVorjahr = fbErloeseVorjahr > 0 ? (fbAufwandVorjahr / fbErloeseVorjahr) * 100 : 0;
+  
+  // F&B Aufwand nach Bereich für Modal
+  const fbAufwandBereiche = useMemo(() => {
+    const bereichSummen: Record<string, { aktuell: number; vormonat: number; vorjahr: number }> = {};
+    
+    vergleiche.forEach(v => {
+      const konto = kontenMap.get(v.kontonummer);
+      if (konto && konto.kontoklasse === '5' && aktiveFbBereiche.some(fb => konto.bereich.includes(fb))) {
+        const bereich = konto.bereich;
+        if (!bereichSummen[bereich]) {
+          bereichSummen[bereich] = { aktuell: 0, vormonat: 0, vorjahr: 0 };
+        }
+        bereichSummen[bereich].aktuell += Math.abs(v.saldoAktuell);
+        bereichSummen[bereich].vormonat += Math.abs(v.saldoVormonat ?? 0);
+        bereichSummen[bereich].vorjahr += Math.abs(v.saldoVorjahr ?? 0);
+      }
+    });
+    
+    return Object.entries(bereichSummen).map(([bereich, data]) => ({
+      bereich,
+      saldoAktuell: data.aktuell,
+      saldoVormonat: data.vormonat,
+      saldoVorjahr: data.vorjahr,
+    }));
+  }, [vergleiche, kontenMap, aktiveFbBereiche]);
 
   // YTD-Berechnung (Januar bis ausgewähltem Monat)
   const ytdData = useMemo(() => {
@@ -392,7 +447,10 @@ export function DashboardView() {
               tooltip={t('tooltip.expenses')}
             />
           </div>
-          <div className="flex flex-col gap-4">
+          <div 
+            className="cursor-pointer transition-transform hover:scale-[1.02]"
+            onClick={() => setFbAufwandModalOpen(true)}
+          >
             <KPICard
               title={t('kpi.fbExpenses')}
               value={fbAufwand}
@@ -401,17 +459,19 @@ export function DashboardView() {
               icon={UtensilsCrossed}
               variant="default"
               invertTrend
-              tooltip="Wareneinsatz für F&B-Bereiche (Restaurant, Küche, Bar, Bankett)"
-            />
-            <KPICard
-              title={t('kpi.fbExpensesPreviousYear')}
-              value={fbAufwandVorjahr}
-              icon={UtensilsCrossed}
-              variant="default"
-              invertTrend
-              tooltip="F&B Wareneinsatz im selben Monat des Vorjahres"
+              tooltip="Wareneinsatz für F&B-Bereiche (konfigurierbar)"
             />
           </div>
+          <KPICard
+            title={t('kpi.foodCost')}
+            value={foodCostPct}
+            previousValue={foodCostPctVormonat || null}
+            previousYearValue={foodCostPctVorjahr || null}
+            icon={Percent}
+            variant={foodCostPct > 35 ? 'warning' : 'success'}
+            invertTrend
+            tooltip="Food Cost % = F&B Aufwand / F&B Erlöse × 100"
+          />
           <div 
             className="cursor-pointer transition-transform hover:scale-[1.02]"
             onClick={() => setPersonalkostenModalOpen(true)}
@@ -588,7 +648,7 @@ export function DashboardView() {
         monat={selectedMonth}
       />
 
-      {/* F&B Detail Modal */}
+      {/* F&B Erlöse Detail Modal */}
       <FBDetailModal
         open={fbModalOpen}
         onOpenChange={setFbModalOpen}
@@ -596,8 +656,26 @@ export function DashboardView() {
         fbVormonat={fbErloeseVormonat}
         fbVorjahr={fbErloeseVorjahr}
         fbBereiche={bereichAggregationen.filter(b => 
-          b.kostenarttTyp === 'Erlös' && fbBereiche.some(fb => b.bereich.includes(fb))
+          b.kostenarttTyp === 'Erlös' && aktiveFbBereiche.some(fb => b.bereich.includes(fb))
         )}
+        jahr={selectedYear}
+        monat={selectedMonth}
+      />
+
+      {/* F&B Aufwand Detail Modal */}
+      <FBAufwandDetailModal
+        open={fbAufwandModalOpen}
+        onOpenChange={setFbAufwandModalOpen}
+        fbAufwand={fbAufwand}
+        fbAufwandVormonat={fbAufwandVormonat}
+        fbAufwandVorjahr={fbAufwandVorjahr}
+        fbErloese={fbErloese}
+        fbErloeseVormonat={fbErloeseVormonat}
+        fbErloeseVorjahr={fbErloeseVorjahr}
+        fbBereiche={fbAufwandBereiche}
+        aktiveBereiche={aktiveFbBereiche}
+        onBereicheChange={handleFbBereicheChange}
+        alleBereiche={alleBereiche}
         jahr={selectedYear}
         monat={selectedMonth}
       />

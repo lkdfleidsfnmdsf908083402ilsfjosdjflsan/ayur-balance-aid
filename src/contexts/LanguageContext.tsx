@@ -56,6 +56,7 @@ const translations: Record<Language, Record<string, string>> = {
     'kpi.fbRevenue': 'F&B Erlöse',
     'kpi.totalExpenses': 'Gesamtaufwand',
     'kpi.fbExpenses': 'F&B Aufwand',
+    'kpi.foodCost': 'Food Cost %',
     'kpi.fbExpensesPreviousYear': 'F&B Aufwand Vorjahr',
     'kpi.personnelCosts': 'Personalkosten',
     'kpi.grossProfit': 'Rohertrag',
@@ -278,6 +279,20 @@ const translations: Record<Language, Record<string, string>> = {
     'common.noData': 'Keine Daten vorhanden',
     'common.error': 'Fehler',
     'common.success': 'Erfolg',
+    'common.configure': 'Konfigurieren',
+    'common.area': 'Bereich',
+    'common.current': 'Aktuell',
+    'common.previousMonth': 'Vormonat',
+    'common.previousYear': 'Vorjahr',
+    'common.trend': 'Trend',
+    'common.share': 'Anteil',
+    
+    // ===== MODAL =====
+    'modal.fbExpenses': 'F&B Aufwand',
+    'modal.fbExpensesDescription': 'Aufschlüsselung der Food & Beverage Kosten nach Bereich',
+    'modal.configureFbAreas': 'F&B-Bereiche konfigurieren',
+    'modal.selectFbAreas': 'Wählen Sie die Bereiche, die als F&B gezählt werden sollen:',
+    'modal.fbExpensesByArea': 'F&B Aufwand nach Bereich',
     
     // ===== MONTHS =====
     'month.january': 'Januar',
@@ -941,6 +956,20 @@ const translations: Record<Language, Record<string, string>> = {
     'common.noData': 'No data available',
     'common.error': 'Error',
     'common.success': 'Success',
+    'common.configure': 'Configure',
+    'common.area': 'Area',
+    'common.current': 'Current',
+    'common.previousMonth': 'Previous Month',
+    'common.previousYear': 'Previous Year',
+    'common.trend': 'Trend',
+    'common.share': 'Share',
+    
+    // ===== MODAL =====
+    'modal.fbExpenses': 'F&B Expenses',
+    'modal.fbExpensesDescription': 'Breakdown of Food & Beverage costs by area',
+    'modal.configureFbAreas': 'Configure F&B Areas',
+    'modal.selectFbAreas': 'Select the areas to be counted as F&B:',
+    'modal.fbExpensesByArea': 'F&B Expenses by Area',
     
     // ===== MONTHS =====
     'month.january': 'January',
@@ -1473,6 +1502,20 @@ const translations: Record<Language, Record<string, string>> = {
     'common.noData': 'कोई डेटा उपलब्ध नहीं',
     'common.error': 'त्रुटि',
     'common.success': 'सफलता',
+    'common.configure': 'कॉन्फ़िगर करें',
+    'common.area': 'क्षेत्र',
+    'common.current': 'वर्तमान',
+    'common.previousMonth': 'पिछला महीना',
+    'common.previousYear': 'पिछला वर्ष',
+    'common.trend': 'रुझान',
+    'common.share': 'हिस्सा',
+    
+    // ===== MODAL =====
+    'modal.fbExpenses': 'F&B व्यय',
+    'modal.fbExpensesDescription': 'क्षेत्र के अनुसार खाद्य और पेय लागत का विवरण',
+    'modal.configureFbAreas': 'F&B क्षेत्र कॉन्फ़िगर करें',
+    'modal.selectFbAreas': 'F&B के रूप में गिने जाने वाले क्षेत्रों का चयन करें:',
+    'modal.fbExpensesByArea': 'क्षेत्र के अनुसार F&B व्यय',
     
     // ===== MONTHS =====
     'month.january': 'जनवरी',
