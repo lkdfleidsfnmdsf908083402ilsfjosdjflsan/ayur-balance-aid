@@ -175,6 +175,34 @@ export function DashboardView() {
     .filter(b => b.kostenarttTyp === 'Erlös' && fbBereiche.some(fb => b.bereich.includes(fb)))
     .reduce((sum, b) => sum + Math.abs(b.saldoVorjahr ?? 0), 0);
 
+  // F&B Aufwand (Wareneinsatz Klasse 5 für F&B-Bereiche)
+  const fbAufwand = useMemo(() => {
+    return vergleiche
+      .filter(v => {
+        const konto = kontenMap.get(v.kontonummer);
+        return konto && konto.kontoklasse === '5' && fbBereiche.some(fb => konto.bereich.includes(fb));
+      })
+      .reduce((sum, v) => sum + Math.abs(v.saldoAktuell), 0);
+  }, [vergleiche, kontenMap]);
+  
+  const fbAufwandVormonat = useMemo(() => {
+    return vergleiche
+      .filter(v => {
+        const konto = kontenMap.get(v.kontonummer);
+        return konto && konto.kontoklasse === '5' && fbBereiche.some(fb => konto.bereich.includes(fb));
+      })
+      .reduce((sum, v) => sum + Math.abs(v.saldoVormonat ?? 0), 0);
+  }, [vergleiche, kontenMap]);
+  
+  const fbAufwandVorjahr = useMemo(() => {
+    return vergleiche
+      .filter(v => {
+        const konto = kontenMap.get(v.kontonummer);
+        return konto && konto.kontoklasse === '5' && fbBereiche.some(fb => konto.bereich.includes(fb));
+      })
+      .reduce((sum, v) => sum + Math.abs(v.saldoVorjahr ?? 0), 0);
+  }, [vergleiche, kontenMap]);
+
   // YTD-Berechnung (Januar bis ausgewähltem Monat)
   const ytdData = useMemo(() => {
     const monthNames = ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'];
@@ -236,6 +264,14 @@ export function DashboardView() {
     const ytdRohmarge = ytdErloese !== 0 ? (ytdRohertrag / ytdErloese) * 100 : 0;
     const ytdRohmargeVorjahr = ytdErloeseVorjahr !== 0 ? (ytdRohertragVorjahr / ytdErloeseVorjahr) * 100 : 0;
     
+    // YTD F&B Aufwand (Klasse 5 für F&B-Bereiche)
+    const fbAufwandKontonummern = konten
+      .filter(k => k.kontoklasse === '5' && fbBereiche.some(fb => k.bereich.includes(fb)))
+      .map(k => k.kontonummer);
+    
+    const ytdFbAufwand = Math.abs(sumByKonten(ytdSalden.filter(s => fbAufwandKontonummern.includes(s.kontonummer))));
+    const ytdFbAufwandVorjahr = Math.abs(sumByKonten(ytdSaldenVorjahr.filter(s => fbAufwandKontonummern.includes(s.kontonummer))));
+    
     return {
       periodLabel,
       periodLabelVorjahr,
@@ -243,6 +279,8 @@ export function DashboardView() {
       erloeseVorjahr: ytdErloeseVorjahr,
       fbErloese: ytdFbErloese,
       fbErloeseVorjahr: ytdFbErloeseVorjahr,
+      fbAufwand: ytdFbAufwand,
+      fbAufwandVorjahr: ytdFbAufwandVorjahr,
       aufwand: ytdAufwand,
       aufwandVorjahr: ytdAufwandVorjahr,
       personal: ytdPersonal,
@@ -354,6 +392,16 @@ export function DashboardView() {
               tooltip={t('tooltip.expenses')}
             />
           </div>
+          <KPICard
+            title={t('kpi.fbExpenses')}
+            value={fbAufwand}
+            previousValue={fbAufwandVormonat || null}
+            previousYearValue={fbAufwandVorjahr || null}
+            icon={UtensilsCrossed}
+            variant="default"
+            invertTrend
+            tooltip="Wareneinsatz für F&B-Bereiche (Restaurant, Küche, Bar, Bankett)"
+          />
           <div 
             className="cursor-pointer transition-transform hover:scale-[1.02]"
             onClick={() => setPersonalkostenModalOpen(true)}
@@ -421,6 +469,16 @@ export function DashboardView() {
             invertTrend
             periodLabel={ytdData.periodLabel}
             tooltip={`Kumulierter Gesamtaufwand von Januar bis ${selectedMonth}. ${selectedYear}`}
+          />
+          <YTDKPICard
+            title={t('kpi.fbExpenses')}
+            value={ytdData.fbAufwand}
+            previousYearValue={ytdData.fbAufwandVorjahr || null}
+            icon={UtensilsCrossed}
+            variant="default"
+            invertTrend
+            periodLabel={ytdData.periodLabel}
+            tooltip={`Kumulierter F&B-Wareneinsatz von Januar bis ${selectedMonth}. ${selectedYear}`}
           />
           <YTDKPICard
             title={t('kpi.personnelCosts')}
