@@ -392,16 +392,26 @@ export function DashboardView() {
               tooltip={t('tooltip.expenses')}
             />
           </div>
-          <KPICard
-            title={t('kpi.fbExpenses')}
-            value={fbAufwand}
-            previousValue={fbAufwandVormonat || null}
-            previousYearValue={fbAufwandVorjahr || null}
-            icon={UtensilsCrossed}
-            variant="default"
-            invertTrend
-            tooltip="Wareneinsatz für F&B-Bereiche (Restaurant, Küche, Bar, Bankett)"
-          />
+          <div className="flex flex-col gap-4">
+            <KPICard
+              title={t('kpi.fbExpenses')}
+              value={fbAufwand}
+              previousValue={fbAufwandVormonat || null}
+              previousYearValue={fbAufwandVorjahr || null}
+              icon={UtensilsCrossed}
+              variant="default"
+              invertTrend
+              tooltip="Wareneinsatz für F&B-Bereiche (Restaurant, Küche, Bar, Bankett)"
+            />
+            <KPICard
+              title={t('kpi.fbExpensesPreviousYear')}
+              value={fbAufwandVorjahr}
+              icon={UtensilsCrossed}
+              variant="default"
+              invertTrend
+              tooltip="F&B Wareneinsatz im selben Monat des Vorjahres"
+            />
+          </div>
           <div 
             className="cursor-pointer transition-transform hover:scale-[1.02]"
             onClick={() => setPersonalkostenModalOpen(true)}
