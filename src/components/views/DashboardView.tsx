@@ -289,7 +289,7 @@ export function DashboardView() {
     
     // YTD F&B Erlöse
     const fbKontonummern = konten
-      .filter(k => k.kostenarttTyp === 'Erlös' && fbBereiche.some(fb => k.bereich.includes(fb)))
+      .filter(k => k.kostenarttTyp === 'Erlös' && aktiveFbBereiche.some(fb => k.bereich.includes(fb)))
       .map(k => k.kontonummer);
     
     const ytdFbErloese = Math.abs(sumByKonten(ytdSalden.filter(s => fbKontonummern.includes(s.kontonummer))));
@@ -321,7 +321,7 @@ export function DashboardView() {
     
     // YTD F&B Aufwand (Klasse 5 für F&B-Bereiche)
     const fbAufwandKontonummern = konten
-      .filter(k => k.kontoklasse === '5' && fbBereiche.some(fb => k.bereich.includes(fb)))
+      .filter(k => k.kontoklasse === '5' && aktiveFbBereiche.some(fb => k.bereich.includes(fb)))
       .map(k => k.kontonummer);
     
     const ytdFbAufwand = Math.abs(sumByKonten(ytdSalden.filter(s => fbAufwandKontonummern.includes(s.kontonummer))));
@@ -345,7 +345,7 @@ export function DashboardView() {
       rohmarge: ytdRohmarge,
       rohmargeVorjahr: ytdRohmargeVorjahr,
     };
-  }, [salden, konten, selectedYear, selectedMonth, fbBereiche, aufwandsKlassen]);
+  }, [salden, konten, selectedYear, selectedMonth, aktiveFbBereiche, aufwandsKlassen]);
   
   if (uploadedFiles.length === 0) {
     return (
