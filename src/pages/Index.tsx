@@ -25,7 +25,18 @@ import { BereicheView } from '@/components/views/BereicheView';
 import { DatenqualitaetView } from '@/components/views/DatenqualitaetView';
 import { BenutzerVerwaltungView } from '@/components/views/BenutzerVerwaltungView';
 import { MobileSchichtplanungView } from '@/components/views/MobileSchichtplanungView';
+import { IntelligentSchichtplanungView } from '@/components/views/IntelligentSchichtplanungView';
+import { MitarbeiterSchichtplanView } from '@/components/views/MitarbeiterSchichtplanView';
 import { AbteilungsleiterDashboardView } from '@/components/views/AbteilungsleiterDashboardView';
+```
+
+---
+
+### **Änderung 2: useEffect ändern**
+
+**Suche mit Cmd+F nach:**
+```
+// Mitarbeiter: redirect to department shift plan
 import { GaesteVerwaltungView } from '@/components/views/GaesteVerwaltungView';
 import { useFinanceStore } from '@/store/financeStore';
 import { useAuth } from '@/hooks/useAuth';
@@ -44,15 +55,32 @@ const Index = () => {
 
   // Auto-switch view based on role
   useEffect(() => {
-    // Mitarbeiter: redirect to department shift plan
+    // Mitarbeiter: redirect to own shift plan view
     if (userRole === 'mitarbeiter' && activeView === 'dashboard') {
-      setActiveView('abteilung-schichtplanung');
+      if (isMobile) {
+        setActiveView('mitarbeiter-schichtplan');
+      } else {
+        setActiveView('abteilung-schichtplanung');
+      }
     }
-    // Abteilungsleiter: redirect to abteilungsleiter dashboard
+    // Abteilungsleiter: redirect to abteilungsleiter dashboard (or intelligent scheduling on mobile)
     else if (isAbteilungsleiter && !isAdmin && activeView === 'dashboard') {
-      setActiveView('abteilungsleiter-dashboard');
+      if (isMobile) {
+        setActiveView('intelligent-schichtplanung');
+      } else {
+        setActiveView('abteilungsleiter-dashboard');
+      }
     }
-  }, [userRole, isAbteilungsleiter, isAdmin, activeView]);
+  }, [userRole, isAbteilungsleiter, isAdmin, activeView, isMobile, setActiveView]);
+```
+
+---
+
+### **Änderung 3: renderView erweitern**
+
+**Suche mit Cmd+F nach:**
+```
+case 'mobile-schichtplanung':
 
   const renderView = () => {
     switch (activeView) {
@@ -84,9 +112,13 @@ const Index = () => {
         return <SchichtplanungView />;
       case 'abteilung-schichtplanung':
         return <AbteilungSchichtplanungView />;
-      case 'mobile-schichtplanung':
-        return <MobileSchichtplanungView />;
-      case 'zeitkonten':
+        case 'mobile-schichtplanung':
+          return <MobileSchichtplanungView />;
+        case 'intelligent-schichtplanung':
+          return <IntelligentSchichtplanungView />;
+        case 'mitarbeiter-schichtplan':
+          return <MitarbeiterSchichtplanView />;
+        case 'zeitkonten':
         return <ZeitkontenView />;
       case 'personal-kpis':
         return <PersonalKpiUebersichtView />;
