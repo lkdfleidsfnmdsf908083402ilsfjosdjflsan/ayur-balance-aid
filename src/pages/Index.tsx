@@ -28,15 +28,6 @@ import { MobileSchichtplanungView } from '@/components/views/MobileSchichtplanun
 import { IntelligentSchichtplanungView } from '@/components/views/IntelligentSchichtplanungView';
 import { MitarbeiterSchichtplanView } from '@/components/views/MitarbeiterSchichtplanView';
 import { AbteilungsleiterDashboardView } from '@/components/views/AbteilungsleiterDashboardView';
-```
-
----
-
-### **Änderung 2: useEffect ändern**
-
-**Suche mit Cmd+F nach:**
-```
-// Mitarbeiter: redirect to department shift plan
 import { GaesteVerwaltungView } from '@/components/views/GaesteVerwaltungView';
 import { useFinanceStore } from '@/store/financeStore';
 import { useAuth } from '@/hooks/useAuth';
@@ -72,15 +63,6 @@ const Index = () => {
       }
     }
   }, [userRole, isAbteilungsleiter, isAdmin, activeView, isMobile, setActiveView]);
-```
-
----
-
-### **Änderung 3: renderView erweitern**
-
-**Suche mit Cmd+F nach:**
-```
-case 'mobile-schichtplanung':
 
   const renderView = () => {
     switch (activeView) {
@@ -112,13 +94,13 @@ case 'mobile-schichtplanung':
         return <SchichtplanungView />;
       case 'abteilung-schichtplanung':
         return <AbteilungSchichtplanungView />;
-        case 'mobile-schichtplanung':
-          return <MobileSchichtplanungView />;
-        case 'intelligent-schichtplanung':
-          return <IntelligentSchichtplanungView />;
-        case 'mitarbeiter-schichtplan':
-          return <MitarbeiterSchichtplanView />;
-        case 'zeitkonten':
+      case 'mobile-schichtplanung':
+        return <MobileSchichtplanungView />;
+      case 'intelligent-schichtplanung':
+        return <IntelligentSchichtplanungView />;
+      case 'mitarbeiter-schichtplan':
+        return <MitarbeiterSchichtplanView />;
+      case 'zeitkonten':
         return <ZeitkontenView />;
       case 'personal-kpis':
         return <PersonalKpiUebersichtView />;
