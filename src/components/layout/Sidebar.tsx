@@ -27,12 +27,15 @@ import {
   Clock,
   ClipboardList,
   Heart,
-  LucideIcon
+  LogOut,
+  LucideIcon,
+  ClipboardCheck
 } from 'lucide-react';
 import { MandiraLogo } from '@/components/MandiraLogo';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SidebarProps {
   activeView: string;
@@ -84,8 +87,8 @@ const navStructure: NavEntry[] = [
     labelKey: 'nav.departmentKpis',
     icon: PieChart,
     items: [
-      { id: 'abteilung-kpi', labelKey: 'nav.overview', icon: PieChart, requiredRole: 'abteilungsleiter' },
-      { id: 'kpi-trends', labelKey: 'nav.kpiTrends', icon: TrendingUp, requiredRole: 'abteilungsleiter' },
+      { id: 'abteilung-kpi', labelKey: 'nav.overview', icon: PieChart, requiredRole: 'admin' },
+      { id: 'kpi-trends', labelKey: 'nav.kpiTrends', icon: TrendingUp, requiredRole: 'admin' },
       { id: 'housekeeping', labelKey: 'nav.housekeeping', icon: Sparkles },
       { id: 'kitchen', labelKey: 'nav.kitchen', icon: ChefHat },
       { id: 'service', labelKey: 'nav.service', icon: UtensilsCrossed },
@@ -107,6 +110,7 @@ const navStructure: NavEntry[] = [
       { id: 'personal-kpis', labelKey: 'nav.personnelKpis', icon: Users, requiredRole: 'abteilungsleiter' },
     ]
   },
+  { id: 'verwaltung', labelKey: 'nav.adminTracker', icon: ClipboardCheck, requiredRole: 'admin' },
   {
     id: 'planung-gruppe',
     labelKey: 'nav.planningAlarms',
@@ -144,6 +148,12 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
     ? abteilungToKpiView[userProfile.abteilung] 
     : null;
 
+  // Logout function
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.href = '/auth';
+  };
+
   // Role hierarchy check
   const hasRole = (requiredRole?: 'admin' | 'abteilungsleiter' | 'mitarbeiter') => {
     if (!requiredRole) return true;
@@ -172,6 +182,13 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
           
           // For mitarbeiter: only show their department's KPI
           if (userRole === 'mitarbeiter' && entry.id === 'abteilung-kpis') {
+            filteredItems = filteredItems.filter(item => 
+              item.id === userAbteilungKpiView
+            );
+          }
+          
+          // For abteilungsleiter (not admin): only show their department's KPI
+          if (userRole === 'abteilungsleiter' && !isAdmin && entry.id === 'abteilung-kpis') {
             filteredItems = filteredItems.filter(item => 
               item.id === userAbteilungKpiView
             );
@@ -351,6 +368,33 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
           return renderNavItem(entry);
         })}
       </nav>
+      
+      {/* User Info & Logout */}
+      <div className="p-3 border-t border-sidebar-border">
+        {!collapsed && userProfile && (
+          <div className="mb-2 px-3 py-2 text-xs text-sidebar-foreground/60">
+            <div className="font-medium text-sidebar-foreground/80 truncate">
+              {userProfile.vorname} {userProfile.nachname}
+            </div>
+            <div className="truncate">{userProfile.email}</div>
+          </div>
+        )}
+        <button
+          onClick={handleLogout}
+          className={cn(
+            "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200",
+            "bg-red-600 text-white hover:bg-red-700"
+          )}
+          title="Abmelden"
+        >
+          <LogOut className="h-4 w-4 shrink-0" />
+          {!collapsed && (
+            <span className="text-sm font-medium animate-fade-in">
+              Abmelden
+            </span>
+          )}
+        </button>
+      </div>
       
       {/* Collapse Button */}
       <div className="p-3 border-t border-sidebar-border">

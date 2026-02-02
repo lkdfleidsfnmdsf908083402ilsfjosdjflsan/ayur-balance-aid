@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useFinanceStore } from '@/store/financeStore';
 import { Header } from '@/components/layout/Header';
 import { KPICard } from '@/components/cards/KPICard';
@@ -70,17 +70,12 @@ export function DashboardView() {
   // Erstelle Konten-Map für schnellen Zugriff auf Kontoklasse
   const kontenMap = useMemo(() => new Map(konten.map(k => [k.kontonummer, k])), [konten]);
   
-  // Kontoklassen-Namen und Farben für Aufwand (5-8)
-  const aufwandKlassenInfo: Record<string, { name: string; color: string }> = {
+  // Kontoklassen-Namen und Farben
+  const klassenInfo: Record<string, { name: string; color: string }> = {
     '5': { name: 'Materialaufwand', color: 'hsl(var(--chart-1))' },
     '6': { name: 'Personalaufwand', color: 'hsl(var(--chart-2))' },
     '7': { name: 'Abschreibungen', color: 'hsl(var(--chart-3))' },
     '8': { name: 'Sonstiger Aufwand', color: 'hsl(var(--chart-4))' },
-  };
-  
-  // Kontoklassen-Namen und Farben für Erlöse (4)
-  const erlösKlassenInfo: Record<string, { name: string; color: string }> = {
-    '4': { name: 'Erlöskonten', color: 'hsl(142, 76%, 36%)' }, // Grün für Erlöse
   };
   
   // Berechne Gesamt-KPIs
@@ -131,47 +126,11 @@ export function DashboardView() {
     
     return aufwandsKlassen.map(klasse => ({
       klasse,
-      name: aufwandKlassenInfo[klasse].name,
+      name: klassenInfo[klasse].name,
       value: klassenSummen[klasse].aktuell,
       valueVormonat: klassenSummen[klasse].vormonat,
       valueVorjahr: klassenSummen[klasse].vorjahr,
-      color: aufwandKlassenInfo[klasse].color,
-      konten: klassenSummen[klasse].konten,
-    }));
-  }, [vergleiche, kontenMap]);
-  
-  // Erlöse nach Kontoklassen berechnen (Klasse 4)
-  const erlösNachKlassen = useMemo(() => {
-    const erlösKlassen = ['4'];
-    const klassenSummen: Record<string, { aktuell: number; vormonat: number; vorjahr: number; konten: any[] }> = {
-      '4': { aktuell: 0, vormonat: 0, vorjahr: 0, konten: [] },
-    };
-    
-    vergleiche.forEach(v => {
-      const konto = kontenMap.get(v.kontonummer);
-      if (konto && erlösKlassen.includes(konto.kontoklasse)) {
-        const klasse = konto.kontoklasse;
-        // Erlöse sind typischerweise negativ in der Buchhaltung (Haben-Seite)
-        klassenSummen[klasse].aktuell += Math.abs(v.saldoAktuell);
-        klassenSummen[klasse].vormonat += Math.abs(v.saldoVormonat ?? 0);
-        klassenSummen[klasse].vorjahr += Math.abs(v.saldoVorjahr ?? 0);
-        klassenSummen[klasse].konten.push({
-          kontonummer: v.kontonummer,
-          bezeichnung: konto.kontobezeichnung,
-          saldoAktuell: v.saldoAktuell,
-          saldoVormonat: v.saldoVormonat,
-          saldoVorjahr: v.saldoVorjahr,
-        });
-      }
-    });
-    
-    return erlösKlassen.map(klasse => ({
-      klasse,
-      name: erlösKlassenInfo[klasse].name,
-      value: klassenSummen[klasse].aktuell,
-      valueVormonat: klassenSummen[klasse].vormonat,
-      valueVorjahr: klassenSummen[klasse].vorjahr,
-      color: erlösKlassenInfo[klasse].color,
+      color: klassenInfo[klasse].color,
       konten: klassenSummen[klasse].konten,
     }));
   }, [vergleiche, kontenMap]);
@@ -626,21 +585,11 @@ export function DashboardView() {
           <BudgetAbweichungWidget jahr={selectedYear} monat={selectedMonth} />
         </div>
         
-        {/* Erlöse nach Kontoklassen Chart - NEU */}
-        <div className="mb-6">
-          <AufwandKlassenChart 
-            data={erlösNachKlassen}
-            title={t('chart.revenueByClass') || 'Gesamterlöse nach Kontenklassen'}
-            totalLabel="Gesamterlöse"
-          />
-        </div>
-        
         {/* Aufwand nach Kontoklassen Chart */}
         <div className="mb-6">
           <AufwandKlassenChart 
             data={aufwandNachKlassen}
             title={t('chart.expensesByClass')}
-            totalLabel="Gesamtaufwand"
           />
         </div>
         

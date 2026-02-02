@@ -46,8 +46,6 @@ import {
   Mail,
   Loader2,
   Printer,
-  TrendingUp,
-  TrendingDown,
 } from "lucide-react";
 import { SchichtplanDruckModal } from '@/components/modals/SchichtplanDruckModal';
 import jsPDF from "jspdf";
@@ -273,6 +271,7 @@ export function AbteilungSchichtplanungView() {
     return option?.label || abwesenheit;
   };
 
+  // Weekly statistics for the department
   // Helper: Zeit-String zu Minuten
   const parseTime = (timeStr: string | null): number => {
     if (!timeStr) return 0;
@@ -362,7 +361,6 @@ export function AbteilungSchichtplanungView() {
     
     return `${shift.schicht_beginn?.slice(0, 5) || "?"}-${shift.schicht_ende?.slice(0, 5) || "?"}`;
   };
-
   // PDF Export Function
   const exportToPDF = () => {
     const doc = new jsPDF({ orientation: "landscape" });
@@ -386,6 +384,7 @@ export function AbteilungSchichtplanungView() {
     doc.text(`Erstellt am: ${format(new Date(), "dd.MM.yyyy HH:mm", { locale: de })}`, 14, 45);
     doc.setTextColor(0, 0, 0);
 
+    // Legend
     const legendY = 18;
     const legendX = 200;
     doc.setFontSize(9);
@@ -412,13 +411,15 @@ export function AbteilungSchichtplanungView() {
     const headers = [
       "Mitarbeiter",
       ...weekDays.map((day) => format(day, "EEE dd.MM", { locale: de })),
-      "Σ Soll",
-      "Σ Ist",
-      "+/-",
+      "Woche",
     ];
 
-    const rows = weekStats.employees.map(({ employee, sollGesamt, istGesamt, ueberstundenGesamt }) => {
+    const rows = filteredEmployees.map((employee) => {
       const employeeShifts = weekDays.map((day) => getShiftForDay(employee.id, day));
+      const weekTotal = employeeShifts.reduce(
+        (sum, shift) => sum + (shift?.soll_stunden || 0),
+        0
+      );
 
       return [
         `${employee.vorname} ${employee.nachname}`,
@@ -429,9 +430,7 @@ export function AbteilungSchichtplanungView() {
           }
           return formatShiftDisplay(shift) + `\n(${shift.soll_stunden}h)`;
         }),
-        `${sollGesamt.toFixed(1)}h`,
-        `${istGesamt.toFixed(1)}h`,
-        `${ueberstundenGesamt >= 0 ? '+' : ''}${ueberstundenGesamt.toFixed(1)}h`,
+        `${weekTotal}h / ${employee.wochenstunden_soll}h`,
       ];
     });
 
@@ -441,7 +440,7 @@ export function AbteilungSchichtplanungView() {
       startY: 52,
       styles: { fontSize: 8, cellPadding: 2 },
       headStyles: { fillColor: [59, 130, 246] },
-      columnStyles: { 0: { cellWidth: 40 } },
+      columnStyles: { 0: { cellWidth: 45 } },
       theme: "grid",
       didParseCell: (data) => {
         if (data.section === "body" && data.column.index > 0 && data.column.index < 8) {
@@ -471,7 +470,7 @@ export function AbteilungSchichtplanungView() {
     doc.text("Zusammenfassung:", 14, finalY + 10);
     doc.setFont("helvetica", "normal");
     doc.text(`• Mitarbeiter: ${weekStats.mitarbeiterAnzahl}`, 14, finalY + 18);
-    doc.text(`• Soll-Stunden: ${weekStats.totalSollStunden.toFixed(1)}h | IST-Stunden: ${weekStats.totalIstStunden.toFixed(1)}h | Überstunden: ${weekStats.totalUeberstunden >= 0 ? '+' : ''}${weekStats.totalUeberstunden.toFixed(1)}h`, 14, finalY + 24);
+    doc.text(`• Soll-Stunden gesamt: ${weekStats.totalSollStunden.toFixed(1)}h`, 14, finalY + 24);
     doc.text(`• Arbeitstage: ${weekStats.arbeitsTage} | Urlaub: ${weekStats.urlaubTage} | Krank: ${weekStats.krankTage}`, 14, finalY + 30);
     doc.text(`• Planungsquote: ${weekStats.planungsquote.toFixed(0)}%`, 14, finalY + 36);
 
@@ -492,6 +491,7 @@ export function AbteilungSchichtplanungView() {
     setSendingEmail(true);
     
     try {
+      // Get the department head for the selected department
       const { data: leiter, error: leiterError } = await supabase
         .from("abteilungsleiter")
         .select("*")
@@ -507,12 +507,14 @@ export function AbteilungSchichtplanungView() {
         return;
       }
 
+      // Generate PDF and get base64
       const doc = new jsPDF({ orientation: "landscape" });
       const kwNumber = format(currentWeekStart, "ww", { locale: de });
       const yearNumber = format(currentWeekStart, "yyyy");
       const weekStartStr = format(currentWeekStart, "dd.MM.yyyy", { locale: de });
       const weekEndStr = format(addDays(currentWeekStart, 6), "dd.MM.yyyy", { locale: de });
 
+      // Build PDF content (simplified version for email)
       doc.setFontSize(24);
       doc.setTextColor(59, 130, 246);
       doc.text("MANDIRA", 14, 18);
@@ -525,13 +527,15 @@ export function AbteilungSchichtplanungView() {
       const headers = [
         "Mitarbeiter",
         ...weekDays.map((day) => format(day, "EEE dd.MM", { locale: de })),
-        "Σ Soll",
-        "Σ Ist",
-        "+/-",
+        "Woche",
       ];
 
-      const rows = weekStats.employees.map(({ employee, sollGesamt, istGesamt, ueberstundenGesamt }) => {
+      const rows = filteredEmployees.map((employee) => {
         const employeeShifts = weekDays.map((day) => getShiftForDay(employee.id, day));
+        const weekTotal = employeeShifts.reduce(
+          (sum, shift) => sum + (shift?.soll_stunden || 0),
+          0
+        );
 
         return [
           `${employee.vorname} ${employee.nachname}`,
@@ -542,9 +546,7 @@ export function AbteilungSchichtplanungView() {
             }
             return formatShiftDisplay(shift);
           }),
-          `${sollGesamt.toFixed(1)}h`,
-          `${istGesamt.toFixed(1)}h`,
-          `${ueberstundenGesamt >= 0 ? '+' : ''}${ueberstundenGesamt.toFixed(1)}h`,
+          `${weekTotal}h`,
         ];
       });
 
@@ -557,8 +559,10 @@ export function AbteilungSchichtplanungView() {
         theme: "grid",
       });
 
+      // Convert to base64
       const pdfBase64 = doc.output('datauristring').split(',')[1];
 
+      // Send email via edge function
       const { data, error } = await supabase.functions.invoke('send-shift-plan', {
         body: {
           recipientEmail: leiter.email,
@@ -671,8 +675,8 @@ export function AbteilungSchichtplanungView() {
         </CardContent>
       </Card>
 
-      {/* Department Summary - UPDATED with IST and Überstunden */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+      {/* Department Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
@@ -694,34 +698,10 @@ export function AbteilungSchichtplanungView() {
         <Card>
           <CardContent className="pt-4">
             <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-primary" />
+              <Clock className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">Soll-Stunden</span>
             </div>
             <p className="text-2xl font-bold">{weekStats.totalSollStunden.toFixed(1)}h</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-green-500" />
-              <span className="text-sm text-muted-foreground">IST-Stunden</span>
-            </div>
-            <p className="text-2xl font-bold">{weekStats.totalIstStunden.toFixed(1)}h</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4">
-            <div className="flex items-center gap-2">
-              {weekStats.totalUeberstunden >= 0 ? (
-                <TrendingUp className="h-4 w-4 text-orange-500" />
-              ) : (
-                <TrendingDown className="h-4 w-4 text-blue-500" />
-              )}
-              <span className="text-sm text-muted-foreground">Überstunden</span>
-            </div>
-            <p className={`text-2xl font-bold ${weekStats.totalUeberstunden >= 0 ? 'text-orange-600' : 'text-blue-600'}`}>
-              {weekStats.totalUeberstunden >= 0 ? '+' : ''}{weekStats.totalUeberstunden.toFixed(1)}h
-            </p>
           </CardContent>
         </Card>
         <Card>
@@ -753,7 +733,7 @@ export function AbteilungSchichtplanungView() {
         </Card>
       </div>
 
-      {/* Shift Planning Table - UPDATED with Soll/Ist/+- columns */}
+      {/* Shift Planning Table */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -782,13 +762,17 @@ export function AbteilungSchichtplanungView() {
                         <div className="text-xs text-muted-foreground">{format(day, "dd.MM")}</div>
                       </TableHead>
                     ))}
-                    <TableHead className="text-right">Σ Soll</TableHead>
-                    <TableHead className="text-right">Σ Ist</TableHead>
-                    <TableHead className="text-right">+/-</TableHead>
+                    <TableHead className="text-center">Woche</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {weekStats.employees.map(({ employee, sollGesamt, istGesamt, ueberstundenGesamt }) => {
+                  {filteredEmployees.map((employee) => {
+                    const employeeShifts = weekDays.map((day) => getShiftForDay(employee.id, day));
+                    const weekTotal = employeeShifts.reduce(
+                      (sum, shift) => sum + (shift?.soll_stunden || 0),
+                      0
+                    );
+
                     return (
                       <TableRow key={employee.id}>
                         <TableCell className="font-medium sticky left-0 bg-background z-10">
@@ -797,8 +781,8 @@ export function AbteilungSchichtplanungView() {
                             Soll: {employee.wochenstunden_soll}h/Woche
                           </div>
                         </TableCell>
-                        {weekDays.map((day) => {
-                          const shift = getShiftForDay(employee.id, day);
+                        {weekDays.map((day, idx) => {
+                          const shift = employeeShifts[idx];
                           return (
                             <TableCell
                               key={day.toISOString()}
@@ -842,10 +826,18 @@ export function AbteilungSchichtplanungView() {
                             </TableCell>
                           );
                         })}
-                        <TableCell className="text-right font-medium">{sollGesamt.toFixed(1)}h</TableCell>
-                        <TableCell className="text-right">{istGesamt.toFixed(1)}h</TableCell>
-                        <TableCell className={`text-right font-medium ${ueberstundenGesamt >= 0 ? 'text-orange-600' : 'text-blue-600'}`}>
-                          {ueberstundenGesamt >= 0 ? '+' : ''}{ueberstundenGesamt.toFixed(1)}h
+                        <TableCell className="text-center font-medium">
+                          <span
+                            className={
+                              weekTotal > employee.wochenstunden_soll
+                                ? "text-orange-600"
+                                : weekTotal < employee.wochenstunden_soll
+                                ? "text-blue-600"
+                                : ""
+                            }
+                          >
+                            {weekTotal}h
+                          </span>
                         </TableCell>
                       </TableRow>
                     );

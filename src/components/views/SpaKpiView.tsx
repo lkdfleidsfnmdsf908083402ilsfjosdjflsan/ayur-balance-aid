@@ -1,617 +1,597 @@
-import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { format, subDays } from "date-fns";
-import { de } from "date-fns/locale";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Sparkles, TrendingUp, Users, Euro, AlertTriangle, Star, Calendar, XCircle } from "lucide-react";
-import { SpaTrendCharts } from "@/components/charts/SpaTrendCharts";
+import { format, startOfMonth, endOfMonth } from "date-fns";
+import { Sparkles, Save, Leaf, Hand, Palette, Heart, TrendingUp } from "lucide-react";
 
-type TrafficLight = "green" | "yellow" | "red";
+type TrafficColor = "green" | "yellow" | "red";
 
-interface KpiThresholds {
-  green: [number, number];
-  yellow: [number, number];
+interface SpaReport {
+  id: string;
+  report_date: string;
+  treatments_ayurveda: number;
+  treatments_classic: number;
+  treatments_cosmetic: number;
+  treatments_yoga: number;
+  treatments_other: number;
+  treatments_total: number;
+  revenue_ayurveda: number | null;
+  revenue_classic: number | null;
+  revenue_cosmetic: number | null;
+  revenue_yoga: number | null;
+  revenue_products: number | null;
+  revenue_total: number | null;
+  therapists_count: number;
+  total_hours: number | null;
+  available_slots: number;
+  booked_slots: number;
+  complaints: number;
+  utilization_pct: number | null;
+  treatments_per_therapist: number | null;
+  avg_revenue_per_treatment: number | null;
 }
 
-const getTrafficLight = (value: number | null, thresholds: KpiThresholds, inverse = false): TrafficLight => {
-  if (value === null) return "yellow";
-  
-  if (inverse) {
-    if (value <= thresholds.green[1]) return "green";
-    if (value <= thresholds.yellow[1]) return "yellow";
-    return "red";
-  }
-  
-  if (value >= thresholds.green[0]) return "green";
-  if (value >= thresholds.yellow[0]) return "yellow";
+// Ampellogik
+function getUtilizationColor(pct: number): TrafficColor {
+  if (pct >= 75) return "green";
+  if (pct >= 60) return "yellow";
   return "red";
-};
+}
 
-const trafficLightColors: Record<TrafficLight, string> = {
+function getTreatmentsPerTherapistColor(treatments: number): TrafficColor {
+  if (treatments >= 4 && treatments <= 6) return "green";
+  if (treatments >= 3 && treatments < 4) return "yellow";
+  return "red";
+}
+
+function getAvgRevenueColor(revenue: number): TrafficColor {
+  if (revenue >= 80) return "green";
+  if (revenue >= 60) return "yellow";
+  return "red";
+}
+
+const colorClasses: Record<TrafficColor, string> = {
   green: "bg-green-500",
   yellow: "bg-yellow-500",
   red: "bg-red-500",
 };
 
-// Schwellenwerte für Spa-KPIs
-const thresholds = {
-  roomUtilization: { green: [75, 100], yellow: [60, 74] },
-  therapistUtilization: { green: [80, 100], yellow: [65, 79] },
-  spaRating: { green: [4.5, 5], yellow: [4.2, 4.4] },
-  complaintRate: { green: [0, 1], yellow: [1, 2] },
-  noShowRate: { green: [0, 5], yellow: [5, 10] },
-  retailRatio: { green: [15, 100], yellow: [10, 14] },
+const colorBgClasses: Record<TrafficColor, string> = {
+  green: "bg-green-50 border-green-200",
+  yellow: "bg-yellow-50 border-yellow-200",
+  red: "bg-red-50 border-red-200",
 };
 
 export function SpaKpiView() {
-  const queryClient = useQueryClient();
+  const [reports, setReports] = useState<SpaReport[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"));
-  const [daysToShow, setDaysToShow] = useState(14);
 
-  // Formular-State
   const [formData, setFormData] = useState({
-    available_treatment_hours: "",
-    booked_treatment_hours: "",
-    treatments_total: "",
-    guests_total: "",
-    therapists_on_duty: "",
-    therapist_hours_total: "",
-    spa_revenue: "",
-    retail_revenue: "",
-    no_shows: "",
-    cancellations: "",
-    bookings_total: "",
-    spa_complaints: "",
-    spa_ratings_count: "",
-    spa_ratings_sum: "",
-    attendance_rate: "",
-    turnover_rate: "",
+    treatments_ayurveda: 0,
+    treatments_classic: 0,
+    treatments_cosmetic: 0,
+    treatments_yoga: 0,
+    treatments_other: 0,
+    revenue_ayurveda: 0,
+    revenue_classic: 0,
+    revenue_cosmetic: 0,
+    revenue_yoga: 0,
+    revenue_products: 0,
+    therapists_count: 0,
+    total_hours: 0,
+    available_slots: 0,
+    booked_slots: 0,
+    complaints: 0,
   });
 
-  // Daten laden
-  const { data: reports = [], isLoading } = useQuery({
-    queryKey: ["spa-reports"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("spa_daily_reports")
-        .select("*")
-        .order("report_date", { ascending: false })
-        .limit(90);
-      
-      if (error) throw error;
-      return data;
-    },
-  });
+  useEffect(() => {
+    fetchReports();
+  }, []);
 
-  // Aktuellen Tagesbericht laden
-  const { data: currentReport } = useQuery({
-    queryKey: ["spa-report", selectedDate],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("spa_daily_reports")
-        .select("*")
-        .eq("report_date", selectedDate)
-        .maybeSingle();
-      
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  // Mutation zum Speichern
-  const saveMutation = useMutation({
-    mutationFn: async (data: typeof formData) => {
-      const payload = {
-        report_date: selectedDate,
-        available_treatment_hours: parseFloat(data.available_treatment_hours) || 0,
-        booked_treatment_hours: parseFloat(data.booked_treatment_hours) || 0,
-        treatments_total: parseInt(data.treatments_total) || 0,
-        guests_total: parseInt(data.guests_total) || 0,
-        therapists_on_duty: parseInt(data.therapists_on_duty) || 0,
-        therapist_hours_total: parseFloat(data.therapist_hours_total) || 0,
-        spa_revenue: parseFloat(data.spa_revenue) || 0,
-        retail_revenue: parseFloat(data.retail_revenue) || 0,
-        no_shows: parseInt(data.no_shows) || 0,
-        cancellations: parseInt(data.cancellations) || 0,
-        bookings_total: parseInt(data.bookings_total) || 0,
-        spa_complaints: parseInt(data.spa_complaints) || 0,
-        spa_ratings_count: parseInt(data.spa_ratings_count) || 0,
-        spa_ratings_sum: parseInt(data.spa_ratings_sum) || 0,
-        attendance_rate: data.attendance_rate ? parseFloat(data.attendance_rate) : null,
-        turnover_rate: data.turnover_rate ? parseFloat(data.turnover_rate) : null,
-      };
-
-      if (currentReport) {
-        const { error } = await supabase
-          .from("spa_daily_reports")
-          .update(payload)
-          .eq("id", currentReport.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("spa_daily_reports")
-          .insert(payload);
-        if (error) throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["spa-reports"] });
-      queryClient.invalidateQueries({ queryKey: ["spa-report", selectedDate] });
-      toast.success("Spa-Bericht gespeichert");
-    },
-    onError: (error) => {
-      toast.error("Fehler beim Speichern: " + error.message);
-    },
-  });
-
-  // Formular mit bestehendem Bericht befüllen
-  const loadReportToForm = () => {
-    if (currentReport) {
+  useEffect(() => {
+    const existingReport = reports.find(r => r.report_date === selectedDate);
+    if (existingReport) {
       setFormData({
-        available_treatment_hours: currentReport.available_treatment_hours?.toString() || "",
-        booked_treatment_hours: currentReport.booked_treatment_hours?.toString() || "",
-        treatments_total: currentReport.treatments_total?.toString() || "",
-        guests_total: currentReport.guests_total?.toString() || "",
-        therapists_on_duty: currentReport.therapists_on_duty?.toString() || "",
-        therapist_hours_total: currentReport.therapist_hours_total?.toString() || "",
-        spa_revenue: currentReport.spa_revenue?.toString() || "",
-        retail_revenue: currentReport.retail_revenue?.toString() || "",
-        no_shows: currentReport.no_shows?.toString() || "",
-        cancellations: currentReport.cancellations?.toString() || "",
-        bookings_total: currentReport.bookings_total?.toString() || "",
-        spa_complaints: currentReport.spa_complaints?.toString() || "",
-        spa_ratings_count: currentReport.spa_ratings_count?.toString() || "",
-        spa_ratings_sum: currentReport.spa_ratings_sum?.toString() || "",
-        attendance_rate: currentReport.attendance_rate?.toString() || "",
-        turnover_rate: currentReport.turnover_rate?.toString() || "",
+        treatments_ayurveda: existingReport.treatments_ayurveda || 0,
+        treatments_classic: existingReport.treatments_classic || 0,
+        treatments_cosmetic: existingReport.treatments_cosmetic || 0,
+        treatments_yoga: existingReport.treatments_yoga || 0,
+        treatments_other: existingReport.treatments_other || 0,
+        revenue_ayurveda: existingReport.revenue_ayurveda || 0,
+        revenue_classic: existingReport.revenue_classic || 0,
+        revenue_cosmetic: existingReport.revenue_cosmetic || 0,
+        revenue_yoga: existingReport.revenue_yoga || 0,
+        revenue_products: existingReport.revenue_products || 0,
+        therapists_count: existingReport.therapists_count || 0,
+        total_hours: existingReport.total_hours || 0,
+        available_slots: existingReport.available_slots || 0,
+        booked_slots: existingReport.booked_slots || 0,
+        complaints: existingReport.complaints || 0,
+      });
+    } else {
+      setFormData({
+        treatments_ayurveda: 0,
+        treatments_classic: 0,
+        treatments_cosmetic: 0,
+        treatments_yoga: 0,
+        treatments_other: 0,
+        revenue_ayurveda: 0,
+        revenue_classic: 0,
+        revenue_cosmetic: 0,
+        revenue_yoga: 0,
+        revenue_products: 0,
+        therapists_count: 0,
+        total_hours: 0,
+        available_slots: 0,
+        booked_slots: 0,
+        complaints: 0,
       });
     }
+  }, [selectedDate, reports]);
+
+  const fetchReports = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("spa_daily_reports")
+      .select("*")
+      .order("report_date", { ascending: false })
+      .limit(365);
+
+    if (error) {
+      toast.error("Fehler beim Laden der SPA-Reports");
+      console.error(error);
+    } else {
+      setReports(data || []);
+    }
+    setLoading(false);
   };
 
-  // Aggregierte Werte berechnen
-  const last7Days = reports.filter(r => 
-    new Date(r.report_date) >= subDays(new Date(), 7)
-  );
-  
-  const avgRoomUtilization = last7Days.length > 0 
-    ? last7Days.reduce((sum, r) => sum + (r.room_utilization_pct || 0), 0) / last7Days.length 
-    : null;
-  const avgTherapistUtilization = last7Days.length > 0 
-    ? last7Days.reduce((sum, r) => sum + (r.therapist_utilization_pct || 0), 0) / last7Days.length 
-    : null;
-  const avgSpaRating = last7Days.length > 0 
-    ? last7Days.reduce((sum, r) => sum + (r.avg_spa_rating || 0), 0) / last7Days.length 
-    : null;
-  const avgComplaintRate = last7Days.length > 0 
-    ? last7Days.reduce((sum, r) => sum + (r.complaint_rate_pct || 0), 0) / last7Days.length 
-    : null;
-  const avgNoShowRate = last7Days.length > 0 
-    ? last7Days.reduce((sum, r) => sum + (r.no_show_rate_pct || 0), 0) / last7Days.length 
-    : null;
-  const avgRetailRatio = last7Days.length > 0 
-    ? last7Days.reduce((sum, r) => sum + (r.retail_ratio_pct || 0), 0) / last7Days.length 
-    : null;
-  const totalRevenue = last7Days.reduce((sum, r) => sum + (r.spa_revenue || 0) + (r.retail_revenue || 0), 0);
-  const totalGuests = last7Days.reduce((sum, r) => sum + (r.guests_total || 0), 0);
+  const calculatedKpis = useMemo(() => {
+    const treatments_total = formData.treatments_ayurveda + formData.treatments_classic + 
+                            formData.treatments_cosmetic + formData.treatments_yoga + 
+                            formData.treatments_other;
+    
+    const revenue_total = (formData.revenue_ayurveda || 0) + (formData.revenue_classic || 0) + 
+                         (formData.revenue_cosmetic || 0) + (formData.revenue_yoga || 0) + 
+                         (formData.revenue_products || 0);
+
+    const utilization_pct = formData.available_slots > 0 
+      ? (formData.booked_slots / formData.available_slots) * 100 
+      : 0;
+
+    const treatments_per_therapist = formData.therapists_count > 0 
+      ? treatments_total / formData.therapists_count 
+      : 0;
+
+    const treatment_revenue = revenue_total - (formData.revenue_products || 0);
+    const avg_revenue_per_treatment = treatments_total > 0 
+      ? treatment_revenue / treatments_total 
+      : 0;
+
+    return {
+      treatments_total,
+      revenue_total,
+      utilization_pct,
+      treatments_per_therapist,
+      avg_revenue_per_treatment,
+    };
+  }, [formData]);
+
+  // Monatsstatistik
+  const monthlyStats = useMemo(() => {
+    const monthStart = startOfMonth(new Date(selectedDate));
+    const monthEnd = endOfMonth(new Date(selectedDate));
+    
+    const monthReports = reports.filter(r => {
+      const d = new Date(r.report_date);
+      return d >= monthStart && d <= monthEnd;
+    });
+
+    if (monthReports.length === 0) return null;
+
+    const totalTreatments = monthReports.reduce((s, r) => s + (r.treatments_total || 0), 0);
+    const totalRevenue = monthReports.reduce((s, r) => s + (r.revenue_total || 0), 0);
+    const totalAyurveda = monthReports.reduce((s, r) => s + (r.treatments_ayurveda || 0), 0);
+    const totalProducts = monthReports.reduce((s, r) => s + (r.revenue_products || 0), 0);
+
+    return {
+      days: monthReports.length,
+      totalTreatments,
+      totalRevenue,
+      totalAyurveda,
+      totalProducts,
+      avgTreatmentsPerDay: totalTreatments / monthReports.length,
+    };
+  }, [reports, selectedDate]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    
+    const reportData = {
+      report_date: selectedDate,
+      ...formData,
+      treatments_total: calculatedKpis.treatments_total,
+      revenue_total: calculatedKpis.revenue_total,
+      utilization_pct: calculatedKpis.utilization_pct,
+      treatments_per_therapist: calculatedKpis.treatments_per_therapist,
+      avg_revenue_per_treatment: calculatedKpis.avg_revenue_per_treatment,
+    };
+
+    const existingReport = reports.find(r => r.report_date === selectedDate);
+
+    if (existingReport) {
+      const { error } = await supabase
+        .from("spa_daily_reports")
+        .update(reportData)
+        .eq("id", existingReport.id);
+
+      if (error) {
+        toast.error("Fehler beim Aktualisieren");
+        console.error(error);
+      } else {
+        toast.success("SPA-Report aktualisiert");
+        fetchReports();
+      }
+    } else {
+      const { error } = await supabase
+        .from("spa_daily_reports")
+        .insert(reportData);
+
+      if (error) {
+        toast.error("Fehler beim Speichern");
+        console.error(error);
+      } else {
+        toast.success("SPA-Report gespeichert");
+        fetchReports();
+      }
+    }
+    setSaving(false);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2">
-        <Sparkles className="h-6 w-6 text-primary" />
-        <h2 className="text-2xl font-bold">Spa & Wellness KPIs</h2>
+      <div className="flex items-center gap-3">
+        <Sparkles className="h-8 w-8 text-primary" />
+        <div>
+          <h1 className="text-2xl font-bold">SPA & Wellness KPIs</h1>
+          <p className="text-muted-foreground">Behandlungen & Auslastung</p>
+        </div>
       </div>
 
-      <Tabs defaultValue="input">
+      <Tabs defaultValue="daily" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="input">Tageseingabe</TabsTrigger>
-          <TabsTrigger value="overview">Übersicht</TabsTrigger>
-          <TabsTrigger value="trends">Trends</TabsTrigger>
+          <TabsTrigger value="daily">📋 Tägliche Erfassung</TabsTrigger>
+          <TabsTrigger value="kpis">🚦 Aktuelle KPIs</TabsTrigger>
+          <TabsTrigger value="month">📊 Monatsübersicht</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-4">
-          {/* KPI-Karten */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Ø Raum-Auslastung</CardTitle>
-                <div className={`h-3 w-3 rounded-full ${trafficLightColors[getTrafficLight(avgRoomUtilization, thresholds.roomUtilization as KpiThresholds)]}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {avgRoomUtilization?.toFixed(1) ?? "-"}%
-                </div>
-                <p className="text-xs text-muted-foreground">Letzte 7 Tage</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Ø Therapeuten-Auslastung</CardTitle>
-                <div className={`h-3 w-3 rounded-full ${trafficLightColors[getTrafficLight(avgTherapistUtilization, thresholds.therapistUtilization as KpiThresholds)]}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {avgTherapistUtilization?.toFixed(1) ?? "-"}%
-                </div>
-                <p className="text-xs text-muted-foreground">Letzte 7 Tage</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Ø Spa Rating</CardTitle>
-                <div className={`h-3 w-3 rounded-full ${trafficLightColors[getTrafficLight(avgSpaRating, thresholds.spaRating as KpiThresholds)]}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-1">
-                  <Star className="h-5 w-5 text-yellow-500" />
-                  <span className="text-2xl font-bold">
-                    {avgSpaRating?.toFixed(2) ?? "-"}
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground">Letzte 7 Tage</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Ø Beschwerderate</CardTitle>
-                <div className={`h-3 w-3 rounded-full ${trafficLightColors[getTrafficLight(avgComplaintRate, thresholds.complaintRate as KpiThresholds, true)]}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-1">
-                  <AlertTriangle className="h-5 w-5 text-orange-500" />
-                  <span className="text-2xl font-bold">
-                    {avgComplaintRate?.toFixed(2) ?? "-"}%
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground">Letzte 7 Tage</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Ø No-Show Rate</CardTitle>
-                <div className={`h-3 w-3 rounded-full ${trafficLightColors[getTrafficLight(avgNoShowRate, thresholds.noShowRate as KpiThresholds, true)]}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-1">
-                  <XCircle className="h-5 w-5 text-red-500" />
-                  <span className="text-2xl font-bold">
-                    {avgNoShowRate?.toFixed(1) ?? "-"}%
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground">Letzte 7 Tage</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Ø Retail Ratio</CardTitle>
-                <div className={`h-3 w-3 rounded-full ${trafficLightColors[getTrafficLight(avgRetailRatio, thresholds.retailRatio as KpiThresholds)]}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {avgRetailRatio?.toFixed(1) ?? "-"}%
-                </div>
-                <p className="text-xs text-muted-foreground">Letzte 7 Tage</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Gesamt-Umsatz</CardTitle>
-                <Euro className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  €{totalRevenue.toLocaleString("de-DE", { minimumFractionDigits: 2 })}
-                </div>
-                <p className="text-xs text-muted-foreground">Letzte 7 Tage</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">Gäste gesamt</CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{totalGuests}</div>
-                <p className="text-xs text-muted-foreground">Letzte 7 Tage</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Letzte Berichte */}
+        {/* ===== TÄGLICHE ERFASSUNG ===== */}
+        <TabsContent value="daily" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Letzte Tagesberichte</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto touch-pan-x touch-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="py-2 text-left">Datum</th>
-                      <th className="py-2 text-right">Raum %</th>
-                      <th className="py-2 text-right">Therap. %</th>
-                      <th className="py-2 text-right">Rating</th>
-                      <th className="py-2 text-right">No-Show %</th>
-                      <th className="py-2 text-right">Retail %</th>
-                      <th className="py-2 text-right">Umsatz</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {reports.slice(0, 10).map((report) => (
-                      <tr key={report.id} className="border-b">
-                        <td className="py-2">
-                          {format(new Date(report.report_date), "dd.MM.yyyy", { locale: de })}
-                        </td>
-                        <td className="py-2 text-right">
-                          <Badge variant="outline" className={trafficLightColors[getTrafficLight(report.room_utilization_pct, thresholds.roomUtilization as KpiThresholds)] + " text-white"}>
-                            {report.room_utilization_pct?.toFixed(1) ?? "-"}%
-                          </Badge>
-                        </td>
-                        <td className="py-2 text-right">
-                          <Badge variant="outline" className={trafficLightColors[getTrafficLight(report.therapist_utilization_pct, thresholds.therapistUtilization as KpiThresholds)] + " text-white"}>
-                            {report.therapist_utilization_pct?.toFixed(1) ?? "-"}%
-                          </Badge>
-                        </td>
-                        <td className="py-2 text-right">
-                          <Badge variant="outline" className={trafficLightColors[getTrafficLight(report.avg_spa_rating, thresholds.spaRating as KpiThresholds)] + " text-white"}>
-                            {report.avg_spa_rating?.toFixed(2) ?? "-"}
-                          </Badge>
-                        </td>
-                        <td className="py-2 text-right">
-                          <Badge variant="outline" className={trafficLightColors[getTrafficLight(report.no_show_rate_pct, thresholds.noShowRate as KpiThresholds, true)] + " text-white"}>
-                            {report.no_show_rate_pct?.toFixed(1) ?? "-"}%
-                          </Badge>
-                        </td>
-                        <td className="py-2 text-right">
-                          <Badge variant="outline" className={trafficLightColors[getTrafficLight(report.retail_ratio_pct, thresholds.retailRatio as KpiThresholds)] + " text-white"}>
-                            {report.retail_ratio_pct?.toFixed(1) ?? "-"}%
-                          </Badge>
-                        </td>
-                        <td className="py-2 text-right font-medium">
-                          €{((report.spa_revenue || 0) + (report.retail_revenue || 0)).toLocaleString("de-DE")}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="input" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Tagesbericht erfassen
+              <CardTitle className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5" />
+                  Behandlungen heute
+                </span>
+                <Input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="w-auto"
+                />
               </CardTitle>
+              <p className="text-sm text-muted-foreground">⏱️ Zeitaufwand: ca. 5 Minuten</p>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center gap-4">
-                <div className="flex-1">
-                  <Label htmlFor="date">Datum</Label>
+              
+              {/* Behandlungen nach Kategorie */}
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                <Card className="border-2 border-green-200 bg-green-50">
+                  <CardContent className="p-3 text-center">
+                    <Leaf className="h-5 w-5 text-green-600 mx-auto mb-1" />
+                    <Label className="text-xs font-semibold">Ayurveda</Label>
+                    <Input
+                      type="number"
+                      value={formData.treatments_ayurveda || ""}
+                      onChange={(e) => setFormData({ ...formData, treatments_ayurveda: Number(e.target.value) })}
+                      className="text-xl h-10 text-center font-bold mt-1"
+                    />
+                  </CardContent>
+                </Card>
+
+                <Card className="border-2 border-blue-200 bg-blue-50">
+                  <CardContent className="p-3 text-center">
+                    <Hand className="h-5 w-5 text-blue-600 mx-auto mb-1" />
+                    <Label className="text-xs font-semibold">Klassisch</Label>
+                    <Input
+                      type="number"
+                      value={formData.treatments_classic || ""}
+                      onChange={(e) => setFormData({ ...formData, treatments_classic: Number(e.target.value) })}
+                      className="text-xl h-10 text-center font-bold mt-1"
+                    />
+                  </CardContent>
+                </Card>
+
+                <Card className="border-2 border-pink-200 bg-pink-50">
+                  <CardContent className="p-3 text-center">
+                    <Palette className="h-5 w-5 text-pink-600 mx-auto mb-1" />
+                    <Label className="text-xs font-semibold">Kosmetik</Label>
+                    <Input
+                      type="number"
+                      value={formData.treatments_cosmetic || ""}
+                      onChange={(e) => setFormData({ ...formData, treatments_cosmetic: Number(e.target.value) })}
+                      className="text-xl h-10 text-center font-bold mt-1"
+                    />
+                  </CardContent>
+                </Card>
+
+                <Card className="border-2 border-purple-200 bg-purple-50">
+                  <CardContent className="p-3 text-center">
+                    <Heart className="h-5 w-5 text-purple-600 mx-auto mb-1" />
+                    <Label className="text-xs font-semibold">Yoga</Label>
+                    <Input
+                      type="number"
+                      value={formData.treatments_yoga || ""}
+                      onChange={(e) => setFormData({ ...formData, treatments_yoga: Number(e.target.value) })}
+                      className="text-xl h-10 text-center font-bold mt-1"
+                    />
+                  </CardContent>
+                </Card>
+
+                <Card className="border-2 border-gray-200 bg-gray-50">
+                  <CardContent className="p-3 text-center">
+                    <Sparkles className="h-5 w-5 text-gray-600 mx-auto mb-1" />
+                    <Label className="text-xs font-semibold">Sonstige</Label>
+                    <Input
+                      type="number"
+                      value={formData.treatments_other || ""}
+                      onChange={(e) => setFormData({ ...formData, treatments_other: Number(e.target.value) })}
+                      className="text-xl h-10 text-center font-bold mt-1"
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Auslastung & Personal */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <Label>Therapeuten im Einsatz</Label>
                   <Input
-                    id="date"
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
+                    type="number"
+                    value={formData.therapists_count || ""}
+                    onChange={(e) => setFormData({ ...formData, therapists_count: Number(e.target.value) })}
                   />
                 </div>
-                {currentReport && (
-                  <div className="pt-6">
-                    <Button variant="outline" onClick={loadReportToForm}>
-                      Bestehende Daten laden
-                    </Button>
+                <div>
+                  <Label>Verfügbare Slots</Label>
+                  <Input
+                    type="number"
+                    value={formData.available_slots || ""}
+                    onChange={(e) => setFormData({ ...formData, available_slots: Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <Label>Gebuchte Slots</Label>
+                  <Input
+                    type="number"
+                    value={formData.booked_slots || ""}
+                    onChange={(e) => setFormData({ ...formData, booked_slots: Number(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <Label>Produktverkauf (€)</Label>
+                  <Input
+                    type="number"
+                    value={formData.revenue_products || ""}
+                    onChange={(e) => setFormData({ ...formData, revenue_products: Number(e.target.value) })}
+                  />
+                </div>
+              </div>
+
+              {/* Optional: Umsatz nach Kategorie */}
+              <details className="group">
+                <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
+                  ➕ Optional: Umsatz nach Kategorie
+                </summary>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 p-4 border rounded-lg">
+                  <div>
+                    <Label>Ayurveda (€)</Label>
+                    <Input
+                      type="number"
+                      value={formData.revenue_ayurveda || ""}
+                      onChange={(e) => setFormData({ ...formData, revenue_ayurveda: Number(e.target.value) })}
+                    />
                   </div>
-                )}
-              </div>
+                  <div>
+                    <Label>Klassisch (€)</Label>
+                    <Input
+                      type="number"
+                      value={formData.revenue_classic || ""}
+                      onChange={(e) => setFormData({ ...formData, revenue_classic: Number(e.target.value) })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Kosmetik (€)</Label>
+                    <Input
+                      type="number"
+                      value={formData.revenue_cosmetic || ""}
+                      onChange={(e) => setFormData({ ...formData, revenue_cosmetic: Number(e.target.value) })}
+                    />
+                  </div>
+                  <div>
+                    <Label>Yoga (€)</Label>
+                    <Input
+                      type="number"
+                      value={formData.revenue_yoga || ""}
+                      onChange={(e) => setFormData({ ...formData, revenue_yoga: Number(e.target.value) })}
+                    />
+                  </div>
+                </div>
+              </details>
 
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                {/* Kapazität */}
-                <div className="space-y-2">
-                  <Label htmlFor="available_treatment_hours">Verfügbare Behandlungsstunden</Label>
-                  <Input
-                    id="available_treatment_hours"
-                    type="number"
-                    step="0.5"
-                    value={formData.available_treatment_hours}
-                    onChange={(e) => setFormData({ ...formData, available_treatment_hours: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="booked_treatment_hours">Gebuchte Behandlungsstunden</Label>
-                  <Input
-                    id="booked_treatment_hours"
-                    type="number"
-                    step="0.5"
-                    value={formData.booked_treatment_hours}
-                    onChange={(e) => setFormData({ ...formData, booked_treatment_hours: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="treatments_total">Behandlungen gesamt</Label>
-                  <Input
-                    id="treatments_total"
-                    type="number"
-                    value={formData.treatments_total}
-                    onChange={(e) => setFormData({ ...formData, treatments_total: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="guests_total">Gäste gesamt</Label>
-                  <Input
-                    id="guests_total"
-                    type="number"
-                    value={formData.guests_total}
-                    onChange={(e) => setFormData({ ...formData, guests_total: e.target.value })}
-                  />
-                </div>
-
-                {/* Personal */}
-                <div className="space-y-2">
-                  <Label htmlFor="therapists_on_duty">Therapeuten im Einsatz</Label>
-                  <Input
-                    id="therapists_on_duty"
-                    type="number"
-                    value={formData.therapists_on_duty}
-                    onChange={(e) => setFormData({ ...formData, therapists_on_duty: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="therapist_hours_total">Therapeuten-Stunden gesamt</Label>
-                  <Input
-                    id="therapist_hours_total"
-                    type="number"
-                    step="0.5"
-                    value={formData.therapist_hours_total}
-                    onChange={(e) => setFormData({ ...formData, therapist_hours_total: e.target.value })}
-                  />
-                </div>
-
-                {/* Umsatz */}
-                <div className="space-y-2">
-                  <Label htmlFor="spa_revenue">Spa-Umsatz (€)</Label>
-                  <Input
-                    id="spa_revenue"
-                    type="number"
-                    step="0.01"
-                    value={formData.spa_revenue}
-                    onChange={(e) => setFormData({ ...formData, spa_revenue: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="retail_revenue">Produkt-Umsatz (€)</Label>
-                  <Input
-                    id="retail_revenue"
-                    type="number"
-                    step="0.01"
-                    value={formData.retail_revenue}
-                    onChange={(e) => setFormData({ ...formData, retail_revenue: e.target.value })}
-                  />
-                </div>
-
-                {/* Effizienz */}
-                <div className="space-y-2">
-                  <Label htmlFor="bookings_total">Buchungen gesamt</Label>
-                  <Input
-                    id="bookings_total"
-                    type="number"
-                    value={formData.bookings_total}
-                    onChange={(e) => setFormData({ ...formData, bookings_total: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="no_shows">No-Shows</Label>
-                  <Input
-                    id="no_shows"
-                    type="number"
-                    value={formData.no_shows}
-                    onChange={(e) => setFormData({ ...formData, no_shows: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="cancellations">Stornierungen</Label>
-                  <Input
-                    id="cancellations"
-                    type="number"
-                    value={formData.cancellations}
-                    onChange={(e) => setFormData({ ...formData, cancellations: e.target.value })}
-                  />
-                </div>
-
-                {/* Qualität */}
-                <div className="space-y-2">
-                  <Label htmlFor="spa_complaints">Beschwerden</Label>
-                  <Input
-                    id="spa_complaints"
-                    type="number"
-                    value={formData.spa_complaints}
-                    onChange={(e) => setFormData({ ...formData, spa_complaints: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="spa_ratings_count">Anzahl Bewertungen</Label>
-                  <Input
-                    id="spa_ratings_count"
-                    type="number"
-                    value={formData.spa_ratings_count}
-                    onChange={(e) => setFormData({ ...formData, spa_ratings_count: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="spa_ratings_sum">Summe Bewertungspunkte</Label>
-                  <Input
-                    id="spa_ratings_sum"
-                    type="number"
-                    value={formData.spa_ratings_sum}
-                    onChange={(e) => setFormData({ ...formData, spa_ratings_sum: e.target.value })}
-                  />
-                </div>
-
-                {/* Personal-KPIs */}
-                <div className="space-y-2">
-                  <Label htmlFor="attendance_rate">Anwesenheitsrate (%)</Label>
-                  <Input
-                    id="attendance_rate"
-                    type="number"
-                    step="0.1"
-                    value={formData.attendance_rate}
-                    onChange={(e) => setFormData({ ...formData, attendance_rate: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="turnover_rate">Fluktuationsrate (%)</Label>
-                  <Input
-                    id="turnover_rate"
-                    type="number"
-                    step="0.1"
-                    value={formData.turnover_rate}
-                    onChange={(e) => setFormData({ ...formData, turnover_rate: e.target.value })}
-                  />
+              {/* Live-Zusammenfassung */}
+              <div className="p-4 bg-muted rounded-lg">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Behandlungen</p>
+                    <p className="text-2xl font-bold text-primary">{calculatedKpis.treatments_total}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Auslastung</p>
+                    <p className="text-2xl font-bold">{calculatedKpis.utilization_pct.toFixed(0)}%</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Beh./Therapeut</p>
+                    <p className="text-2xl font-bold">{calculatedKpis.treatments_per_therapist.toFixed(1)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Ø Umsatz/Beh.</p>
+                    <p className="text-2xl font-bold">{calculatedKpis.avg_revenue_per_treatment.toFixed(0)} €</p>
+                  </div>
                 </div>
               </div>
 
-              <Button 
-                onClick={() => saveMutation.mutate(formData)}
-                disabled={saveMutation.isPending}
-              >
-                {saveMutation.isPending ? "Speichern..." : "Bericht speichern"}
+              <Button onClick={handleSave} disabled={saving} className="w-full" size="lg">
+                <Save className="h-4 w-4 mr-2" />
+                {saving ? "Speichern..." : "SPA-Report speichern"}
               </Button>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="trends" className="space-y-4">
-          <div className="flex items-center gap-4 mb-4">
-            <Label>Zeitraum:</Label>
-            <div className="flex gap-2">
-              {[7, 14, 30, 90].map((days) => (
-                <Button
-                  key={days}
-                  variant={daysToShow === days ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setDaysToShow(days)}
-                >
-                  {days} Tage
-                </Button>
-              ))}
-            </div>
+        {/* ===== AKTUELLE KPIs ===== */}
+        <TabsContent value="kpis" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card className={`border-2 ${colorBgClasses[getUtilizationColor(calculatedKpis.utilization_pct)]}`}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Auslastung</p>
+                    <p className="text-3xl font-bold">{calculatedKpis.utilization_pct.toFixed(0)}%</p>
+                    <p className="text-xs text-muted-foreground">Ziel: ≥75%</p>
+                  </div>
+                  <div className={`w-5 h-5 rounded-full ${colorClasses[getUtilizationColor(calculatedKpis.utilization_pct)]} shadow-md`} />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className={`border-2 ${colorBgClasses[getTreatmentsPerTherapistColor(calculatedKpis.treatments_per_therapist)]}`}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Beh./Therapeut</p>
+                    <p className="text-3xl font-bold">{calculatedKpis.treatments_per_therapist.toFixed(1)}</p>
+                    <p className="text-xs text-muted-foreground">Ziel: 4-6</p>
+                  </div>
+                  <div className={`w-5 h-5 rounded-full ${colorClasses[getTreatmentsPerTherapistColor(calculatedKpis.treatments_per_therapist)]} shadow-md`} />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className={`border-2 ${colorBgClasses[getAvgRevenueColor(calculatedKpis.avg_revenue_per_treatment)]}`}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Ø Umsatz/Behandlung</p>
+                    <p className="text-3xl font-bold">{calculatedKpis.avg_revenue_per_treatment.toFixed(0)} €</p>
+                    <p className="text-xs text-muted-foreground">Ziel: ≥80 €</p>
+                  </div>
+                  <div className={`w-5 h-5 rounded-full ${colorClasses[getAvgRevenueColor(calculatedKpis.avg_revenue_per_treatment)]} shadow-md`} />
+                </div>
+              </CardContent>
+            </Card>
           </div>
-          <SpaTrendCharts reports={reports} daysToShow={daysToShow} />
+
+          {/* Behandlungen nach Kategorie */}
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-sm font-semibold mb-3">Behandlungen nach Kategorie</p>
+              <div className="grid grid-cols-5 gap-2 text-center">
+                <div className="p-2 bg-green-50 rounded">
+                  <Leaf className="h-4 w-4 text-green-600 mx-auto" />
+                  <p className="text-lg font-bold text-green-600">{formData.treatments_ayurveda}</p>
+                  <p className="text-xs">Ayurveda</p>
+                </div>
+                <div className="p-2 bg-blue-50 rounded">
+                  <Hand className="h-4 w-4 text-blue-600 mx-auto" />
+                  <p className="text-lg font-bold text-blue-600">{formData.treatments_classic}</p>
+                  <p className="text-xs">Klassisch</p>
+                </div>
+                <div className="p-2 bg-pink-50 rounded">
+                  <Palette className="h-4 w-4 text-pink-600 mx-auto" />
+                  <p className="text-lg font-bold text-pink-600">{formData.treatments_cosmetic}</p>
+                  <p className="text-xs">Kosmetik</p>
+                </div>
+                <div className="p-2 bg-purple-50 rounded">
+                  <Heart className="h-4 w-4 text-purple-600 mx-auto" />
+                  <p className="text-lg font-bold text-purple-600">{formData.treatments_yoga}</p>
+                  <p className="text-xs">Yoga</p>
+                </div>
+                <div className="p-2 bg-gray-50 rounded">
+                  <Sparkles className="h-4 w-4 text-gray-600 mx-auto" />
+                  <p className="text-lg font-bold text-gray-600">{formData.treatments_other}</p>
+                  <p className="text-xs">Sonstige</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ===== MONATSÜBERSICHT ===== */}
+        <TabsContent value="month" className="space-y-4">
+          {monthlyStats ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Monatsübersicht ({monthlyStats.days} Tage erfasst)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-primary/10 rounded-lg">
+                    <p className="text-sm text-muted-foreground">Behandlungen</p>
+                    <p className="text-3xl font-bold text-primary">{monthlyStats.totalTreatments}</p>
+                    <p className="text-xs text-muted-foreground">Ø {monthlyStats.avgTreatmentsPerDay.toFixed(0)}/Tag</p>
+                  </div>
+                  <div className="text-center p-4 bg-green-50 rounded-lg">
+                    <p className="text-sm text-muted-foreground">davon Ayurveda</p>
+                    <p className="text-3xl font-bold text-green-600">{monthlyStats.totalAyurveda}</p>
+                  </div>
+                  <div className="text-center p-4 bg-muted rounded-lg">
+                    <p className="text-sm text-muted-foreground">Gesamtumsatz</p>
+                    <p className="text-3xl font-bold">{monthlyStats.totalRevenue.toLocaleString('de-DE')} €</p>
+                  </div>
+                  <div className="text-center p-4 bg-yellow-50 rounded-lg col-span-2 md:col-span-1">
+                    <p className="text-sm text-muted-foreground">Produktverkauf</p>
+                    <p className="text-2xl font-bold text-yellow-600">{monthlyStats.totalProducts.toLocaleString('de-DE')} €</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="p-8 text-center text-muted-foreground">
+                Keine Daten für diesen Monat vorhanden
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>

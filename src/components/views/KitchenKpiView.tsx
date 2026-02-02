@@ -1,92 +1,73 @@
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { format, startOfWeek, startOfMonth, startOfYear, subDays } from "date-fns";
+import { format, startOfWeek, endOfWeek } from "date-fns";
 import { de } from "date-fns/locale";
-import { ChefHat, Save, TrendingUp, AlertCircle, CheckCircle } from "lucide-react";
-import { KitchenTrendCharts } from "@/components/charts/KitchenTrendCharts";
+import { ChefHat, Save, Calculator, Coffee, UtensilsCrossed, Moon, Users, AlertCircle } from "lucide-react";
 
 type TrafficColor = "green" | "yellow" | "red";
 
 interface KitchenReport {
   id: string;
   report_date: string;
-  food_revenue: number;
-  food_cost: number;
-  covers_total: number;
-  plates_total: number;
-  kitchen_staff_on_duty: number;
-  kitchen_hours_total: number;
-  kitchen_labour_cost: number | null;
-  food_complaints: number;
-  correct_orders: number;
-  orders_total: number;
-  food_waste_value: number | null;
-  attendance_rate: number | null;
-  turnover_rate: number | null;
-  food_cost_pct: number | null;
-  food_cost_per_cover: number | null;
-  kitchen_labour_pct: number | null;
-  prime_cost_pct: number | null;
-  meals_per_employee: number | null;
-  plates_per_hour: number | null;
-  complaint_rate_pct: number | null;
-  order_accuracy_pct: number | null;
-  food_waste_pct: number | null;
+  food_cost_week: number | null;
+  beverage_cost_week: number | null;
+  waste_value_week: number | null;
+  kitchen_staff_count: number;
+  base_cpc: number | null;
+  cpc_breakfast: number | null;
+  cpc_lunch: number | null;
+  cpc_dinner: number | null;
+  cpgd: number | null;
+  waste_pct: number | null;
 }
+
+interface ServiceReport {
+  report_date: string;
+  covers_breakfast: number;
+  covers_lunch: number;
+  covers_dinner: number;
+  covers_total: number;
+}
+
+// Gewichtungsfaktoren
+const WEIGHT_BREAKFAST = 1.0;
+const WEIGHT_LUNCH = 1.5;
+const WEIGHT_DINNER = 2.0;
 
 // Ampellogik
-function getFoodCostColor(pct: number): TrafficColor {
-  if (pct >= 25 && pct <= 35) return "green";
-  if (pct > 35 && pct <= 38) return "yellow";
+function getCpcBreakfastColor(cpc: number): TrafficColor {
+  if (cpc >= 4 && cpc <= 6) return "green";
+  if (cpc > 6 && cpc <= 8) return "yellow";
   return "red";
 }
 
-function getLabourCostColor(pct: number): TrafficColor {
-  if (pct >= 18 && pct <= 28) return "green";
-  if (pct > 28 && pct <= 32) return "yellow";
+function getCpcLunchColor(cpc: number): TrafficColor {
+  if (cpc >= 6 && cpc <= 10) return "green";
+  if (cpc > 10 && cpc <= 14) return "yellow";
   return "red";
 }
 
-function getMealsPerEmployeeColor(meals: number): TrafficColor {
-  if (meals >= 25 && meals <= 45) return "green";
-  if ((meals >= 20 && meals < 25) || (meals > 45 && meals <= 55)) return "yellow";
+function getCpcDinnerColor(cpc: number): TrafficColor {
+  if (cpc >= 8 && cpc <= 14) return "green";
+  if (cpc > 14 && cpc <= 18) return "yellow";
   return "red";
 }
 
-function getPlatesPerHourColor(plates: number): TrafficColor {
-  if (plates >= 15 && plates <= 35) return "green";
-  if (plates >= 10 && plates < 15) return "yellow";
+function getCpgdColor(cpgd: number): TrafficColor {
+  if (cpgd >= 18 && cpgd <= 30) return "green";
+  if (cpgd > 30 && cpgd <= 40) return "yellow";
   return "red";
 }
 
-function getComplaintRateColor(rate: number): TrafficColor {
-  if (rate <= 1) return "green";
-  if (rate <= 1.5) return "yellow";
-  return "red";
-}
-
-function getOrderAccuracyColor(rate: number): TrafficColor {
-  if (rate >= 98) return "green";
-  if (rate >= 95) return "yellow";
-  return "red";
-}
-
-function getFoodWasteColor(pct: number): TrafficColor {
-  if (pct < 5) return "green";
-  if (pct <= 10) return "yellow";
-  return "red";
-}
-
-function getAttendanceColor(rate: number): TrafficColor {
-  if (rate >= 95) return "green";
-  if (rate >= 92) return "yellow";
+function getWasteColor(pct: number): TrafficColor {
+  if (pct < 2) return "green";
+  if (pct <= 5) return "yellow";
   return "red";
 }
 
@@ -96,96 +77,156 @@ const colorClasses: Record<TrafficColor, string> = {
   red: "bg-red-500",
 };
 
+const colorBgClasses: Record<TrafficColor, string> = {
+  green: "bg-green-50 border-green-200",
+  yellow: "bg-yellow-50 border-yellow-200",
+  red: "bg-red-50 border-red-200",
+};
+
 export function KitchenKpiView() {
-  const [reports, setReports] = useState<KitchenReport[]>([]);
+  const [kitchenReports, setKitchenReports] = useState<KitchenReport[]>([]);
+  const [serviceReports, setServiceReports] = useState<ServiceReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"));
-  const [aggregateView, setAggregateView] = useState<"week" | "month" | "year">("month");
 
-  // Formular-State
+  // Nur Wareneinsatz wird eingegeben
   const [formData, setFormData] = useState({
-    food_revenue: 0,
-    food_cost: 0,
-    covers_total: 0,
-    plates_total: 0,
-    kitchen_staff_on_duty: 0,
-    kitchen_hours_total: 0,
-    kitchen_labour_cost: 0,
-    food_complaints: 0,
-    correct_orders: 0,
-    orders_total: 0,
-    food_waste_value: 0,
-    attendance_rate: 97,
-    turnover_rate: 20,
+    food_cost_week: 0,
+    beverage_cost_week: 0,
+    waste_value_week: 0,
+    kitchen_staff_count: 0,
   });
 
   useEffect(() => {
-    fetchReports();
+    fetchData();
   }, []);
 
-  const fetchReports = async () => {
+  useEffect(() => {
+    const existingReport = kitchenReports.find(r => r.report_date === selectedDate);
+    if (existingReport) {
+      setFormData({
+        food_cost_week: existingReport.food_cost_week || 0,
+        beverage_cost_week: existingReport.beverage_cost_week || 0,
+        waste_value_week: existingReport.waste_value_week || 0,
+        kitchen_staff_count: existingReport.kitchen_staff_count || 0,
+      });
+    } else {
+      setFormData({
+        food_cost_week: 0,
+        beverage_cost_week: 0,
+        waste_value_week: 0,
+        kitchen_staff_count: 0,
+      });
+    }
+  }, [selectedDate, kitchenReports]);
+
+  const fetchData = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    
+    // Kitchen Reports
+    const { data: kitchenData, error: kitchenError } = await supabase
       .from("kitchen_daily_reports")
       .select("*")
       .order("report_date", { ascending: false })
       .limit(365);
 
-    if (error) {
-      toast.error("Fehler beim Laden der Küchen-Reports");
-      console.error(error);
+    if (kitchenError) {
+      console.error("Kitchen fetch error:", kitchenError);
     } else {
-      setReports(data || []);
-      // Lade Daten für ausgewähltes Datum
-      const existingReport = data?.find(r => r.report_date === selectedDate);
-      if (existingReport) {
-        setFormData({
-          food_revenue: existingReport.food_revenue,
-          food_cost: existingReport.food_cost,
-          covers_total: existingReport.covers_total,
-          plates_total: existingReport.plates_total,
-          kitchen_staff_on_duty: existingReport.kitchen_staff_on_duty,
-          kitchen_hours_total: existingReport.kitchen_hours_total,
-          kitchen_labour_cost: existingReport.kitchen_labour_cost || 0,
-          food_complaints: existingReport.food_complaints,
-          correct_orders: existingReport.correct_orders,
-          orders_total: existingReport.orders_total,
-          food_waste_value: existingReport.food_waste_value || 0,
-          attendance_rate: existingReport.attendance_rate || 97,
-          turnover_rate: existingReport.turnover_rate || 20,
-        });
-      }
+      setKitchenReports(kitchenData || []);
     }
+
+    // Service Reports (für Covers)
+    const { data: serviceData, error: serviceError } = await supabase
+      .from("service_daily_reports")
+      .select("report_date, covers_breakfast, covers_lunch, covers_dinner, covers_total")
+      .order("report_date", { ascending: false })
+      .limit(365);
+
+    if (serviceError) {
+      console.error("Service fetch error:", serviceError);
+    } else {
+      setServiceReports(serviceData || []);
+    }
+
     setLoading(false);
   };
 
-  // Berechnete KPIs
-  const calculatedKpis = useMemo(() => {
-    const { food_revenue, food_cost, covers_total, plates_total, kitchen_staff_on_duty, kitchen_hours_total, kitchen_labour_cost, food_complaints, correct_orders, orders_total, food_waste_value } = formData;
+  // Covers von Service für die aktuelle Woche
+  const weeklyCovers = useMemo(() => {
+    const weekStart = startOfWeek(new Date(selectedDate), { locale: de });
+    const weekEnd = endOfWeek(new Date(selectedDate), { locale: de });
+    
+    const weekReports = serviceReports.filter(r => {
+      const d = new Date(r.report_date);
+      return d >= weekStart && d <= weekEnd;
+    });
+
+    if (weekReports.length === 0) return null;
+
+    const totalBreakfast = weekReports.reduce((s, r) => s + (r.covers_breakfast || 0), 0);
+    const totalLunch = weekReports.reduce((s, r) => s + (r.covers_lunch || 0), 0);
+    const totalDinner = weekReports.reduce((s, r) => s + (r.covers_dinner || 0), 0);
+
+    const weightedCovers = (totalBreakfast * WEIGHT_BREAKFAST) + 
+                          (totalLunch * WEIGHT_LUNCH) + 
+                          (totalDinner * WEIGHT_DINNER);
 
     return {
-      food_cost_pct: food_revenue > 0 ? (food_cost / food_revenue) * 100 : 0,
-      food_cost_per_cover: covers_total > 0 ? food_cost / covers_total : 0,
-      kitchen_labour_pct: food_revenue > 0 && kitchen_labour_cost > 0 ? (kitchen_labour_cost / food_revenue) * 100 : 0,
-      prime_cost_pct: food_revenue > 0 ? ((food_cost + kitchen_labour_cost) / food_revenue) * 100 : 0,
-      meals_per_employee: kitchen_staff_on_duty > 0 ? covers_total / kitchen_staff_on_duty : 0,
-      plates_per_hour: kitchen_hours_total > 0 ? plates_total / kitchen_hours_total : 0,
-      complaint_rate_pct: covers_total > 0 ? (food_complaints / covers_total) * 100 : 0,
-      order_accuracy_pct: orders_total > 0 ? (correct_orders / orders_total) * 100 : 0,
-      food_waste_pct: food_cost > 0 && food_waste_value > 0 ? (food_waste_value / food_cost) * 100 : 0,
+      days: weekReports.length,
+      totalBreakfast,
+      totalLunch,
+      totalDinner,
+      totalCovers: totalBreakfast + totalLunch + totalDinner,
+      weightedCovers,
     };
-  }, [formData]);
+  }, [serviceReports, selectedDate]);
+
+  // Berechnete CPCs
+  const calculatedKpis = useMemo(() => {
+    if (!weeklyCovers || weeklyCovers.weightedCovers === 0) {
+      return {
+        base_cpc: 0,
+        cpc_breakfast: 0,
+        cpc_lunch: 0,
+        cpc_dinner: 0,
+        cpgd: 0,
+        waste_pct: 0,
+      };
+    }
+
+    const total_cost = (formData.food_cost_week || 0) + (formData.beverage_cost_week || 0);
+    const base_cpc = total_cost / weeklyCovers.weightedCovers;
+
+    return {
+      base_cpc,
+      cpc_breakfast: base_cpc * WEIGHT_BREAKFAST,
+      cpc_lunch: base_cpc * WEIGHT_LUNCH,
+      cpc_dinner: base_cpc * WEIGHT_DINNER,
+      cpgd: base_cpc * (WEIGHT_BREAKFAST + WEIGHT_LUNCH + WEIGHT_DINNER),
+      waste_pct: total_cost > 0 ? ((formData.waste_value_week || 0) / total_cost) * 100 : 0,
+    };
+  }, [formData, weeklyCovers]);
 
   const handleSave = async () => {
     setSaving(true);
+    
     const reportData = {
       report_date: selectedDate,
-      ...formData,
-      ...calculatedKpis,
+      food_cost_week: formData.food_cost_week,
+      beverage_cost_week: formData.beverage_cost_week,
+      waste_value_week: formData.waste_value_week,
+      kitchen_staff_count: formData.kitchen_staff_count,
+      base_cpc: calculatedKpis.base_cpc,
+      cpc_breakfast: calculatedKpis.cpc_breakfast,
+      cpc_lunch: calculatedKpis.cpc_lunch,
+      cpc_dinner: calculatedKpis.cpc_dinner,
+      cpgd: calculatedKpis.cpgd,
+      waste_pct: calculatedKpis.waste_pct,
     };
 
-    const existingReport = reports.find(r => r.report_date === selectedDate);
+    const existingReport = kitchenReports.find(r => r.report_date === selectedDate);
 
     if (existingReport) {
       const { error } = await supabase
@@ -197,8 +238,8 @@ export function KitchenKpiView() {
         toast.error("Fehler beim Aktualisieren");
         console.error(error);
       } else {
-        toast.success("Tagesreport aktualisiert");
-        fetchReports();
+        toast.success("Küchen-Report aktualisiert & CPCs berechnet");
+        fetchData();
       }
     } else {
       const { error } = await supabase
@@ -209,66 +250,34 @@ export function KitchenKpiView() {
         toast.error("Fehler beim Speichern");
         console.error(error);
       } else {
-        toast.success("Tagesreport gespeichert");
-        fetchReports();
+        toast.success("Küchen-Report gespeichert & CPCs berechnet");
+        fetchData();
       }
     }
     setSaving(false);
   };
 
-  // Aggregierte Daten
-  const aggregatedData = useMemo(() => {
-    if (reports.length === 0) return null;
-
-    let startDate: Date;
-    const now = new Date();
-
-    switch (aggregateView) {
-      case "week":
-        startDate = startOfWeek(now, { locale: de });
-        break;
-      case "month":
-        startDate = startOfMonth(now);
-        break;
-      case "year":
-        startDate = startOfYear(now);
-        break;
-    }
-
-    const filteredReports = reports.filter(r => new Date(r.report_date) >= startDate);
-
-    if (filteredReports.length === 0) return null;
-
-    const sum = (key: keyof KitchenReport) => 
-      filteredReports.reduce((acc, r) => acc + (Number(r[key]) || 0), 0);
-    const avg = (key: keyof KitchenReport) => sum(key) / filteredReports.length;
-
-    return {
-      count: filteredReports.length,
-      total_revenue: sum("food_revenue"),
-      total_food_cost: sum("food_cost"),
-      total_covers: sum("covers_total"),
-      avg_food_cost_pct: avg("food_cost_pct"),
-      avg_labour_pct: avg("kitchen_labour_pct"),
-      avg_prime_cost_pct: avg("prime_cost_pct"),
-      avg_meals_per_employee: avg("meals_per_employee"),
-      avg_plates_per_hour: avg("plates_per_hour"),
-      avg_complaint_rate: avg("complaint_rate_pct"),
-      avg_order_accuracy: avg("order_accuracy_pct"),
-      avg_food_waste: avg("food_waste_pct"),
-    };
-  }, [reports, aggregateView]);
-
-  const renderKpiCard = (label: string, value: number, unit: string, color: TrafficColor, target: string) => (
-    <Card>
+  const renderCpcCard = (
+    label: string, 
+    icon: React.ReactNode,
+    value: number, 
+    benchmark: string, 
+    color: TrafficColor
+  ) => (
+    <Card className={`border-2 ${colorBgClasses[color]}`}>
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">{label}</p>
-            <p className="text-2xl font-bold">{value.toFixed(1)}{unit}</p>
-            <p className="text-xs text-muted-foreground">{target}</p>
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white rounded-lg shadow-sm">
+              {icon}
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">{label}</p>
+              <p className="text-2xl font-bold">{value.toFixed(2)} €</p>
+              <p className="text-xs text-muted-foreground">{benchmark}</p>
+            </div>
           </div>
-          <div className={`w-4 h-4 rounded-full ${colorClasses[color]}`} />
+          <div className={`w-5 h-5 rounded-full ${colorClasses[color]} shadow-md`} />
         </div>
       </CardContent>
     </Card>
@@ -287,238 +296,314 @@ export function KitchenKpiView() {
       <div className="flex items-center gap-3">
         <ChefHat className="h-8 w-8 text-primary" />
         <div>
-          <h1 className="text-2xl font-bold">Küchen-KPIs</h1>
-          <p className="text-muted-foreground">Tägliche Erfassung und Auswertung</p>
+          <h1 className="text-2xl font-bold">Küchen-KPIs (Vollpension)</h1>
+          <p className="text-muted-foreground">Cost per Cover Berechnung</p>
         </div>
       </div>
 
-      <Tabs defaultValue="input" className="space-y-4">
+      <Tabs defaultValue="costs" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="input">Tageseingabe</TabsTrigger>
-          <TabsTrigger value="kpis">Aktuelle KPIs</TabsTrigger>
-          <TabsTrigger value="trends">Trends & Vergleiche</TabsTrigger>
+          <TabsTrigger value="costs">💰 Wareneinsatz (Woche)</TabsTrigger>
+          <TabsTrigger value="covers">👥 Covers (von Service)</TabsTrigger>
+          <TabsTrigger value="kpis">🚦 Aktuelle CPCs</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="input" className="space-y-4">
+        {/* ===== WARENEINSATZ EINGABE ===== */}
+        <TabsContent value="costs" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <span>Tagesreport Küche</span>
+              <CardTitle className="flex items-center justify-between">
+                <span className="flex items-center gap-2">
+                  <Calculator className="h-5 w-5" />
+                  Wareneinsatz der Woche
+                </span>
                 <Input
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-auto ml-auto"
+                  className="w-auto"
                 />
               </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                📅 Empfohlen: Jeden Freitag erfassen (aus Lieferscheinen)
+              </p>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Umsatz & Kosten */}
+              
+              {/* Covers-Info von Service (Read-Only) */}
+              {weeklyCovers ? (
+                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <h4 className="font-semibold mb-3 flex items-center gap-2 text-blue-800">
+                    <Users className="h-4 w-4" />
+                    Covers der Woche (vom Service erfasst)
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    <div className="text-center p-2 bg-white rounded">
+                      <p className="text-xs text-muted-foreground">Frühstück</p>
+                      <p className="text-lg font-bold text-orange-600">{weeklyCovers.totalBreakfast}</p>
+                    </div>
+                    <div className="text-center p-2 bg-white rounded">
+                      <p className="text-xs text-muted-foreground">Mittag</p>
+                      <p className="text-lg font-bold text-yellow-600">{weeklyCovers.totalLunch}</p>
+                    </div>
+                    <div className="text-center p-2 bg-white rounded">
+                      <p className="text-xs text-muted-foreground">Abend</p>
+                      <p className="text-lg font-bold text-blue-600">{weeklyCovers.totalDinner}</p>
+                    </div>
+                    <div className="text-center p-2 bg-white rounded">
+                      <p className="text-xs text-muted-foreground">Gesamt</p>
+                      <p className="text-lg font-bold">{weeklyCovers.totalCovers}</p>
+                    </div>
+                    <div className="text-center p-2 bg-white rounded">
+                      <p className="text-xs text-muted-foreground">Gewichtet</p>
+                      <p className="text-lg font-bold text-primary">{weeklyCovers.weightedCovers.toFixed(0)}</p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2 text-center">
+                    {weeklyCovers.days} Tage erfasst | Gewichtung: Frühstück ×1, Mittag ×1.5, Abend ×2
+                  </p>
+                </div>
+              ) : (
+                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg flex items-center gap-3">
+                  <AlertCircle className="h-5 w-5 text-yellow-600" />
+                  <div>
+                    <p className="font-semibold text-yellow-800">Keine Cover-Daten vorhanden</p>
+                    <p className="text-sm text-yellow-700">Der Service muss zuerst die Covers dieser Woche erfassen.</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Wareneinsatz Eingabe */}
               <div>
-                <h3 className="font-semibold mb-3">Umsatz & Kosten</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <Label>Speisenumsatz (€)</Label>
-                    <Input
-                      type="number"
-                      value={formData.food_revenue}
-                      onChange={(e) => setFormData({ ...formData, food_revenue: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Wareneinsatz (€)</Label>
-                    <Input
-                      type="number"
-                      value={formData.food_cost}
-                      onChange={(e) => setFormData({ ...formData, food_cost: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Personalkosten Küche (€)</Label>
-                    <Input
-                      type="number"
-                      value={formData.kitchen_labour_cost}
-                      onChange={(e) => setFormData({ ...formData, kitchen_labour_cost: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Food Waste Wert (€)</Label>
-                    <Input
-                      type="number"
-                      value={formData.food_waste_value}
-                      onChange={(e) => setFormData({ ...formData, food_waste_value: Number(e.target.value) })}
-                    />
-                  </div>
+                <h4 className="font-semibold mb-3">💰 Wareneinsatz eingeben</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <Card className="border-2 border-green-200">
+                    <CardContent className="p-4">
+                      <Label className="font-semibold">Food-Einkauf (€)</Label>
+                      <Input
+                        type="number"
+                        value={formData.food_cost_week || ""}
+                        onChange={(e) => setFormData({ ...formData, food_cost_week: Number(e.target.value) })}
+                        placeholder="z.B. 4500"
+                        className="text-xl h-12 mt-2"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">Fleisch, Gemüse, Milch, etc.</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-2 border-purple-200">
+                    <CardContent className="p-4">
+                      <Label className="font-semibold">Getränke-Einkauf (€)</Label>
+                      <Input
+                        type="number"
+                        value={formData.beverage_cost_week || ""}
+                        onChange={(e) => setFormData({ ...formData, beverage_cost_week: Number(e.target.value) })}
+                        placeholder="z.B. 800"
+                        className="text-xl h-12 mt-2"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">Wein, Bier, Säfte, Kaffee</p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-2 border-red-200">
+                    <CardContent className="p-4">
+                      <Label className="font-semibold">Schwund/Reste (€)</Label>
+                      <Input
+                        type="number"
+                        value={formData.waste_value_week || ""}
+                        onChange={(e) => setFormData({ ...formData, waste_value_week: Number(e.target.value) })}
+                        placeholder="z.B. 150"
+                        className="text-xl h-12 mt-2"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">Geschätzte Lebensmittelabfälle</p>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
 
-              {/* Produktion */}
-              <div>
-                <h3 className="font-semibold mb-3">Produktion</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <Label>Covers gesamt</Label>
-                    <Input
-                      type="number"
-                      value={formData.covers_total}
-                      onChange={(e) => setFormData({ ...formData, covers_total: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Teller gesamt</Label>
-                    <Input
-                      type="number"
-                      value={formData.plates_total}
-                      onChange={(e) => setFormData({ ...formData, plates_total: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Küchen-MA im Einsatz</Label>
-                    <Input
-                      type="number"
-                      value={formData.kitchen_staff_on_duty}
-                      onChange={(e) => setFormData({ ...formData, kitchen_staff_on_duty: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Küchenstunden gesamt</Label>
-                    <Input
-                      type="number"
-                      step="0.5"
-                      value={formData.kitchen_hours_total}
-                      onChange={(e) => setFormData({ ...formData, kitchen_hours_total: Number(e.target.value) })}
-                    />
+              {/* Vorschau der berechneten CPCs */}
+              {weeklyCovers && (formData.food_cost_week > 0 || formData.beverage_cost_week > 0) && (
+                <div className="p-4 border-2 border-primary rounded-lg bg-primary/5">
+                  <h4 className="font-semibold mb-3 flex items-center gap-2">
+                    <Calculator className="h-4 w-4" />
+                    Berechnete Cost per Cover (Vorschau)
+                  </h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center p-3 bg-white rounded-lg">
+                      <p className="text-xs text-muted-foreground">CPC Frühstück</p>
+                      <p className="text-2xl font-bold text-orange-600">{calculatedKpis.cpc_breakfast.toFixed(2)} €</p>
+                    </div>
+                    <div className="text-center p-3 bg-white rounded-lg">
+                      <p className="text-xs text-muted-foreground">CPC Mittagessen</p>
+                      <p className="text-2xl font-bold text-yellow-600">{calculatedKpis.cpc_lunch.toFixed(2)} €</p>
+                    </div>
+                    <div className="text-center p-3 bg-white rounded-lg">
+                      <p className="text-xs text-muted-foreground">CPC Abendessen</p>
+                      <p className="text-2xl font-bold text-blue-600">{calculatedKpis.cpc_dinner.toFixed(2)} €</p>
+                    </div>
+                    <div className="text-center p-3 bg-white rounded-lg border-2 border-primary">
+                      <p className="text-xs text-muted-foreground">CPGD (pro Gast/Tag)</p>
+                      <p className="text-2xl font-bold text-primary">{calculatedKpis.cpgd.toFixed(2)} €</p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* Qualität */}
-              <div>
-                <h3 className="font-semibold mb-3">Qualität</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <Label>Bestellungen gesamt</Label>
-                    <Input
-                      type="number"
-                      value={formData.orders_total}
-                      onChange={(e) => setFormData({ ...formData, orders_total: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Korrekte Bestellungen</Label>
-                    <Input
-                      type="number"
-                      value={formData.correct_orders}
-                      onChange={(e) => setFormData({ ...formData, correct_orders: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Beschwerden Speisen</Label>
-                    <Input
-                      type="number"
-                      value={formData.food_complaints}
-                      onChange={(e) => setFormData({ ...formData, food_complaints: Number(e.target.value) })}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Personal */}
-              <div>
-                <h3 className="font-semibold mb-3">Personal</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <Label>Anwesenheitsquote (%)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      value={formData.attendance_rate}
-                      onChange={(e) => setFormData({ ...formData, attendance_rate: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Fluktuation p.a. (%)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      value={formData.turnover_rate}
-                      onChange={(e) => setFormData({ ...formData, turnover_rate: Number(e.target.value) })}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <Button onClick={handleSave} disabled={saving} className="w-full md:w-auto">
+              <Button 
+                onClick={handleSave} 
+                disabled={saving || !weeklyCovers} 
+                className="w-full" 
+                size="lg"
+              >
                 <Save className="h-4 w-4 mr-2" />
-                {saving ? "Speichern..." : "Tagesreport speichern"}
+                {saving ? "Speichern..." : "Wareneinsatz speichern & CPCs berechnen"}
               </Button>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="kpis" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {renderKpiCard("Food Cost", calculatedKpis.food_cost_pct, "%", getFoodCostColor(calculatedKpis.food_cost_pct), "Ziel: 25-35%")}
-            {renderKpiCard("Kitchen Labour", calculatedKpis.kitchen_labour_pct, "%", getLabourCostColor(calculatedKpis.kitchen_labour_pct), "Ziel: 18-28%")}
-            {renderKpiCard("Prime Cost", calculatedKpis.prime_cost_pct, "%", calculatedKpis.prime_cost_pct <= 65 ? "green" : calculatedKpis.prime_cost_pct <= 70 ? "yellow" : "red", "Ziel: ≤65%")}
-            {renderKpiCard("Food Cost/Cover", calculatedKpis.food_cost_per_cover, "€", "green", "Benchmark abhängig")}
-            {renderKpiCard("Meals/MA", calculatedKpis.meals_per_employee, "", getMealsPerEmployeeColor(calculatedKpis.meals_per_employee), "Ziel: 25-45")}
-            {renderKpiCard("Teller/Stunde", calculatedKpis.plates_per_hour, "", getPlatesPerHourColor(calculatedKpis.plates_per_hour), "Ziel: 15-35")}
-            {renderKpiCard("Order Accuracy", calculatedKpis.order_accuracy_pct, "%", getOrderAccuracyColor(calculatedKpis.order_accuracy_pct), "Ziel: ≥98%")}
-            {renderKpiCard("Beschwerderate", calculatedKpis.complaint_rate_pct, "%", getComplaintRateColor(calculatedKpis.complaint_rate_pct), "Ziel: ≤1%")}
-            {renderKpiCard("Food Waste", calculatedKpis.food_waste_pct, "%", getFoodWasteColor(calculatedKpis.food_waste_pct), "Ziel: <5%")}
-            {renderKpiCard("Anwesenheit", formData.attendance_rate, "%", getAttendanceColor(formData.attendance_rate), "Ziel: ≥95%")}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="trends" className="space-y-6">
-          <div>
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              KPI-Trends (letzte 30 Tage)
-            </h3>
-            <KitchenTrendCharts reports={reports} daysToShow={30} />
-          </div>
-
+        {/* ===== COVERS ANZEIGE (Read-Only) ===== */}
+        <TabsContent value="covers" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>Aggregierte Auswertung</span>
-                <Select value={aggregateView} onValueChange={(v) => setAggregateView(v as "week" | "month" | "year")}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="week">Woche</SelectItem>
-                    <SelectItem value="month">Monat</SelectItem>
-                    <SelectItem value="year">Jahr</SelectItem>
-                  </SelectContent>
-                </Select>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Covers der Woche (vom Service erfasst)
               </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Diese Daten werden vom Service-Team eingegeben
+              </p>
             </CardHeader>
             <CardContent>
-              {aggregatedData ? (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                  <div className="text-center p-4 bg-muted rounded-lg">
-                    <p className="text-sm text-muted-foreground">Erfasste Tage</p>
-                    <p className="text-2xl font-bold">{aggregatedData.count}</p>
+              {weeklyCovers ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <Card className="border-2 border-orange-200 bg-orange-50">
+                      <CardContent className="p-6 text-center">
+                        <Coffee className="h-8 w-8 text-orange-600 mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground">Frühstück</p>
+                        <p className="text-3xl font-bold text-orange-600">{weeklyCovers.totalBreakfast}</p>
+                        <p className="text-xs text-muted-foreground">Ø {(weeklyCovers.totalBreakfast / weeklyCovers.days).toFixed(0)}/Tag</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-2 border-yellow-200 bg-yellow-50">
+                      <CardContent className="p-6 text-center">
+                        <UtensilsCrossed className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground">Mittagessen</p>
+                        <p className="text-3xl font-bold text-yellow-600">{weeklyCovers.totalLunch}</p>
+                        <p className="text-xs text-muted-foreground">Ø {(weeklyCovers.totalLunch / weeklyCovers.days).toFixed(0)}/Tag</p>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-2 border-blue-200 bg-blue-50">
+                      <CardContent className="p-6 text-center">
+                        <Moon className="h-8 w-8 text-blue-600 mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground">Abendessen</p>
+                        <p className="text-3xl font-bold text-blue-600">{weeklyCovers.totalDinner}</p>
+                        <p className="text-xs text-muted-foreground">Ø {(weeklyCovers.totalDinner / weeklyCovers.days).toFixed(0)}/Tag</p>
+                      </CardContent>
+                    </Card>
                   </div>
-                  <div className="text-center p-4 bg-muted rounded-lg">
-                    <p className="text-sm text-muted-foreground">Gesamtumsatz</p>
-                    <p className="text-2xl font-bold">{aggregatedData.total_revenue.toLocaleString("de-DE")} €</p>
-                  </div>
-                  <div className="text-center p-4 bg-muted rounded-lg">
-                    <p className="text-sm text-muted-foreground">Ø Food Cost</p>
-                    <p className="text-2xl font-bold">{aggregatedData.avg_food_cost_pct.toFixed(1)}%</p>
-                  </div>
-                  <div className="text-center p-4 bg-muted rounded-lg">
-                    <p className="text-sm text-muted-foreground">Ø Order Accuracy</p>
-                    <p className="text-2xl font-bold">{aggregatedData.avg_order_accuracy.toFixed(1)}%</p>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <Card>
+                      <CardContent className="p-4 text-center">
+                        <p className="text-sm text-muted-foreground">Gesamt Covers</p>
+                        <p className="text-3xl font-bold">{weeklyCovers.totalCovers}</p>
+                      </CardContent>
+                    </Card>
+                    <Card className="border-2 border-primary">
+                      <CardContent className="p-4 text-center">
+                        <p className="text-sm text-muted-foreground">Gewichtete Covers</p>
+                        <p className="text-3xl font-bold text-primary">{weeklyCovers.weightedCovers.toFixed(0)}</p>
+                        <p className="text-xs text-muted-foreground">Für CPC-Berechnung</p>
+                      </CardContent>
+                    </Card>
                   </div>
                 </div>
               ) : (
-                <p className="text-muted-foreground text-center py-8">Keine Daten für diesen Zeitraum</p>
+                <div className="p-8 text-center text-muted-foreground">
+                  <AlertCircle className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
+                  <p className="font-semibold">Keine Cover-Daten für diese Woche</p>
+                  <p className="text-sm">Der Service muss zuerst die täglichen Covers erfassen.</p>
+                </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ===== AKTUELLE KPIs ===== */}
+        <TabsContent value="kpis" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            {renderCpcCard(
+              "CPC Frühstück",
+              <Coffee className="h-5 w-5 text-orange-600" />,
+              calculatedKpis.cpc_breakfast,
+              "Benchmark: 4-6 €",
+              getCpcBreakfastColor(calculatedKpis.cpc_breakfast)
+            )}
+            {renderCpcCard(
+              "CPC Mittagessen",
+              <UtensilsCrossed className="h-5 w-5 text-yellow-600" />,
+              calculatedKpis.cpc_lunch,
+              "Benchmark: 6-10 €",
+              getCpcLunchColor(calculatedKpis.cpc_lunch)
+            )}
+            {renderCpcCard(
+              "CPC Abendessen",
+              <Moon className="h-5 w-5 text-blue-600" />,
+              calculatedKpis.cpc_dinner,
+              "Benchmark: 8-14 €",
+              getCpcDinnerColor(calculatedKpis.cpc_dinner)
+            )}
+            {renderCpcCard(
+              "CPGD (Kosten/Gast/Tag)",
+              <Users className="h-5 w-5 text-primary" />,
+              calculatedKpis.cpgd,
+              "Benchmark: 18-30 €",
+              getCpgdColor(calculatedKpis.cpgd)
+            )}
+          </div>
+
+          {/* Schwund */}
+          <Card className={`border-2 ${colorBgClasses[getWasteColor(calculatedKpis.waste_pct)]}`}>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Schwund/Waste</p>
+                  <p className="text-2xl font-bold">{calculatedKpis.waste_pct.toFixed(1)}%</p>
+                  <p className="text-xs text-muted-foreground">Ziel: {"<"}2%</p>
+                </div>
+                <div className={`w-5 h-5 rounded-full ${colorClasses[getWasteColor(calculatedKpis.waste_pct)]} shadow-md`} />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Benchmark-Legende */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm">🚦 Ampel-Legende (Benchmarks für Kurhotel)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="font-semibold mb-2">Cost per Cover (CPC)</p>
+                  <ul className="space-y-1">
+                    <li><span className="inline-block w-3 h-3 rounded-full bg-green-500 mr-2"></span>Frühstück: 4-6 € | Mittag: 6-10 € | Abend: 8-14 €</li>
+                    <li><span className="inline-block w-3 h-3 rounded-full bg-yellow-500 mr-2"></span>Frühstück: 6-8 € | Mittag: 10-14 € | Abend: 14-18 €</li>
+                    <li><span className="inline-block w-3 h-3 rounded-full bg-red-500 mr-2"></span>Frühstück: {">"}8 € | Mittag: {">"}14 € | Abend: {">"}18 €</li>
+                  </ul>
+                </div>
+                <div>
+                  <p className="font-semibold mb-2">Weitere KPIs</p>
+                  <ul className="space-y-1">
+                    <li><span className="inline-block w-3 h-3 rounded-full bg-green-500 mr-2"></span>CPGD: 18-30 € | Schwund: {"<"}2%</li>
+                    <li><span className="inline-block w-3 h-3 rounded-full bg-yellow-500 mr-2"></span>CPGD: 30-40 € | Schwund: 2-5%</li>
+                    <li><span className="inline-block w-3 h-3 rounded-full bg-red-500 mr-2"></span>CPGD: {">"}40 € | Schwund: {">"}5%</li>
+                  </ul>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

@@ -26,6 +26,7 @@ interface KlassenData {
 interface AufwandKlassenChartProps {
   data: KlassenData[];
   title: string;
+  totalLabel?: string;
 }
 
 const TrendIndicator = ({ current, previous }: { current: number; previous: number | null }) => {
@@ -43,6 +44,30 @@ const TrendIndicator = ({ current, previous }: { current: number; previous: numb
       "flex items-center gap-0.5 text-xs font-medium",
       isPositive && "text-destructive",
       isNegative && "text-success",
+      !isPositive && !isNegative && "text-muted-foreground"
+    )}>
+      <Icon className="h-3 w-3" />
+      {formatPercent(diffPercent)}
+    </span>
+  );
+};
+
+// Variante für Erlöse (positive Trends sind gut)
+const TrendIndicatorRevenue = ({ current, previous }: { current: number; previous: number | null }) => {
+  if (previous === null || previous === 0) return null;
+  
+  const diff = current - previous;
+  const diffPercent = (diff / Math.abs(previous)) * 100;
+  const isPositive = diff > 0;
+  const isNegative = diff < 0;
+  
+  const Icon = isPositive ? TrendingUp : isNegative ? TrendingDown : Minus;
+  
+  return (
+    <span className={cn(
+      "flex items-center gap-0.5 text-xs font-medium",
+      isPositive && "text-success",
+      isNegative && "text-destructive",
       !isPositive && !isNegative && "text-muted-foreground"
     )}>
       <Icon className="h-3 w-3" />
@@ -79,12 +104,16 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-export function AufwandKlassenChart({ data, title }: AufwandKlassenChartProps) {
+export function AufwandKlassenChart({ data, title, totalLabel = "Gesamtaufwand" }: AufwandKlassenChartProps) {
   const [expandedKlasse, setExpandedKlasse] = useState<string | null>(null);
   
   const total = data.reduce((sum, d) => sum + d.value, 0);
   const totalVormonat = data.reduce((sum, d) => sum + d.valueVormonat, 0);
   const totalVorjahr = data.reduce((sum, d) => sum + d.valueVorjahr, 0);
+  
+  // Determine if this is a revenue chart (for trend indicator styling)
+  const isRevenueChart = totalLabel.toLowerCase().includes('erlös') || totalLabel.toLowerCase().includes('revenue');
+  const TrendComponent = isRevenueChart ? TrendIndicatorRevenue : TrendIndicator;
 
   if (data.length === 0 || total === 0) {
     return (
@@ -149,7 +178,7 @@ export function AufwandKlassenChart({ data, title }: AufwandKlassenChartProps) {
                       <p className="text-sm font-mono text-muted-foreground">
                         {formatCurrency(item.valueVormonat)}
                       </p>
-                      <TrendIndicator current={item.value} previous={item.valueVormonat} />
+                      <TrendComponent current={item.value} previous={item.valueVormonat} />
                     </div>
                     <p className="text-xs text-muted-foreground">Vormonat</p>
                   </div>
@@ -160,7 +189,7 @@ export function AufwandKlassenChart({ data, title }: AufwandKlassenChartProps) {
                       <p className="text-sm font-mono text-muted-foreground">
                         {formatCurrency(item.valueVorjahr)}
                       </p>
-                      <TrendIndicator current={item.value} previous={item.valueVorjahr} />
+                      <TrendComponent current={item.value} previous={item.valueVorjahr} />
                     </div>
                     <p className="text-xs text-muted-foreground">Vorjahr</p>
                   </div>
@@ -177,9 +206,9 @@ export function AufwandKlassenChart({ data, title }: AufwandKlassenChartProps) {
               </div>
             </button>
             
-            {/* Drill-down: Einzelne Konten */}
+            {/* Drill-down: Einzelne Konten - MIT SCROLLBAR */}
             {expandedKlasse === item.klasse && item.konten.length > 0 && (
-              <div className="mt-2 ml-4 border-l-2 border-border pl-4 space-y-1">
+              <div className="mt-2 ml-4 border-l-2 border-border pl-4">
                 <div className="grid grid-cols-12 gap-2 text-xs text-muted-foreground py-2 border-b border-border">
                   <div className="col-span-2">Konto</div>
                   <div className="col-span-4">Bezeichnung</div>
@@ -187,30 +216,37 @@ export function AufwandKlassenChart({ data, title }: AufwandKlassenChartProps) {
                   <div className="col-span-2 text-right hidden sm:block">Vormonat</div>
                   <div className="col-span-2 text-right hidden md:block">Vorjahr</div>
                 </div>
-                {item.konten
-                  .sort((a, b) => Math.abs(b.saldoAktuell) - Math.abs(a.saldoAktuell))
-                  .map((konto) => (
-                  <div 
-                    key={konto.kontonummer} 
-                    className="grid grid-cols-12 gap-2 text-sm py-2 hover:bg-muted/30 rounded px-1"
-                  >
-                    <div className="col-span-2 font-mono text-muted-foreground">
-                      {konto.kontonummer}
+                {/* Scrollbare Liste mit max-height */}
+                <div className="max-h-64 overflow-y-auto space-y-1">
+                  {item.konten
+                    .sort((a, b) => Math.abs(b.saldoAktuell) - Math.abs(a.saldoAktuell))
+                    .map((konto) => (
+                    <div 
+                      key={konto.kontonummer} 
+                      className="grid grid-cols-12 gap-2 text-sm py-2 hover:bg-muted/30 rounded px-1"
+                    >
+                      <div className="col-span-2 font-mono text-muted-foreground">
+                        {konto.kontonummer}
+                      </div>
+                      <div className="col-span-4 truncate text-foreground" title={konto.bezeichnung}>
+                        {konto.bezeichnung}
+                      </div>
+                      <div className="col-span-2 text-right font-mono font-medium text-foreground">
+                        {formatCurrency(Math.abs(konto.saldoAktuell))}
+                      </div>
+                      <div className="col-span-2 text-right font-mono text-muted-foreground hidden sm:block">
+                        {konto.saldoVormonat !== null ? formatCurrency(Math.abs(konto.saldoVormonat)) : '–'}
+                      </div>
+                      <div className="col-span-2 text-right font-mono text-muted-foreground hidden md:block">
+                        {konto.saldoVorjahr !== null ? formatCurrency(Math.abs(konto.saldoVorjahr)) : '–'}
+                      </div>
                     </div>
-                    <div className="col-span-4 truncate text-foreground" title={konto.bezeichnung}>
-                      {konto.bezeichnung}
-                    </div>
-                    <div className="col-span-2 text-right font-mono font-medium text-foreground">
-                      {formatCurrency(Math.abs(konto.saldoAktuell))}
-                    </div>
-                    <div className="col-span-2 text-right font-mono text-muted-foreground hidden sm:block">
-                      {konto.saldoVormonat !== null ? formatCurrency(Math.abs(konto.saldoVormonat)) : '–'}
-                    </div>
-                    <div className="col-span-2 text-right font-mono text-muted-foreground hidden md:block">
-                      {konto.saldoVorjahr !== null ? formatCurrency(Math.abs(konto.saldoVorjahr)) : '–'}
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+                {/* Anzahl der Konten anzeigen */}
+                <div className="text-xs text-muted-foreground pt-2 border-t border-border mt-2">
+                  {item.konten.length} Konten
+                </div>
               </div>
             )}
           </div>
@@ -261,7 +297,7 @@ export function AufwandKlassenChart({ data, title }: AufwandKlassenChartProps) {
       {/* Total with comparisons */}
       <div className="mt-4 pt-4 border-t border-border">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <span className="text-sm font-medium text-muted-foreground">Gesamtaufwand</span>
+          <span className="text-sm font-medium text-muted-foreground">{totalLabel}</span>
           <div className="flex items-center gap-6">
             <div className="text-right">
               <p className="text-lg font-mono font-semibold text-foreground">
@@ -274,7 +310,7 @@ export function AufwandKlassenChart({ data, title }: AufwandKlassenChartProps) {
                 <p className="text-sm font-mono text-muted-foreground">
                   {formatCurrency(totalVormonat)}
                 </p>
-                <TrendIndicator current={total} previous={totalVormonat} />
+                <TrendComponent current={total} previous={totalVormonat} />
               </div>
               <p className="text-xs text-muted-foreground">Vormonat</p>
             </div>
@@ -283,7 +319,7 @@ export function AufwandKlassenChart({ data, title }: AufwandKlassenChartProps) {
                 <p className="text-sm font-mono text-muted-foreground">
                   {formatCurrency(totalVorjahr)}
                 </p>
-                <TrendIndicator current={total} previous={totalVorjahr} />
+                <TrendComponent current={total} previous={totalVorjahr} />
               </div>
               <p className="text-xs text-muted-foreground">Vorjahr</p>
             </div>

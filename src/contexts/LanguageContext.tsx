@@ -27,6 +27,8 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.employees': 'Mitarbeiter',
     'nav.shiftPlanningAll': 'Schichtplanung (Alle)',
     'nav.departmentShiftPlan': 'Abteilungs-Schichtplan',
+    'nav.teamShiftPlan': 'Team-Schichtplan',
+    'nav.myShiftPlan': 'Mein Schichtplan',
     'nav.timeAccounts': 'Zeitkonten',
     'nav.personnelKpis': 'Personal-KPIs',
     'nav.planningAlarms': 'Planung & Alarme',
@@ -40,6 +42,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.periodComparison': 'Periodenvergleich',
     'nav.areaAnalysis': 'Bereichsanalyse',
     'nav.dataQuality': 'Datenqualität',
+    'nav.adminTracker': 'Verwaltungs-Tracker',
     'nav.financialAnalysis': 'FinanzAnalyse',
     'nav.hotelBalanceLists': 'Hotel Saldenlisten',
     
@@ -76,8 +79,8 @@ const translations: Record<Language, Record<string, string>> = {
     
     // ===== CHARTS =====
     'chart.expensesByClass': 'Gesamtaufwand nach Kontoklassen',
+    'chart.revenueByClass': 'Gesamterlöse nach Kontenklassen',  // <-- NEU
     'chart.revenueByArea': 'Erlöse nach Bereich',
-    'chart.expensesByArea': 'Aufwand nach Bereich',
     'chart.materialExpenses': 'Materialaufwand',
     'chart.personnelExpenses': 'Personalaufwand',
     'chart.depreciation': 'Abschreibungen',
@@ -574,6 +577,8 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.employees': 'Employees',
     'nav.shiftPlanningAll': 'Shift Planning (All)',
     'nav.departmentShiftPlan': 'Department Shift Plan',
+    'nav.teamShiftPlan': 'Team Shift Plan',
+    'nav.myShiftPlan': 'My Shift Plan',
     'nav.timeAccounts': 'Time Accounts',
     'nav.personnelKpis': 'Personnel KPIs',
     'nav.planningAlarms': 'Planning & Alarms',
@@ -587,6 +592,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.periodComparison': 'Period Comparison',
     'nav.areaAnalysis': 'Area Analysis',
     'nav.dataQuality': 'Data Quality',
+    'nav.adminTracker': 'Admin Tracker',
     'nav.financialAnalysis': 'Financial Analysis',
     'nav.hotelBalanceLists': 'Hotel Balance Lists',
     
@@ -623,6 +629,7 @@ const translations: Record<Language, Record<string, string>> = {
     // ===== CHARTS =====
     'chart.expensesByClass': 'Total Expenses by Account Class',
     'chart.revenueByArea': 'Revenue by Area',
+    'chart.revenueByClass': 'Total Revenue by Account Class',
     'chart.expensesByArea': 'Expenses by Area',
     'chart.materialExpenses': 'Material Expenses',
     'chart.personnelExpenses': 'Personnel Expenses',
@@ -1120,6 +1127,8 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.employees': 'कर्मचारी',
     'nav.shiftPlanningAll': 'शिफ्ट योजना (सभी)',
     'nav.departmentShiftPlan': 'विभाग शिफ्ट योजना',
+    'nav.teamShiftPlan': 'टीम शिफ्ट योजना',
+    'nav.myShiftPlan': 'मेरी शिफ्ट योजना',
     'nav.timeAccounts': 'समय खाते',
     'nav.personnelKpis': 'कर्मचारी KPIs',
     'nav.planningAlarms': 'योजना और अलार्म',
@@ -1133,6 +1142,7 @@ const translations: Record<Language, Record<string, string>> = {
     'nav.periodComparison': 'अवधि तुलना',
     'nav.areaAnalysis': 'क्षेत्र विश्लेषण',
     'nav.dataQuality': 'डेटा गुणवत्ता',
+    'nav.adminTracker': 'प्रशासन ट्रैकर',
     'nav.financialAnalysis': 'वित्तीय विश्लेषण',
     'nav.hotelBalanceLists': 'होटल शेष सूची',
     
@@ -1169,6 +1179,7 @@ const translations: Record<Language, Record<string, string>> = {
     // ===== CHARTS =====
     'chart.expensesByClass': 'खाता वर्ग के अनुसार कुल व्यय',
     'chart.revenueByArea': 'क्षेत्र के अनुसार राजस्व',
+    'chart.revenueByClass': 'खाता वर्ग के अनुसार कुल राजस्व',
     'chart.expensesByArea': 'क्षेत्र के अनुसार व्यय',
     'chart.materialExpenses': 'सामग्री व्यय',
     'chart.personnelExpenses': 'कर्मचारी व्यय',

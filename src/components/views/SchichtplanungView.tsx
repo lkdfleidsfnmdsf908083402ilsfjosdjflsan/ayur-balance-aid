@@ -277,14 +277,67 @@ export function SchichtplanungView() {
     return option?.label || abwesenheit;
   };
 
+  // Helper: Zeit-String zu Minuten
+  const parseTime = (timeStr: string | null): number => {
+    if (!timeStr) return 0;
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    return hours * 60 + (minutes || 0);
+  };
+
   const weekStats = useMemo(() => {
     const employeeStats = filteredEmployees.map(emp => {
       const empShifts = shifts.filter(s => s.employee_id === emp.id);
-      const sollGesamt = empShifts.reduce((sum, s) => sum + (s.abwesenheit === 'Arbeit' ? s.soll_stunden : 0), 0);
-      const istGesamt = empShifts.reduce((sum, s) => sum + (s.ist_stunden || 0), 0);
-      const ueberstundenGesamt = empShifts.reduce((sum, s) => sum + (s.ueberstunden || 0), 0);
-      const krankTage = empShifts.filter(s => s.abwesenheit === 'Krank').length;
-      const urlaubTage = empShifts.filter(s => s.abwesenheit === 'Urlaub').length;
+      
+      let sollGesamt = 0;
+      let istGesamt = 0;
+      let ueberstundenGesamt = 0;
+      let krankTage = 0;
+      let urlaubTage = 0;
+
+      empShifts.forEach(s => {
+        // Soll-Stunden nur bei Arbeit
+        if (s.abwesenheit === 'Arbeit') {
+          sollGesamt += s.soll_stunden || 0;
+        }
+        
+        // IST-Stunden berechnen
+        let istStunden = s.ist_stunden;
+        
+        // Wenn keine IST-Stunden eingetragen (null oder 0), aus Schichtzeiten berechnen
+        if ((istStunden === null || istStunden === 0) && s.abwesenheit === 'Arbeit') {
+          if (s.vormittag_beginn && s.vormittag_ende && s.nachmittag_beginn && s.nachmittag_ende) {
+            // Geteilte Schicht
+            const vmMinuten = parseTime(s.vormittag_ende) - parseTime(s.vormittag_beginn);
+            const nmMinuten = parseTime(s.nachmittag_ende) - parseTime(s.nachmittag_beginn);
+            istStunden = (vmMinuten + nmMinuten) / 60;
+          } else if (s.schicht_beginn && s.schicht_ende) {
+            // Durchgehende Schicht
+            const minuten = parseTime(s.schicht_ende) - parseTime(s.schicht_beginn);
+            const pauseMinuten = s.pause_minuten || 0;
+            istStunden = (minuten - pauseMinuten) / 60;
+          } else {
+            // Fallback: Soll-Stunden als IST annehmen
+            istStunden = s.soll_stunden || 0;
+          }
+        }
+        
+        if (istStunden !== null && istStunden > 0) {
+          istGesamt += istStunden;
+        }
+        
+        // Überstunden: entweder aus DB oder berechnet
+        let ueberstunden = s.ueberstunden;
+        if ((ueberstunden === null || ueberstunden === 0) && s.abwesenheit === 'Arbeit' && istStunden !== null) {
+          ueberstunden = istStunden - (s.soll_stunden || 0);
+        }
+        if (ueberstunden !== null) {
+          ueberstundenGesamt += ueberstunden;
+        }
+        
+        // Krank/Urlaub Tage
+        if (s.abwesenheit === 'Krank') krankTage++;
+        if (s.abwesenheit === 'Urlaub') urlaubTage++;
+      });
 
       return { employee: emp, sollGesamt, istGesamt, ueberstundenGesamt, krankTage, urlaubTage };
     });

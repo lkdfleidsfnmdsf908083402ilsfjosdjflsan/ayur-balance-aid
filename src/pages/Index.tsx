@@ -13,6 +13,8 @@ import { AdminKpiView } from '@/components/views/AdminKpiView';
 import { MitarbeiterStammdatenView } from '@/components/views/MitarbeiterStammdatenView';
 import { SchichtplanungView } from '@/components/views/SchichtplanungView';
 import { AbteilungSchichtplanungView } from '@/components/views/AbteilungSchichtplanungView';
+import { TeamSchichtplanungView } from '@/components/views/TeamSchichtplanungView';
+import { MeinSchichtplanView } from '@/components/views/MeinSchichtplanView';
 import { ZeitkontenView } from '@/components/views/ZeitkontenView';
 import { PersonalKpiUebersichtView } from '@/components/views/PersonalKpiUebersichtView';
 import { BudgetPlanungView } from '@/components/views/BudgetPlanungView';
@@ -29,6 +31,7 @@ import { IntelligentSchichtplanungView } from '@/components/views/IntelligentSch
 import { MitarbeiterSchichtplanView } from '@/components/views/MitarbeiterSchichtplanView';
 import { AbteilungsleiterDashboardView } from '@/components/views/AbteilungsleiterDashboardView';
 import { GaesteVerwaltungView } from '@/components/views/GaesteVerwaltungView';
+import { VerwaltungsTrackerView } from '@/components/views/VerwaltungsTrackerView';
 import { useFinanceStore } from '@/store/financeStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -49,9 +52,9 @@ const Index = () => {
     // Mitarbeiter: redirect to own shift plan view
     if (userRole === 'mitarbeiter' && activeView === 'dashboard') {
       if (isMobile) {
-        setActiveView('mitarbeiter-schichtplan');
+        setActiveView('mein-schichtplan');
       } else {
-        setActiveView('abteilung-schichtplanung');
+        setActiveView('mein-schichtplan');
       }
     }
     // Abteilungsleiter: redirect to abteilungsleiter dashboard (or intelligent scheduling on mobile)
@@ -93,7 +96,11 @@ const Index = () => {
       case 'schichtplanung':
         return <SchichtplanungView />;
       case 'abteilung-schichtplanung':
-        return <AbteilungSchichtplanungView />;
+          return <AbteilungSchichtplanungView />;
+      case 'team-schichtplanung':
+          return <TeamSchichtplanungView />;
+      case 'mein-schichtplan':
+          return <MeinSchichtplanView />;
       case 'mobile-schichtplanung':
         return <MobileSchichtplanungView />;
       case 'intelligent-schichtplanung':
@@ -124,6 +131,8 @@ const Index = () => {
         return <DatenqualitaetView />;
       case 'gaeste':
         return <GaesteVerwaltungView />;
+      case 'verwaltung':
+          return <VerwaltungsTrackerView />;  
       default:
         return <DashboardView />;
     }

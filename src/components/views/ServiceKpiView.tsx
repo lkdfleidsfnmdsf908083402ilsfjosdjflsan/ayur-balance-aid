@@ -1,87 +1,51 @@
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { format, startOfWeek, startOfMonth, startOfYear } from "date-fns";
+import { format, startOfWeek, endOfWeek } from "date-fns";
 import { de } from "date-fns/locale";
-import { UtensilsCrossed, Save, TrendingUp } from "lucide-react";
-import { ServiceTrendCharts } from "@/components/charts/ServiceTrendCharts";
+import { ConciergeBell, Save, Users, Coffee, UtensilsCrossed, Moon, Wine, TrendingUp } from "lucide-react";
 
 type TrafficColor = "green" | "yellow" | "red";
 
 interface ServiceReport {
   id: string;
   report_date: string;
-  service_revenue: number;
+  covers_breakfast: number;
+  covers_lunch: number;
+  covers_dinner: number;
   covers_total: number;
-  tables_served: number;
-  tables_available: number | null;
-  service_staff_on_duty: number;
-  service_hours_total: number;
-  service_errors: number;
-  items_total: number;
-  service_complaints: number;
-  service_ratings_count: number;
-  service_ratings_sum: number;
-  csat_positive_count: number | null;
-  csat_total_respondents: number | null;
-  attendance_rate: number | null;
-  turnover_rate: number | null;
-  sales_per_cover: number | null;
-  sales_per_server: number | null;
-  covers_per_server_per_hour: number | null;
-  table_turnover_rate: number | null;
-  service_error_rate_pct: number | null;
-  service_complaint_rate_pct: number | null;
-  avg_service_rating: number | null;
-  csat_pct: number | null;
+  guests_absent: number;
+  extra_beverage_revenue: number | null;
+  extra_food_revenue: number | null;
+  staff_count: number;
+  total_hours: number | null;
+  complaints: number;
+  covers_per_employee: number | null;
+  extra_revenue_per_cover: number | null;
+  complaint_rate_pct: number | null;
 }
 
 // Ampellogik
-function getCoversPerHourColor(val: number): TrafficColor {
-  if (val >= 6 && val <= 10) return "green";
-  if ((val >= 4 && val < 6) || (val > 10 && val <= 12)) return "yellow";
+function getCoversPerEmployeeColor(covers: number): TrafficColor {
+  if (covers >= 20 && covers <= 35) return "green";
+  if (covers >= 15 && covers < 20) return "yellow";
   return "red";
 }
 
-function getErrorRateColor(rate: number): TrafficColor {
-  if (rate <= 0.5) return "green";
-  if (rate <= 1) return "yellow";
+function getExtraRevenueColor(revenue: number): TrafficColor {
+  if (revenue >= 3) return "green";
+  if (revenue >= 1.5) return "yellow";
   return "red";
 }
 
-function getComplaintRateColor(rate: number): TrafficColor {
-  if (rate <= 0.5) return "green";
-  if (rate <= 1.5) return "yellow";
-  return "red";
-}
-
-function getAvgRatingColor(rating: number): TrafficColor {
-  if (rating >= 4.5) return "green";
-  if (rating >= 4.2) return "yellow";
-  return "red";
-}
-
-function getCsatColor(pct: number): TrafficColor {
-  if (pct >= 90) return "green";
-  if (pct >= 85) return "yellow";
-  return "red";
-}
-
-function getAttendanceColor(rate: number): TrafficColor {
-  if (rate >= 95) return "green";
-  if (rate >= 92) return "yellow";
-  return "red";
-}
-
-function getTurnoverColor(rate: number): TrafficColor {
-  if (rate < 25) return "green";
-  if (rate <= 30) return "yellow";
+function getComplaintColor(rate: number): TrafficColor {
+  if (rate <= 1) return "green";
+  if (rate <= 2) return "yellow";
   return "red";
 }
 
@@ -91,35 +55,62 @@ const colorClasses: Record<TrafficColor, string> = {
   red: "bg-red-500",
 };
 
+const colorBgClasses: Record<TrafficColor, string> = {
+  green: "bg-green-50 border-green-200",
+  yellow: "bg-yellow-50 border-yellow-200",
+  red: "bg-red-50 border-red-200",
+};
+
 export function ServiceKpiView() {
   const [reports, setReports] = useState<ServiceReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"));
-  const [aggregateView, setAggregateView] = useState<"week" | "month" | "year">("month");
 
-  // Formular-State
   const [formData, setFormData] = useState({
-    service_revenue: 0,
-    covers_total: 0,
-    tables_served: 0,
-    tables_available: 20,
-    service_staff_on_duty: 0,
-    service_hours_total: 0,
-    service_errors: 0,
-    items_total: 0,
-    service_complaints: 0,
-    service_ratings_count: 0,
-    service_ratings_sum: 0,
-    csat_positive_count: 0,
-    csat_total_respondents: 0,
-    attendance_rate: 97,
-    turnover_rate: 20,
+    covers_breakfast: 0,
+    covers_lunch: 0,
+    covers_dinner: 0,
+    guests_absent: 0,
+    extra_beverage_revenue: 0,
+    extra_food_revenue: 0,
+    staff_count: 0,
+    total_hours: 0,
+    complaints: 0,
   });
 
   useEffect(() => {
     fetchReports();
   }, []);
+
+  useEffect(() => {
+    const existingReport = reports.find(r => r.report_date === selectedDate);
+    if (existingReport) {
+      setFormData({
+        covers_breakfast: existingReport.covers_breakfast || 0,
+        covers_lunch: existingReport.covers_lunch || 0,
+        covers_dinner: existingReport.covers_dinner || 0,
+        guests_absent: existingReport.guests_absent || 0,
+        extra_beverage_revenue: existingReport.extra_beverage_revenue || 0,
+        extra_food_revenue: existingReport.extra_food_revenue || 0,
+        staff_count: existingReport.staff_count || 0,
+        total_hours: existingReport.total_hours || 0,
+        complaints: existingReport.complaints || 0,
+      });
+    } else {
+      setFormData({
+        covers_breakfast: 0,
+        covers_lunch: 0,
+        covers_dinner: 0,
+        guests_absent: 0,
+        extra_beverage_revenue: 0,
+        extra_food_revenue: 0,
+        staff_count: 0,
+        total_hours: 0,
+        complaints: 0,
+      });
+    }
+  }, [selectedDate, reports]);
 
   const fetchReports = async () => {
     setLoading(true);
@@ -134,50 +125,55 @@ export function ServiceKpiView() {
       console.error(error);
     } else {
       setReports(data || []);
-      const existingReport = data?.find(r => r.report_date === selectedDate);
-      if (existingReport) {
-        setFormData({
-          service_revenue: existingReport.service_revenue,
-          covers_total: existingReport.covers_total,
-          tables_served: existingReport.tables_served,
-          tables_available: existingReport.tables_available || 20,
-          service_staff_on_duty: existingReport.service_staff_on_duty,
-          service_hours_total: existingReport.service_hours_total,
-          service_errors: existingReport.service_errors,
-          items_total: existingReport.items_total,
-          service_complaints: existingReport.service_complaints,
-          service_ratings_count: existingReport.service_ratings_count,
-          service_ratings_sum: existingReport.service_ratings_sum,
-          csat_positive_count: existingReport.csat_positive_count || 0,
-          csat_total_respondents: existingReport.csat_total_respondents || 0,
-          attendance_rate: existingReport.attendance_rate || 97,
-          turnover_rate: existingReport.turnover_rate || 20,
-        });
-      }
     }
     setLoading(false);
   };
 
-  // Berechnete KPIs
   const calculatedKpis = useMemo(() => {
-    const { service_revenue, covers_total, tables_served, tables_available, service_staff_on_duty, service_hours_total, service_errors, items_total, service_complaints, service_ratings_count, service_ratings_sum, csat_positive_count, csat_total_respondents } = formData;
-
-    const totalServiceHours = service_staff_on_duty * service_hours_total;
+    const { covers_breakfast, covers_lunch, covers_dinner, staff_count, extra_beverage_revenue, extra_food_revenue, complaints } = formData;
+    
+    const covers_total = covers_breakfast + covers_lunch + covers_dinner;
+    const extra_total = (extra_beverage_revenue || 0) + (extra_food_revenue || 0);
 
     return {
-      sales_per_cover: covers_total > 0 ? service_revenue / covers_total : 0,
-      sales_per_server: service_staff_on_duty > 0 ? service_revenue / service_staff_on_duty : 0,
-      covers_per_server_per_hour: totalServiceHours > 0 ? covers_total / totalServiceHours : 0,
-      table_turnover_rate: tables_available > 0 ? tables_served / tables_available : 0,
-      service_error_rate_pct: items_total > 0 ? (service_errors / items_total) * 100 : 0,
-      service_complaint_rate_pct: covers_total > 0 ? (service_complaints / covers_total) * 100 : 0,
-      avg_service_rating: service_ratings_count > 0 ? service_ratings_sum / service_ratings_count : 0,
-      csat_pct: csat_total_respondents > 0 ? (csat_positive_count / csat_total_respondents) * 100 : 0,
+      covers_total,
+      covers_per_employee: staff_count > 0 ? covers_total / staff_count : 0,
+      extra_revenue_per_cover: covers_total > 0 ? extra_total / covers_total : 0,
+      complaint_rate_pct: covers_total > 0 ? (complaints / covers_total) * 100 : 0,
     };
   }, [formData]);
 
+  // Wochenstatistik
+  const weeklyStats = useMemo(() => {
+    const weekStart = startOfWeek(new Date(selectedDate), { locale: de });
+    const weekEnd = endOfWeek(new Date(selectedDate), { locale: de });
+    
+    const weekReports = reports.filter(r => {
+      const d = new Date(r.report_date);
+      return d >= weekStart && d <= weekEnd;
+    });
+
+    if (weekReports.length === 0) return null;
+
+    const totalBreakfast = weekReports.reduce((s, r) => s + (r.covers_breakfast || 0), 0);
+    const totalLunch = weekReports.reduce((s, r) => s + (r.covers_lunch || 0), 0);
+    const totalDinner = weekReports.reduce((s, r) => s + (r.covers_dinner || 0), 0);
+    const totalExtras = weekReports.reduce((s, r) => s + (r.extra_beverage_revenue || 0) + (r.extra_food_revenue || 0), 0);
+
+    return {
+      days: weekReports.length,
+      totalBreakfast,
+      totalLunch,
+      totalDinner,
+      totalCovers: totalBreakfast + totalLunch + totalDinner,
+      totalExtras,
+      avgCoversPerDay: (totalBreakfast + totalLunch + totalDinner) / weekReports.length,
+    };
+  }, [reports, selectedDate]);
+
   const handleSave = async () => {
     setSaving(true);
+
     const reportData = {
       report_date: selectedDate,
       ...formData,
@@ -196,7 +192,7 @@ export function ServiceKpiView() {
         toast.error("Fehler beim Aktualisieren");
         console.error(error);
       } else {
-        toast.success("Tagesreport aktualisiert");
+        toast.success("Service-Report aktualisiert");
         fetchReports();
       }
     } else {
@@ -208,67 +204,12 @@ export function ServiceKpiView() {
         toast.error("Fehler beim Speichern");
         console.error(error);
       } else {
-        toast.success("Tagesreport gespeichert");
+        toast.success("Service-Report gespeichert");
         fetchReports();
       }
     }
     setSaving(false);
   };
-
-  // Aggregierte Daten
-  const aggregatedData = useMemo(() => {
-    if (reports.length === 0) return null;
-
-    let startDate: Date;
-    const now = new Date();
-
-    switch (aggregateView) {
-      case "week":
-        startDate = startOfWeek(now, { locale: de });
-        break;
-      case "month":
-        startDate = startOfMonth(now);
-        break;
-      case "year":
-        startDate = startOfYear(now);
-        break;
-    }
-
-    const filteredReports = reports.filter(r => new Date(r.report_date) >= startDate);
-
-    if (filteredReports.length === 0) return null;
-
-    const sum = (key: keyof ServiceReport) => 
-      filteredReports.reduce((acc, r) => acc + (Number(r[key]) || 0), 0);
-    const avg = (key: keyof ServiceReport) => sum(key) / filteredReports.length;
-
-    return {
-      count: filteredReports.length,
-      total_revenue: sum("service_revenue"),
-      total_covers: sum("covers_total"),
-      avg_sales_per_cover: avg("sales_per_cover"),
-      avg_covers_per_hour: avg("covers_per_server_per_hour"),
-      avg_error_rate: avg("service_error_rate_pct"),
-      avg_complaint_rate: avg("service_complaint_rate_pct"),
-      avg_rating: avg("avg_service_rating"),
-      avg_csat: avg("csat_pct"),
-    };
-  }, [reports, aggregateView]);
-
-  const renderKpiCard = (label: string, value: number, unit: string, color: TrafficColor, target: string) => (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">{label}</p>
-            <p className="text-2xl font-bold">{value.toFixed(unit === "€" ? 2 : 1)}{unit}</p>
-            <p className="text-xs text-muted-foreground">{target}</p>
-          </div>
-          <div className={`w-4 h-4 rounded-full ${colorClasses[color]}`} />
-        </div>
-      </CardContent>
-    </Card>
-  );
 
   if (loading) {
     return (
@@ -279,27 +220,31 @@ export function ServiceKpiView() {
   }
 
   return (
-    <div className="space-y-6 p-6 overflow-auto">
+    <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <UtensilsCrossed className="h-8 w-8 text-primary" />
+        <ConciergeBell className="h-8 w-8 text-primary" />
         <div>
           <h1 className="text-2xl font-bold">Service-KPIs</h1>
-          <p className="text-muted-foreground">Tägliche Erfassung und Auswertung</p>
+          <p className="text-muted-foreground">Cover-Erfassung & Zusatzverkäufe</p>
         </div>
       </div>
 
-      <Tabs defaultValue="input" className="space-y-4">
+      <Tabs defaultValue="daily" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="input">Tageseingabe</TabsTrigger>
-          <TabsTrigger value="kpis">Aktuelle KPIs</TabsTrigger>
-          <TabsTrigger value="trends">Trends & Vergleiche</TabsTrigger>
+          <TabsTrigger value="daily">📋 Tägliche Erfassung</TabsTrigger>
+          <TabsTrigger value="kpis">🚦 Aktuelle KPIs</TabsTrigger>
+          <TabsTrigger value="week">📊 Wochenübersicht</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="input" className="space-y-4">
+        {/* ===== TÄGLICHE ERFASSUNG ===== */}
+        <TabsContent value="daily" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>Tagesreport Service</span>
+                <span className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Cover-Erfassung (Service)
+                </span>
                 <Input
                   type="date"
                   value={selectedDate}
@@ -307,232 +252,262 @@ export function ServiceKpiView() {
                   className="w-auto"
                 />
               </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                ⏱️ Zeitaufwand: ca. 5 Minuten | 🔔 Diese Daten werden auch für die Küche verwendet
+              </p>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Umsatz & Gäste */}
+              
+              {/* Covers nach Mahlzeit */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="border-2 border-orange-200 bg-orange-50">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <Coffee className="h-6 w-6 text-orange-600" />
+                      <Label className="text-lg font-semibold">Frühstück</Label>
+                    </div>
+                    <Input
+                      type="number"
+                      value={formData.covers_breakfast || ""}
+                      onChange={(e) => setFormData({ ...formData, covers_breakfast: Number(e.target.value) })}
+                      placeholder="Anzahl Gäste"
+                      className="text-2xl h-14 text-center font-bold"
+                    />
+                  </CardContent>
+                </Card>
+
+                <Card className="border-2 border-yellow-200 bg-yellow-50">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <UtensilsCrossed className="h-6 w-6 text-yellow-600" />
+                      <Label className="text-lg font-semibold">Mittagessen</Label>
+                    </div>
+                    <Input
+                      type="number"
+                      value={formData.covers_lunch || ""}
+                      onChange={(e) => setFormData({ ...formData, covers_lunch: Number(e.target.value) })}
+                      placeholder="Anzahl Gäste"
+                      className="text-2xl h-14 text-center font-bold"
+                    />
+                  </CardContent>
+                </Card>
+
+                <Card className="border-2 border-blue-200 bg-blue-50">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <Moon className="h-6 w-6 text-blue-600" />
+                      <Label className="text-lg font-semibold">Abendessen</Label>
+                    </div>
+                    <Input
+                      type="number"
+                      value={formData.covers_dinner || ""}
+                      onChange={(e) => setFormData({ ...formData, covers_dinner: Number(e.target.value) })}
+                      placeholder="Anzahl Gäste"
+                      className="text-2xl h-14 text-center font-bold"
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Zusammenfassung + Abwesend */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-muted rounded-lg">
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">Covers Gesamt</p>
+                  <p className="text-3xl font-bold text-primary">{calculatedKpis.covers_total}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">Gäste außer Haus</p>
+                  <Input
+                    type="number"
+                    value={formData.guests_absent || ""}
+                    onChange={(e) => setFormData({ ...formData, guests_absent: Number(e.target.value) })}
+                    className="w-24 mx-auto text-center text-lg"
+                  />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">Beschwerden</p>
+                  <Input
+                    type="number"
+                    value={formData.complaints || ""}
+                    onChange={(e) => setFormData({ ...formData, complaints: Number(e.target.value) })}
+                    className="w-24 mx-auto text-center text-lg"
+                  />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground">Service-MA</p>
+                  <Input
+                    type="number"
+                    value={formData.staff_count || ""}
+                    onChange={(e) => setFormData({ ...formData, staff_count: Number(e.target.value) })}
+                    className="w-24 mx-auto text-center text-lg"
+                  />
+                </div>
+              </div>
+
+              {/* Zusatzverkäufe */}
               <div>
-                <h3 className="font-semibold mb-3">Umsatz & Gäste</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <h4 className="font-semibold mb-3 flex items-center gap-2">
+                  <Wine className="h-4 w-4" />
+                  Zusatzverkäufe (à la carte)
+                </h4>
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label>Service-Umsatz (€)</Label>
+                    <Label>Getränke-Extras (€)</Label>
                     <Input
                       type="number"
-                      value={formData.service_revenue}
-                      onChange={(e) => setFormData({ ...formData, service_revenue: Number(e.target.value) })}
+                      step="0.01"
+                      value={formData.extra_beverage_revenue || ""}
+                      onChange={(e) => setFormData({ ...formData, extra_beverage_revenue: Number(e.target.value) })}
+                      placeholder="z.B. 125.50"
                     />
+                    <p className="text-xs text-muted-foreground mt-1">Wein, Cocktails, etc.</p>
                   </div>
                   <div>
-                    <Label>Covers gesamt</Label>
+                    <Label>Speisen-Extras (€)</Label>
                     <Input
                       type="number"
-                      value={formData.covers_total}
-                      onChange={(e) => setFormData({ ...formData, covers_total: Number(e.target.value) })}
+                      step="0.01"
+                      value={formData.extra_food_revenue || ""}
+                      onChange={(e) => setFormData({ ...formData, extra_food_revenue: Number(e.target.value) })}
+                      placeholder="z.B. 45.00"
                     />
-                  </div>
-                  <div>
-                    <Label>Bediente Tische</Label>
-                    <Input
-                      type="number"
-                      value={formData.tables_served}
-                      onChange={(e) => setFormData({ ...formData, tables_served: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Verfügbare Tische</Label>
-                    <Input
-                      type="number"
-                      value={formData.tables_available}
-                      onChange={(e) => setFormData({ ...formData, tables_available: Number(e.target.value) })}
-                    />
+                    <p className="text-xs text-muted-foreground mt-1">À la carte Bestellungen</p>
                   </div>
                 </div>
               </div>
 
-              {/* Personal */}
-              <div>
-                <h3 className="font-semibold mb-3">Personal</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <Label>Service-MA im Einsatz</Label>
-                    <Input
-                      type="number"
-                      value={formData.service_staff_on_duty}
-                      onChange={(e) => setFormData({ ...formData, service_staff_on_duty: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Stunden pro MA</Label>
-                    <Input
-                      type="number"
-                      step="0.5"
-                      value={formData.service_hours_total}
-                      onChange={(e) => setFormData({ ...formData, service_hours_total: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Anwesenheitsquote (%)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      value={formData.attendance_rate}
-                      onChange={(e) => setFormData({ ...formData, attendance_rate: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Fluktuation p.a. (%)</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      value={formData.turnover_rate}
-                      onChange={(e) => setFormData({ ...formData, turnover_rate: Number(e.target.value) })}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Qualität */}
-              <div>
-                <h3 className="font-semibold mb-3">Qualität</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <Label>Items/Bestellungen gesamt</Label>
-                    <Input
-                      type="number"
-                      value={formData.items_total}
-                      onChange={(e) => setFormData({ ...formData, items_total: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Service-Fehler</Label>
-                    <Input
-                      type="number"
-                      value={formData.service_errors}
-                      onChange={(e) => setFormData({ ...formData, service_errors: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Beschwerden Service</Label>
-                    <Input
-                      type="number"
-                      value={formData.service_complaints}
-                      onChange={(e) => setFormData({ ...formData, service_complaints: Number(e.target.value) })}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Bewertungen */}
-              <div>
-                <h3 className="font-semibold mb-3">Gästebewertungen</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <Label>Anzahl Bewertungen</Label>
-                    <Input
-                      type="number"
-                      value={formData.service_ratings_count}
-                      onChange={(e) => setFormData({ ...formData, service_ratings_count: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Summe Bewertungspunkte</Label>
-                    <Input
-                      type="number"
-                      value={formData.service_ratings_sum}
-                      onChange={(e) => setFormData({ ...formData, service_ratings_sum: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <Label>CSAT: Zufriedene Gäste</Label>
-                    <Input
-                      type="number"
-                      value={formData.csat_positive_count}
-                      onChange={(e) => setFormData({ ...formData, csat_positive_count: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <Label>CSAT: Befragte gesamt</Label>
-                    <Input
-                      type="number"
-                      value={formData.csat_total_respondents}
-                      onChange={(e) => setFormData({ ...formData, csat_total_respondents: Number(e.target.value) })}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <Button onClick={handleSave} disabled={saving} className="w-full md:w-auto">
+              <Button onClick={handleSave} disabled={saving} className="w-full" size="lg">
                 <Save className="h-4 w-4 mr-2" />
-                {saving ? "Speichern..." : "Tagesreport speichern"}
+                {saving ? "Speichern..." : "Service-Report speichern"}
               </Button>
             </CardContent>
           </Card>
         </TabsContent>
 
+        {/* ===== AKTUELLE KPIs ===== */}
         <TabsContent value="kpis" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {renderKpiCard("Sales/Cover", calculatedKpis.sales_per_cover, "€", "green", "Abhängig von Preismodell")}
-            {renderKpiCard("Sales/Server", calculatedKpis.sales_per_server, "€", "green", "Produktivitätsindikator")}
-            {renderKpiCard("Covers/MA/Stunde", calculatedKpis.covers_per_server_per_hour, "", getCoversPerHourColor(calculatedKpis.covers_per_server_per_hour), "Ziel: 6-10")}
-            {renderKpiCard("Tisch-Umschlag", calculatedKpis.table_turnover_rate, "x", "green", "1-2 bei Resort")}
-            {renderKpiCard("Fehlerrate", calculatedKpis.service_error_rate_pct, "%", getErrorRateColor(calculatedKpis.service_error_rate_pct), "Ziel: ≤0.5%")}
-            {renderKpiCard("Beschwerderate", calculatedKpis.service_complaint_rate_pct, "%", getComplaintRateColor(calculatedKpis.service_complaint_rate_pct), "Ziel: ≤0.5%")}
-            {renderKpiCard("Ø Service-Bewertung", calculatedKpis.avg_service_rating, "/5", getAvgRatingColor(calculatedKpis.avg_service_rating), "Ziel: ≥4.5")}
-            {renderKpiCard("CSAT", calculatedKpis.csat_pct, "%", getCsatColor(calculatedKpis.csat_pct), "Ziel: ≥90%")}
-            {renderKpiCard("Anwesenheit", formData.attendance_rate, "%", getAttendanceColor(formData.attendance_rate), "Ziel: ≥95%")}
-            {renderKpiCard("Fluktuation", formData.turnover_rate, "%", getTurnoverColor(formData.turnover_rate), "Ziel: <25%")}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="trends" className="space-y-6">
-          <div>
-            <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-              <TrendingUp className="h-5 w-5" />
-              KPI-Trends (letzte 30 Tage)
-            </h3>
-            <ServiceTrendCharts reports={reports} daysToShow={30} />
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>Aggregierte Auswertung</span>
-                <Select value={aggregateView} onValueChange={(v) => setAggregateView(v as "week" | "month" | "year")}>
-                  <SelectTrigger className="w-32">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="week">Woche</SelectItem>
-                    <SelectItem value="month">Monat</SelectItem>
-                    <SelectItem value="year">Jahr</SelectItem>
-                  </SelectContent>
-                </Select>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {aggregatedData ? (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                  <div className="text-center p-4 bg-muted rounded-lg">
-                    <p className="text-sm text-muted-foreground">Erfasste Tage</p>
-                    <p className="text-2xl font-bold">{aggregatedData.count}</p>
+            <Card className={`border-2 ${colorBgClasses[getCoversPerEmployeeColor(calculatedKpis.covers_per_employee)]}`}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Covers/MA</p>
+                    <p className="text-2xl font-bold">{calculatedKpis.covers_per_employee.toFixed(1)}</p>
+                    <p className="text-xs text-muted-foreground">Ziel: 20-35</p>
                   </div>
-                  <div className="text-center p-4 bg-muted rounded-lg">
-                    <p className="text-sm text-muted-foreground">Gesamtumsatz</p>
-                    <p className="text-2xl font-bold">{aggregatedData.total_revenue.toLocaleString("de-DE")} €</p>
-                  </div>
-                  <div className="text-center p-4 bg-muted rounded-lg">
-                    <p className="text-sm text-muted-foreground">Ø Sales/Cover</p>
-                    <p className="text-2xl font-bold">{aggregatedData.avg_sales_per_cover.toFixed(2)} €</p>
-                  </div>
-                  <div className="text-center p-4 bg-muted rounded-lg">
-                    <p className="text-sm text-muted-foreground">Ø Bewertung</p>
-                    <p className="text-2xl font-bold">{aggregatedData.avg_rating.toFixed(1)}/5</p>
-                  </div>
+                  <div className={`w-5 h-5 rounded-full ${colorClasses[getCoversPerEmployeeColor(calculatedKpis.covers_per_employee)]} shadow-md`} />
                 </div>
-              ) : (
-                <p className="text-muted-foreground text-center py-8">Keine Daten für diesen Zeitraum</p>
-              )}
+              </CardContent>
+            </Card>
+
+            <Card className={`border-2 ${colorBgClasses[getExtraRevenueColor(calculatedKpis.extra_revenue_per_cover)]}`}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Extra-Umsatz/Cover</p>
+                    <p className="text-2xl font-bold">{calculatedKpis.extra_revenue_per_cover.toFixed(2)} €</p>
+                    <p className="text-xs text-muted-foreground">Ziel: ≥3 €</p>
+                  </div>
+                  <div className={`w-5 h-5 rounded-full ${colorClasses[getExtraRevenueColor(calculatedKpis.extra_revenue_per_cover)]} shadow-md`} />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className={`border-2 ${colorBgClasses[getComplaintColor(calculatedKpis.complaint_rate_pct)]}`}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Beschwerderate</p>
+                    <p className="text-2xl font-bold">{calculatedKpis.complaint_rate_pct.toFixed(2)}%</p>
+                    <p className="text-xs text-muted-foreground">Ziel: ≤1%</p>
+                  </div>
+                  <div className={`w-5 h-5 rounded-full ${colorClasses[getComplaintColor(calculatedKpis.complaint_rate_pct)]} shadow-md`} />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Tagesübersicht */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="grid grid-cols-3 md:grid-cols-6 gap-4 text-center">
+                <div className="p-3 bg-orange-50 rounded-lg">
+                  <p className="text-xs text-muted-foreground">Frühstück</p>
+                  <p className="text-xl font-bold text-orange-600">{formData.covers_breakfast}</p>
+                </div>
+                <div className="p-3 bg-yellow-50 rounded-lg">
+                  <p className="text-xs text-muted-foreground">Mittag</p>
+                  <p className="text-xl font-bold text-yellow-600">{formData.covers_lunch}</p>
+                </div>
+                <div className="p-3 bg-blue-50 rounded-lg">
+                  <p className="text-xs text-muted-foreground">Abend</p>
+                  <p className="text-xl font-bold text-blue-600">{formData.covers_dinner}</p>
+                </div>
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="text-xs text-muted-foreground">Gesamt</p>
+                  <p className="text-xl font-bold">{calculatedKpis.covers_total}</p>
+                </div>
+                <div className="p-3 bg-green-50 rounded-lg">
+                  <p className="text-xs text-muted-foreground">Extras</p>
+                  <p className="text-xl font-bold text-green-600">{((formData.extra_beverage_revenue || 0) + (formData.extra_food_revenue || 0)).toFixed(0)} €</p>
+                </div>
+                <div className="p-3 bg-muted rounded-lg">
+                  <p className="text-xs text-muted-foreground">Service-MA</p>
+                  <p className="text-xl font-bold">{formData.staff_count}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ===== WOCHENÜBERSICHT ===== */}
+        <TabsContent value="week" className="space-y-4">
+          {weeklyStats ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Wochenübersicht ({weeklyStats.days} Tage erfasst)
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center p-4 bg-orange-50 rounded-lg">
+                    <p className="text-sm text-muted-foreground">Frühstück Woche</p>
+                    <p className="text-2xl font-bold text-orange-600">{weeklyStats.totalBreakfast}</p>
+                    <p className="text-xs text-muted-foreground">Ø {(weeklyStats.totalBreakfast / weeklyStats.days).toFixed(0)}/Tag</p>
+                  </div>
+                  <div className="text-center p-4 bg-yellow-50 rounded-lg">
+                    <p className="text-sm text-muted-foreground">Mittag Woche</p>
+                    <p className="text-2xl font-bold text-yellow-600">{weeklyStats.totalLunch}</p>
+                    <p className="text-xs text-muted-foreground">Ø {(weeklyStats.totalLunch / weeklyStats.days).toFixed(0)}/Tag</p>
+                  </div>
+                  <div className="text-center p-4 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-muted-foreground">Abend Woche</p>
+                    <p className="text-2xl font-bold text-blue-600">{weeklyStats.totalDinner}</p>
+                    <p className="text-xs text-muted-foreground">Ø {(weeklyStats.totalDinner / weeklyStats.days).toFixed(0)}/Tag</p>
+                  </div>
+                  <div className="text-center p-4 bg-primary/10 rounded-lg">
+                    <p className="text-sm text-muted-foreground">Gesamt Woche</p>
+                    <p className="text-2xl font-bold text-primary">{weeklyStats.totalCovers}</p>
+                    <p className="text-xs text-muted-foreground">Ø {weeklyStats.avgCoversPerDay.toFixed(0)}/Tag</p>
+                  </div>
+                </div>
+
+                <div className="mt-4 p-4 bg-green-50 rounded-lg text-center">
+                  <p className="text-sm text-muted-foreground">Zusatzverkäufe Woche</p>
+                  <p className="text-2xl font-bold text-green-600">{weeklyStats.totalExtras.toFixed(2)} €</p>
+                  <p className="text-xs text-muted-foreground">Ø {(weeklyStats.totalExtras / weeklyStats.totalCovers).toFixed(2)} € pro Cover</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="p-8 text-center text-muted-foreground">
+                Keine Daten für diese Woche vorhanden
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>
