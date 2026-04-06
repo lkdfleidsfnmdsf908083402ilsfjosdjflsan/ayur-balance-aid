@@ -12,7 +12,7 @@ import { Hotel, Save, Users, LogIn, LogOut, UserX, TrendingUp, DoorOpen } from "
 type TrafficColor = "green" | "yellow" | "red";
 
 // Stammdaten
-const TOTAL_ROOMS = 60; // Aktiv im Verkauf (7 für Mitarbeiter nicht mitgezählt)
+const TOTAL_ROOMS = 59; // 59 verkaufbare Zimmer (Zi 114+214 = Mitarbeiter)
 
 interface FrontdeskReport {
   id: string;
