@@ -1,54 +1,85 @@
+/**
+ * FrontOfficeKpiView.tsx
+ * Rezeption-Dashboard — 100% aus Protel Live-Daten (protel_kpi_tag)
+ * 
+ * Keine manuellen Daily Reports mehr nötig!
+ * Daten kommen alle 15 Min. via Sync-Agent → Supabase.
+ *
+ * Tabs:
+ *  1. Heute     — Tages-KPIs mit Ampeln
+ *  2. Monat     — Monatsübersicht mit Trend-Chart
+ *  3. Jahresvergleich — Aktuelles Jahr vs. Vorjahr
+ */
+
 import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { format, startOfMonth, endOfMonth } from "date-fns";
-import { Hotel, Save, Users, LogIn, LogOut, UserX, TrendingUp, DoorOpen } from "lucide-react";
+import { format, startOfMonth, endOfMonth, subMonths, getDaysInMonth } from "date-fns";
+import { de } from "date-fns/locale";
+import {
+  Hotel, TrendingUp, TrendingDown, Minus, RefreshCw,
+  LogIn, LogOut, DoorOpen, Users, CalendarDays, BarChart3
+} from "lucide-react";
+import {
+  AreaChart, Area, BarChart, Bar, LineChart, Line,
+  XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip,
+  ResponsiveContainer, Legend
+} from "recharts";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Konstanten
+// ─────────────────────────────────────────────────────────────────────────────
+
+const TOTAL_ROOMS = 59; // 59 verkaufbare Zimmer (Zi 114+214 = Mitarbeiter)
+
+const MONTHS = [
+  "Jänner", "Februar", "März", "April", "Mai", "Juni",
+  "Juli", "August", "September", "Oktober", "November", "Dezember"
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Typen
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface ProtelKpiTag {
+  datum: string;
+  auslastung_pct: number | null;
+  adr: number | null;
+  revpar: number | null;
+  logis_netto: number | null;
+  zimmer_belegt: number | null;
+  ankuenfte: number | null;
+  abreisen: number | null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Ampellogik
+// ─────────────────────────────────────────────────────────────────────────────
 
 type TrafficColor = "green" | "yellow" | "red";
 
-// Stammdaten
-const TOTAL_ROOMS = 59; // 59 verkaufbare Zimmer (Zi 114+214 = Mitarbeiter)
-
-interface FrontdeskReport {
-  id: string;
-  report_date: string;
-  rooms_occupied: number;
-  checkins_today: number;
-  checkouts_today: number;
-  walkins: number;
-  noshows: number;
-  cancellations: number;
-  guests_total: number;
-  guests_absent: number;
-  room_revenue: number | null;
-  staff_count: number;
-  complaints: number;
-  occupancy_pct: number | null;
-  adr: number | null;
-  revpar: number | null;
-}
-
-// Ampellogik
-function getOccupancyColor(pct: number): TrafficColor {
+function getOccupancyColor(pct: number | null): TrafficColor {
+  if (pct == null) return "yellow";
   if (pct >= 70) return "green";
   if (pct >= 50) return "yellow";
   return "red";
 }
 
-function getAdrColor(adr: number): TrafficColor {
+function getAdrColor(adr: number | null): TrafficColor {
+  if (adr == null) return "yellow";
   if (adr >= 150) return "green";
   if (adr >= 120) return "yellow";
   return "red";
 }
 
-function getNoshowColor(rate: number): TrafficColor {
-  if (rate <= 2) return "green";
-  if (rate <= 5) return "yellow";
+function getRevparColor(revpar: number | null): TrafficColor {
+  if (revpar == null) return "yellow";
+  if (revpar >= 100) return "green";
+  if (revpar >= 70) return "yellow";
   return "red";
 }
 
@@ -59,491 +90,555 @@ const colorClasses: Record<TrafficColor, string> = {
 };
 
 const colorBgClasses: Record<TrafficColor, string> = {
-  green: "bg-green-50 border-green-200",
-  yellow: "bg-yellow-50 border-yellow-200",
-  red: "bg-red-50 border-red-200",
+  green: "bg-green-500/10 border-green-500/30",
+  yellow: "bg-yellow-500/10 border-yellow-500/30",
+  red: "bg-red-500/10 border-red-500/30",
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Hilfsfunktionen
+// ─────────────────────────────────────────────────────────────────────────────
+
+function fmtEur(val: number | null): string {
+  if (val == null) return "–";
+  return val.toLocaleString("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
+}
+
+function fmtPct(val: number | null): string {
+  if (val == null) return "–";
+  return val.toFixed(1) + " %";
+}
+
+function fmtNum(val: number | null): string {
+  if (val == null) return "–";
+  return Math.round(val).toLocaleString("de-DE");
+}
+
+function DeltaBadge({ current, previous, suffix = "", invert = false }: { 
+  current: number | null; previous: number | null; suffix?: string; invert?: boolean 
+}) {
+  if (current == null || previous == null || previous === 0) return null;
+  const delta = ((current - previous) / previous) * 100;
+  const isPositive = invert ? delta < 0 : delta > 0;
+  const Icon = delta > 0 ? TrendingUp : delta < 0 ? TrendingDown : Minus;
+  return (
+    <Badge variant="outline" className={`text-xs gap-1 ${isPositive ? "text-green-600 border-green-300" : delta === 0 ? "text-gray-500" : "text-red-600 border-red-300"}`}>
+      <Icon className="h-3 w-3" />
+      {delta > 0 ? "+" : ""}{delta.toFixed(1)}%{suffix}
+    </Badge>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Komponente
+// ─────────────────────────────────────────────────────────────────────────────
+
 export function FrontOfficeKpiView() {
-  const [reports, setReports] = useState<FrontdeskReport[]>([]);
+  const [kpiData, setKpiData] = useState<ProtelKpiTag[]>([]);
+  const [vjData, setVjData] = useState<ProtelKpiTag[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [lastSync, setLastSync] = useState<Date | null>(null);
 
-  const [formData, setFormData] = useState({
-    rooms_occupied: 0,
-    checkins_today: 0,
-    checkouts_today: 0,
-    walkins: 0,
-    noshows: 0,
-    cancellations: 0,
-    guests_total: 0,
-    guests_absent: 0,
-    room_revenue: 0,
-    staff_count: 0,
-    complaints: 0,
-  });
+  const now = new Date();
+  const [selYear, setSelYear] = useState(now.getFullYear());
+  const [selMonth, setSelMonth] = useState(now.getMonth() + 1);
+
+  // ── Daten laden ──────────────────────────────────────────────────────────
 
   useEffect(() => {
-    fetchReports();
-  }, []);
+    loadData();
+  }, [selYear, selMonth]);
 
-  useEffect(() => {
-    const existingReport = reports.find(r => r.report_date === selectedDate);
-    if (existingReport) {
-      setFormData({
-        rooms_occupied: existingReport.rooms_occupied || 0,
-        checkins_today: existingReport.checkins_today || 0,
-        checkouts_today: existingReport.checkouts_today || 0,
-        walkins: existingReport.walkins || 0,
-        noshows: existingReport.noshows || 0,
-        cancellations: existingReport.cancellations || 0,
-        guests_total: existingReport.guests_total || 0,
-        guests_absent: existingReport.guests_absent || 0,
-        room_revenue: existingReport.room_revenue || 0,
-        staff_count: existingReport.staff_count || 0,
-        complaints: existingReport.complaints || 0,
-      });
-    } else {
-      setFormData({
-        rooms_occupied: 0,
-        checkins_today: 0,
-        checkouts_today: 0,
-        walkins: 0,
-        noshows: 0,
-        cancellations: 0,
-        guests_total: 0,
-        guests_absent: 0,
-        room_revenue: 0,
-        staff_count: 0,
-        complaints: 0,
-      });
-    }
-  }, [selectedDate, reports]);
-
-  const fetchReports = async () => {
+  const loadData = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("frontdesk_daily_reports")
-      .select("*")
-      .order("report_date", { ascending: false })
-      .limit(365);
+    try {
+      const dateFrom = `${selYear}-${String(selMonth).padStart(2, "0")}-01`;
+      const dateTo = new Date(selYear, selMonth, 0).toISOString().split("T")[0];
 
-    if (error) {
-      toast.error("Fehler beim Laden der Rezeption-Reports");
-      console.error(error);
-    } else {
-      setReports(data || []);
+      // Aktueller Monat
+      const { data: current, error: err1 } = await supabase
+        .from("protel_kpi_tag")
+        .select("datum,auslastung_pct,adr,revpar,logis_netto,zimmer_belegt,ankuenfte,abreisen")
+        .gte("datum", dateFrom)
+        .lte("datum", dateTo)
+        .order("datum");
+
+      if (err1) throw err1;
+      setKpiData(current || []);
+
+      // Vorjahr zum Vergleich
+      const vjFrom = `${selYear - 1}-${String(selMonth).padStart(2, "0")}-01`;
+      const vjTo = new Date(selYear - 1, selMonth, 0).toISOString().split("T")[0];
+
+      const { data: prev } = await supabase
+        .from("protel_kpi_tag")
+        .select("datum,auslastung_pct,adr,revpar,logis_netto,zimmer_belegt,ankuenfte,abreisen")
+        .gte("datum", vjFrom)
+        .lte("datum", vjTo)
+        .order("datum");
+
+      setVjData(prev || []);
+      setLastSync(new Date());
+    } catch (e) {
+      console.error("Fehler beim Laden:", e);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  const calculatedKpis = useMemo(() => {
-    const { rooms_occupied, room_revenue, checkins_today, noshows } = formData;
+  // ── Heute ────────────────────────────────────────────────────────────────
 
-    const occupancy_pct = (rooms_occupied / TOTAL_ROOMS) * 100;
-    const adr = rooms_occupied > 0 && room_revenue > 0 ? room_revenue / rooms_occupied : 0;
-    const revpar = room_revenue > 0 ? room_revenue / TOTAL_ROOMS : 0;
-    const noshow_rate = (checkins_today + noshows) > 0 ? (noshows / (checkins_today + noshows)) * 100 : 0;
+  const today = useMemo(() => {
+    const todayStr = format(now, "yyyy-MM-dd");
+    // Heute oder letzter verfügbarer Tag
+    const todayData = kpiData.find(k => k.datum === todayStr);
+    if (todayData) return todayData;
+    // Fallback: letzter Tag mit Daten
+    return kpiData.length > 0 ? kpiData[kpiData.length - 1] : null;
+  }, [kpiData]);
 
-    return {
-      occupancy_pct,
-      adr,
-      revpar,
-      noshow_rate,
-      rooms_available: TOTAL_ROOMS - rooms_occupied,
-    };
-  }, [formData]);
+  // ── Monatszusammenfassung ────────────────────────────────────────────────
 
-  // Monatsstatistik
-  const monthlyStats = useMemo(() => {
-    const monthStart = startOfMonth(new Date(selectedDate));
-    const monthEnd = endOfMonth(new Date(selectedDate));
-    
-    const monthReports = reports.filter(r => {
-      const d = new Date(r.report_date);
-      return d >= monthStart && d <= monthEnd;
-    });
+  const monthSummary = useMemo(() => {
+    if (!kpiData.length) return null;
+    const valid = kpiData.filter(k => k.zimmer_belegt != null && k.zimmer_belegt > 0);
+    if (!valid.length) return null;
 
-    if (monthReports.length === 0) return null;
+    const sumBelegt = valid.reduce((s, k) => s + (k.zimmer_belegt ?? 0), 0);
+    const sumLogis = valid.reduce((s, k) => s + (k.logis_netto ?? 0), 0);
+    const sumAnkuenfte = kpiData.reduce((s, k) => s + (k.ankuenfte ?? 0), 0);
+    const sumAbreisen = kpiData.reduce((s, k) => s + (k.abreisen ?? 0), 0);
 
-    const totalOccupied = monthReports.reduce((s, r) => s + (r.rooms_occupied || 0), 0);
-    const totalRevenue = monthReports.reduce((s, r) => s + (r.room_revenue || 0), 0);
-    const totalCheckins = monthReports.reduce((s, r) => s + (r.checkins_today || 0), 0);
-    const totalNoshows = monthReports.reduce((s, r) => s + (r.noshows || 0), 0);
-
-    const avgOccupancy = (totalOccupied / (monthReports.length * TOTAL_ROOMS)) * 100;
-    const avgAdr = totalOccupied > 0 ? totalRevenue / totalOccupied : 0;
+    const avgOcc = valid.reduce((s, k) => s + (k.auslastung_pct ?? 0), 0) / valid.length;
+    const avgAdr = sumBelegt > 0 ? sumLogis / sumBelegt : 0;
+    const avgRevpar = valid.length > 0
+      ? valid.reduce((s, k) => s + (k.revpar ?? 0), 0) / valid.length
+      : 0;
 
     return {
-      days: monthReports.length,
-      avgOccupancy,
-      avgAdr,
-      totalRevenue,
-      totalCheckins,
-      totalNoshows,
+      days: valid.length,
+      totalDays: getDaysInMonth(new Date(selYear, selMonth - 1)),
+      avgOcc, avgAdr, avgRevpar,
+      sumLogis, sumBelegt, sumAnkuenfte, sumAbreisen,
     };
-  }, [reports, selectedDate]);
+  }, [kpiData, selYear, selMonth]);
 
-  const handleSave = async () => {
-    setSaving(true);
-    
-    const reportData = {
-      report_date: selectedDate,
-      total_rooms: TOTAL_ROOMS,
-      ...formData,
-      occupancy_pct: calculatedKpis.occupancy_pct,
-      adr: calculatedKpis.adr,
-      revpar: calculatedKpis.revpar,
-    };
+  // ── Vorjahr-Summary ──────────────────────────────────────────────────────
 
-    const existingReport = reports.find(r => r.report_date === selectedDate);
+  const vjSummary = useMemo(() => {
+    if (!vjData.length) return null;
+    const valid = vjData.filter(k => k.zimmer_belegt != null && k.zimmer_belegt > 0);
+    if (!valid.length) return null;
 
-    if (existingReport) {
-      const { error } = await supabase
-        .from("frontdesk_daily_reports")
-        .update(reportData)
-        .eq("id", existingReport.id);
+    const sumBelegt = valid.reduce((s, k) => s + (k.zimmer_belegt ?? 0), 0);
+    const sumLogis = valid.reduce((s, k) => s + (k.logis_netto ?? 0), 0);
+    const avgOcc = valid.reduce((s, k) => s + (k.auslastung_pct ?? 0), 0) / valid.length;
+    const avgAdr = sumBelegt > 0 ? sumLogis / sumBelegt : 0;
+    const avgRevpar = valid.reduce((s, k) => s + (k.revpar ?? 0), 0) / valid.length;
+    const sumAnkuenfte = vjData.reduce((s, k) => s + (k.ankuenfte ?? 0), 0);
 
-      if (error) {
-        toast.error("Fehler beim Aktualisieren");
-        console.error(error);
-      } else {
-        toast.success("Rezeption-Report aktualisiert");
-        fetchReports();
-      }
-    } else {
-      const { error } = await supabase
-        .from("frontdesk_daily_reports")
-        .insert(reportData);
+    return { avgOcc, avgAdr, avgRevpar, sumLogis, sumAnkuenfte, days: valid.length };
+  }, [vjData]);
 
-      if (error) {
-        toast.error("Fehler beim Speichern");
-        console.error(error);
-      } else {
-        toast.success("Rezeption-Report gespeichert");
-        fetchReports();
-      }
-    }
-    setSaving(false);
-  };
+  // ── Chart-Daten ──────────────────────────────────────────────────────────
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  const chartData = useMemo(() => {
+    return kpiData.map(k => ({
+      tag: parseInt(k.datum.split("-")[2]),
+      datum: k.datum,
+      occ: k.auslastung_pct ?? 0,
+      adr: k.adr ?? 0,
+      revpar: k.revpar ?? 0,
+      logis: k.logis_netto ?? 0,
+      belegt: k.zimmer_belegt ?? 0,
+      ankuenfte: k.ankuenfte ?? 0,
+      abreisen: k.abreisen ?? 0,
+    }));
+  }, [kpiData]);
+
+  // ── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Hotel className="h-8 w-8 text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold">Rezeption-KPIs</h1>
-          <p className="text-muted-foreground">Belegung & Gästebewegung ({TOTAL_ROOMS} Zimmer aktiv)</p>
+    <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+        <div className="flex items-center gap-3">
+          <Hotel className="h-6 w-6 text-primary" />
+          <div>
+            <h1 className="text-lg font-semibold text-foreground">Rezeption</h1>
+            <p className="text-xs text-muted-foreground">
+              Live-Daten aus Protel · {TOTAL_ROOMS} Verkaufszimmer
+              {lastSync && <> · Aktualisiert {format(lastSync, "HH:mm", { locale: de })}</>}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Select value={String(selMonth)} onValueChange={v => setSelMonth(Number(v))}>
+            <SelectTrigger className="w-[130px] h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {MONTHS.map((m, i) => (
+                <SelectItem key={i} value={String(i + 1)}>{m}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={String(selYear)} onValueChange={v => setSelYear(Number(v))}>
+            <SelectTrigger className="w-[80px] h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[2022, 2023, 2024, 2025, 2026].map(y => (
+                <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button variant="ghost" size="sm" onClick={loadData} disabled={loading}>
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+          </Button>
         </div>
       </div>
 
-      <Tabs defaultValue="daily" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="daily">📋 Tägliche Erfassung</TabsTrigger>
-          <TabsTrigger value="kpis">🚦 Aktuelle KPIs</TabsTrigger>
-          <TabsTrigger value="month">📊 Monatsübersicht</TabsTrigger>
-        </TabsList>
+      {/* Content */}
+      <div className="flex-1 overflow-auto p-6">
+        <Tabs defaultValue="heute" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="heute">Heute</TabsTrigger>
+            <TabsTrigger value="monat">Monat</TabsTrigger>
+            <TabsTrigger value="vergleich">Jahresvergleich</TabsTrigger>
+          </TabsList>
 
-        {/* ===== TÄGLICHE ERFASSUNG ===== */}
-        <TabsContent value="daily" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="flex items-center gap-2">
-                  <DoorOpen className="h-5 w-5" />
-                  Tägliche Erfassung
-                </span>
-                <Input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-auto"
-                />
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">⏱️ Zeitaufwand: ca. 3 Minuten</p>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              
-              {/* Zimmerbelegung */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <Card className="border-2 border-primary bg-primary/5">
+          {/* ═══════ TAB 1: HEUTE ═══════ */}
+          <TabsContent value="heute" className="space-y-4">
+            {today ? (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  {format(new Date(today.datum), "EEEE, d. MMMM yyyy", { locale: de })}
+                  {today.datum !== format(now, "yyyy-MM-dd") && (
+                    <Badge variant="outline" className="ml-2 text-xs">Letzter verfügbarer Tag</Badge>
+                  )}
+                </p>
+
+                {/* KPI-Kacheln mit Ampel */}
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <Card className={`border-2 ${colorBgClasses[getOccupancyColor(today.auslastung_pct)]}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Auslastung</p>
+                          <p className="text-3xl font-bold font-mono">{fmtPct(today.auslastung_pct)}</p>
+                          <p className="text-xs text-muted-foreground">Ziel: ≥ 70%</p>
+                        </div>
+                        <div className={`w-4 h-4 rounded-full ${colorClasses[getOccupancyColor(today.auslastung_pct)]} shadow-md`} />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className={`border-2 ${colorBgClasses[getAdrColor(today.adr)]}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">ADR</p>
+                          <p className="text-3xl font-bold font-mono">{fmtEur(today.adr)}</p>
+                          <p className="text-xs text-muted-foreground">Ziel: ≥ 150 €</p>
+                        </div>
+                        <div className={`w-4 h-4 rounded-full ${colorClasses[getAdrColor(today.adr)]} shadow-md`} />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className={`border-2 ${colorBgClasses[getRevparColor(today.revpar)]}`}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-muted-foreground">RevPAR</p>
+                          <p className="text-3xl font-bold font-mono">{fmtEur(today.revpar)}</p>
+                          <p className="text-xs text-muted-foreground">Ziel: ≥ 100 €</p>
+                        </div>
+                        <div className={`w-4 h-4 rounded-full ${colorClasses[getRevparColor(today.revpar)]} shadow-md`} />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border">
+                    <CardContent className="p-4">
+                      <p className="text-sm text-muted-foreground">Logis-Umsatz</p>
+                      <p className="text-3xl font-bold font-mono">{fmtEur(today.logis_netto)}</p>
+                      <p className="text-xs text-muted-foreground">Tagesumsatz netto</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Tagesdetails */}
+                <Card>
                   <CardContent className="p-4">
-                    <Label className="text-sm font-semibold">Belegte Zimmer</Label>
-                    <Input
-                      type="number"
-                      max={TOTAL_ROOMS}
-                      value={formData.rooms_occupied || ""}
-                      onChange={(e) => setFormData({ ...formData, rooms_occupied: Number(e.target.value) })}
-                      className="text-3xl h-14 text-center font-bold mt-2"
-                    />
-                    <p className="text-xs text-muted-foreground mt-1 text-center">von {TOTAL_ROOMS} Zimmern</p>
+                    <div className="grid grid-cols-3 md:grid-cols-6 gap-4 text-center">
+                      <div className="p-3 bg-primary/10 rounded-lg">
+                        <DoorOpen className="h-4 w-4 mx-auto mb-1 text-primary" />
+                        <p className="text-xs text-muted-foreground">Belegt</p>
+                        <p className="text-xl font-bold text-primary font-mono">{fmtNum(today.zimmer_belegt)}</p>
+                      </div>
+                      <div className="p-3 bg-green-500/10 rounded-lg">
+                        <Hotel className="h-4 w-4 mx-auto mb-1 text-green-600" />
+                        <p className="text-xs text-muted-foreground">Frei</p>
+                        <p className="text-xl font-bold text-green-600 font-mono">
+                          {today.zimmer_belegt != null ? TOTAL_ROOMS - today.zimmer_belegt : "–"}
+                        </p>
+                      </div>
+                      <div className="p-3 bg-green-500/10 rounded-lg">
+                        <LogIn className="h-4 w-4 mx-auto mb-1 text-green-600" />
+                        <p className="text-xs text-muted-foreground">Ankünfte</p>
+                        <p className="text-xl font-bold text-green-600 font-mono">{fmtNum(today.ankuenfte)}</p>
+                      </div>
+                      <div className="p-3 bg-orange-500/10 rounded-lg">
+                        <LogOut className="h-4 w-4 mx-auto mb-1 text-orange-600" />
+                        <p className="text-xs text-muted-foreground">Abreisen</p>
+                        <p className="text-xl font-bold text-orange-600 font-mono">{fmtNum(today.abreisen)}</p>
+                      </div>
+                      <div className="p-3 bg-muted rounded-lg col-span-2">
+                        <BarChart3 className="h-4 w-4 mx-auto mb-1 text-muted-foreground" />
+                        <p className="text-xs text-muted-foreground">Auslastung</p>
+                        <div className="mt-1 w-full bg-muted-foreground/20 rounded-full h-3">
+                          <div
+                            className={`h-3 rounded-full transition-all ${colorClasses[getOccupancyColor(today.auslastung_pct)]}`}
+                            style={{ width: `${Math.min(100, today.auslastung_pct ?? 0)}%` }}
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {fmtNum(today.zimmer_belegt)} von {TOTAL_ROOMS} Zimmern
+                        </p>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
+              </>
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center text-muted-foreground">
+                  {loading ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <RefreshCw className="h-4 w-4 animate-spin" />
+                      Lade Protel-Daten...
+                    </div>
+                  ) : (
+                    "Keine Daten für heute verfügbar"
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
 
-                <Card className="border-2 border-green-200 bg-green-50">
-                  <CardContent className="p-4">
-                    <Label className="text-sm font-semibold flex items-center gap-1">
-                      <LogIn className="h-4 w-4" /> Check-ins
-                    </Label>
-                    <Input
-                      type="number"
-                      value={formData.checkins_today || ""}
-                      onChange={(e) => setFormData({ ...formData, checkins_today: Number(e.target.value) })}
-                      className="text-2xl h-12 text-center font-bold mt-2"
-                    />
-                  </CardContent>
-                </Card>
+          {/* ═══════ TAB 2: MONAT ═══════ */}
+          <TabsContent value="monat" className="space-y-4">
+            {monthSummary ? (
+              <>
+                {/* Monats-KPIs */}
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <Card>
+                    <CardContent className="p-4">
+                      <p className="text-sm text-muted-foreground">Ø Auslastung</p>
+                      <p className="text-3xl font-bold text-primary font-mono">{fmtPct(monthSummary.avgOcc)}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-xs text-muted-foreground">{monthSummary.days} von {monthSummary.totalDays} Tagen</p>
+                        <DeltaBadge current={monthSummary.avgOcc} previous={vjSummary?.avgOcc ?? null} suffix=" VJ" />
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                <Card className="border-2 border-orange-200 bg-orange-50">
-                  <CardContent className="p-4">
-                    <Label className="text-sm font-semibold flex items-center gap-1">
-                      <LogOut className="h-4 w-4" /> Check-outs
-                    </Label>
-                    <Input
-                      type="number"
-                      value={formData.checkouts_today || ""}
-                      onChange={(e) => setFormData({ ...formData, checkouts_today: Number(e.target.value) })}
-                      className="text-2xl h-12 text-center font-bold mt-2"
-                    />
-                  </CardContent>
-                </Card>
-              </div>
+                  <Card>
+                    <CardContent className="p-4">
+                      <p className="text-sm text-muted-foreground">Ø ADR</p>
+                      <p className="text-3xl font-bold font-mono">{fmtEur(monthSummary.avgAdr)}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-xs text-muted-foreground">pro belegte Nacht</p>
+                        <DeltaBadge current={monthSummary.avgAdr} previous={vjSummary?.avgAdr ?? null} suffix=" VJ" />
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              {/* Gäste */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <Label className="flex items-center gap-1">
-                    <Users className="h-4 w-4" /> Gäste im Haus
-                  </Label>
-                  <Input
-                    type="number"
-                    value={formData.guests_total || ""}
-                    onChange={(e) => setFormData({ ...formData, guests_total: Number(e.target.value) })}
-                    className="text-lg"
-                  />
-                </div>
-                <div>
-                  <Label className="flex items-center gap-1">
-                    <UserX className="h-4 w-4" /> Gäste außer Haus
-                  </Label>
-                  <Input
-                    type="number"
-                    value={formData.guests_absent || ""}
-                    onChange={(e) => setFormData({ ...formData, guests_absent: Number(e.target.value) })}
-                    className="text-lg"
-                  />
-                  <p className="text-xs text-muted-foreground">Ausflüge, etc.</p>
-                </div>
-                <div>
-                  <Label>Walk-ins</Label>
-                  <Input
-                    type="number"
-                    value={formData.walkins || ""}
-                    onChange={(e) => setFormData({ ...formData, walkins: Number(e.target.value) })}
-                  />
-                </div>
-                <div>
-                  <Label>No-Shows</Label>
-                  <Input
-                    type="number"
-                    value={formData.noshows || ""}
-                    onChange={(e) => setFormData({ ...formData, noshows: Number(e.target.value) })}
-                  />
-                </div>
-              </div>
+                  <Card>
+                    <CardContent className="p-4">
+                      <p className="text-sm text-muted-foreground">Ø RevPAR</p>
+                      <p className="text-3xl font-bold font-mono">{fmtEur(monthSummary.avgRevpar)}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-xs text-muted-foreground">pro verfügbare Nacht</p>
+                        <DeltaBadge current={monthSummary.avgRevpar} previous={vjSummary?.avgRevpar ?? null} suffix=" VJ" />
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              {/* Umsatz (optional) */}
-              <details className="group">
-                <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
-                  ➕ Optional: Tagesumsatz & Personal
-                </summary>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4 p-4 border rounded-lg">
-                  <div>
-                    <Label>Logis-Umsatz (€)</Label>
-                    <Input
-                      type="number"
-                      value={formData.room_revenue || ""}
-                      onChange={(e) => setFormData({ ...formData, room_revenue: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Rezeption-MA</Label>
-                    <Input
-                      type="number"
-                      value={formData.staff_count || ""}
-                      onChange={(e) => setFormData({ ...formData, staff_count: Number(e.target.value) })}
-                    />
-                  </div>
-                  <div>
-                    <Label>Beschwerden</Label>
-                    <Input
-                      type="number"
-                      value={formData.complaints || ""}
-                      onChange={(e) => setFormData({ ...formData, complaints: Number(e.target.value) })}
-                    />
-                  </div>
+                  <Card>
+                    <CardContent className="p-4">
+                      <p className="text-sm text-muted-foreground">Logis-Umsatz</p>
+                      <p className="text-3xl font-bold text-green-600 font-mono">{fmtEur(monthSummary.sumLogis)}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-xs text-muted-foreground">{fmtNum(monthSummary.sumBelegt)} Zimmernächte</p>
+                        <DeltaBadge current={monthSummary.sumLogis} previous={vjSummary?.sumLogis ?? null} suffix=" VJ" />
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-              </details>
 
-              {/* Live-Berechnung */}
-              <div className="p-4 bg-muted rounded-lg">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Belegung</p>
-                    <p className="text-2xl font-bold text-primary">{calculatedKpis.occupancy_pct.toFixed(1)}%</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Frei</p>
-                    <p className="text-2xl font-bold text-green-600">{calculatedKpis.rooms_available}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">ADR</p>
-                    <p className="text-2xl font-bold">{calculatedKpis.adr.toFixed(0)} €</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">RevPAR</p>
-                    <p className="text-2xl font-bold">{calculatedKpis.revpar.toFixed(0)} €</p>
-                  </div>
+                {/* Bewegungen */}
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Card>
+                    <CardContent className="p-4 flex items-center gap-4">
+                      <div className="p-3 bg-green-500/10 rounded-lg">
+                        <LogIn className="h-5 w-5 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Ankünfte gesamt</p>
+                        <p className="text-2xl font-bold font-mono">{fmtNum(monthSummary.sumAnkuenfte)}</p>
+                      </div>
+                      <DeltaBadge current={monthSummary.sumAnkuenfte} previous={vjSummary?.sumAnkuenfte ?? null} suffix=" VJ" />
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4 flex items-center gap-4">
+                      <div className="p-3 bg-orange-500/10 rounded-lg">
+                        <LogOut className="h-5 w-5 text-orange-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Abreisen gesamt</p>
+                        <p className="text-2xl font-bold font-mono">{fmtNum(monthSummary.sumAbreisen)}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
-              </div>
 
-              <Button onClick={handleSave} disabled={saving} className="w-full" size="lg">
-                <Save className="h-4 w-4 mr-2" />
-                {saving ? "Speichern..." : "Rezeption-Report speichern"}
-              </Button>
-            </CardContent>
-          </Card>
-        </TabsContent>
+                {/* Tagesverlauf Chart */}
+                {chartData.length > 0 && (
+                  <Card>
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm font-medium text-muted-foreground">
+                        Tagesverlauf — {MONTHS[selMonth - 1]} {selYear}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="h-[280px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                            <defs>
+                              <linearGradient id="occGrad" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                                <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                            <XAxis dataKey="tag" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                            <YAxis yAxisId="left" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" domain={[0, 100]} unit="%" />
+                            <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                            <ReTooltip
+                              contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
+                              formatter={(value: number, name: string) => {
+                                if (name === "Auslastung") return [fmtPct(value), name];
+                                if (name === "ADR" || name === "RevPAR") return [fmtEur(value), name];
+                                return [fmtNum(value), name];
+                              }}
+                              labelFormatter={(label) => `Tag ${label}`}
+                            />
+                            <Legend wrapperStyle={{ fontSize: 11 }} />
+                            <Area yAxisId="left" type="monotone" dataKey="occ" name="Auslastung" stroke="#6366f1" fill="url(#occGrad)" strokeWidth={2} />
+                            <Line yAxisId="right" type="monotone" dataKey="adr" name="ADR" stroke="#10b981" strokeWidth={2} dot={false} />
+                            <Line yAxisId="right" type="monotone" dataKey="revpar" name="RevPAR" stroke="#f59e0b" strokeWidth={2} dot={false} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+              </>
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center text-muted-foreground">
+                  {loading ? "Lade Daten..." : "Keine Protel-Daten für diesen Monat"}
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
 
-        {/* ===== AKTUELLE KPIs ===== */}
-        <TabsContent value="kpis" className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Card className={`border-2 ${colorBgClasses[getOccupancyColor(calculatedKpis.occupancy_pct)]}`}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Belegungsrate</p>
-                    <p className="text-3xl font-bold">{calculatedKpis.occupancy_pct.toFixed(1)}%</p>
-                    <p className="text-xs text-muted-foreground">Ziel: ≥70%</p>
+          {/* ═══════ TAB 3: JAHRESVERGLEICH ═══════ */}
+          <TabsContent value="vergleich" className="space-y-4">
+            {monthSummary && vjSummary ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4" />
+                    {MONTHS[selMonth - 1]} {selYear} vs. {selYear - 1}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border">
+                          <th className="text-left py-3 px-4 text-muted-foreground font-medium">KPI</th>
+                          <th className="text-right py-3 px-4 text-muted-foreground font-medium">{selYear}</th>
+                          <th className="text-right py-3 px-4 text-muted-foreground font-medium">{selYear - 1}</th>
+                          <th className="text-right py-3 px-4 text-muted-foreground font-medium">Δ</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border/50">
+                        <tr>
+                          <td className="py-3 px-4 font-medium">Ø Auslastung</td>
+                          <td className="py-3 px-4 text-right font-mono">{fmtPct(monthSummary.avgOcc)}</td>
+                          <td className="py-3 px-4 text-right font-mono text-muted-foreground">{fmtPct(vjSummary.avgOcc)}</td>
+                          <td className="py-3 px-4 text-right"><DeltaBadge current={monthSummary.avgOcc} previous={vjSummary.avgOcc} /></td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-4 font-medium">Ø ADR</td>
+                          <td className="py-3 px-4 text-right font-mono">{fmtEur(monthSummary.avgAdr)}</td>
+                          <td className="py-3 px-4 text-right font-mono text-muted-foreground">{fmtEur(vjSummary.avgAdr)}</td>
+                          <td className="py-3 px-4 text-right"><DeltaBadge current={monthSummary.avgAdr} previous={vjSummary.avgAdr} /></td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-4 font-medium">Ø RevPAR</td>
+                          <td className="py-3 px-4 text-right font-mono">{fmtEur(monthSummary.avgRevpar)}</td>
+                          <td className="py-3 px-4 text-right font-mono text-muted-foreground">{fmtEur(vjSummary.avgRevpar)}</td>
+                          <td className="py-3 px-4 text-right"><DeltaBadge current={monthSummary.avgRevpar} previous={vjSummary.avgRevpar} /></td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-4 font-medium">Logis-Umsatz</td>
+                          <td className="py-3 px-4 text-right font-mono">{fmtEur(monthSummary.sumLogis)}</td>
+                          <td className="py-3 px-4 text-right font-mono text-muted-foreground">{fmtEur(vjSummary.sumLogis)}</td>
+                          <td className="py-3 px-4 text-right"><DeltaBadge current={monthSummary.sumLogis} previous={vjSummary.sumLogis} /></td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-4 font-medium">Zimmernächte</td>
+                          <td className="py-3 px-4 text-right font-mono">{fmtNum(monthSummary.sumBelegt)}</td>
+                          <td className="py-3 px-4 text-right font-mono text-muted-foreground">–</td>
+                          <td className="py-3 px-4 text-right"></td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-4 font-medium">Ankünfte</td>
+                          <td className="py-3 px-4 text-right font-mono">{fmtNum(monthSummary.sumAnkuenfte)}</td>
+                          <td className="py-3 px-4 text-right font-mono text-muted-foreground">{fmtNum(vjSummary.sumAnkuenfte)}</td>
+                          <td className="py-3 px-4 text-right"><DeltaBadge current={monthSummary.sumAnkuenfte} previous={vjSummary.sumAnkuenfte} /></td>
+                        </tr>
+                        <tr>
+                          <td className="py-3 px-4 font-medium">Erfasste Tage</td>
+                          <td className="py-3 px-4 text-right font-mono">{monthSummary.days}</td>
+                          <td className="py-3 px-4 text-right font-mono text-muted-foreground">{vjSummary.days}</td>
+                          <td className="py-3 px-4 text-right"></td>
+                        </tr>
+                      </tbody>
+                    </table>
                   </div>
-                  <div className={`w-5 h-5 rounded-full ${colorClasses[getOccupancyColor(calculatedKpis.occupancy_pct)]} shadow-md`} />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className={`border-2 ${colorBgClasses[getAdrColor(calculatedKpis.adr)]}`}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">ADR (Ø Zimmerpreis)</p>
-                    <p className="text-3xl font-bold">{calculatedKpis.adr.toFixed(0)} €</p>
-                    <p className="text-xs text-muted-foreground">Ziel: ≥150 €</p>
-                  </div>
-                  <div className={`w-5 h-5 rounded-full ${colorClasses[getAdrColor(calculatedKpis.adr)]} shadow-md`} />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className={`border-2 ${colorBgClasses[getNoshowColor(calculatedKpis.noshow_rate)]}`}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-muted-foreground">No-Show Rate</p>
-                    <p className="text-3xl font-bold">{calculatedKpis.noshow_rate.toFixed(1)}%</p>
-                    <p className="text-xs text-muted-foreground">Ziel: ≤2%</p>
-                  </div>
-                  <div className={`w-5 h-5 rounded-full ${colorClasses[getNoshowColor(calculatedKpis.noshow_rate)]} shadow-md`} />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Tagesübersicht */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="grid grid-cols-3 md:grid-cols-6 gap-4 text-center">
-                <div className="p-3 bg-primary/10 rounded-lg">
-                  <p className="text-xs text-muted-foreground">Belegt</p>
-                  <p className="text-xl font-bold text-primary">{formData.rooms_occupied}</p>
-                </div>
-                <div className="p-3 bg-green-50 rounded-lg">
-                  <p className="text-xs text-muted-foreground">Frei</p>
-                  <p className="text-xl font-bold text-green-600">{calculatedKpis.rooms_available}</p>
-                </div>
-                <div className="p-3 bg-green-50 rounded-lg">
-                  <p className="text-xs text-muted-foreground">Check-ins</p>
-                  <p className="text-xl font-bold text-green-600">{formData.checkins_today}</p>
-                </div>
-                <div className="p-3 bg-orange-50 rounded-lg">
-                  <p className="text-xs text-muted-foreground">Check-outs</p>
-                  <p className="text-xl font-bold text-orange-600">{formData.checkouts_today}</p>
-                </div>
-                <div className="p-3 bg-muted rounded-lg">
-                  <p className="text-xs text-muted-foreground">Gäste</p>
-                  <p className="text-xl font-bold">{formData.guests_total}</p>
-                </div>
-                <div className="p-3 bg-yellow-50 rounded-lg">
-                  <p className="text-xs text-muted-foreground">Außer Haus</p>
-                  <p className="text-xl font-bold text-yellow-600">{formData.guests_absent}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* ===== MONATSÜBERSICHT ===== */}
-        <TabsContent value="month" className="space-y-4">
-          {monthlyStats ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5" />
-                  Monatsübersicht ({monthlyStats.days} Tage erfasst)
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  <div className="text-center p-4 bg-primary/10 rounded-lg">
-                    <p className="text-sm text-muted-foreground">Ø Belegung</p>
-                    <p className="text-3xl font-bold text-primary">{monthlyStats.avgOccupancy.toFixed(1)}%</p>
-                  </div>
-                  <div className="text-center p-4 bg-muted rounded-lg">
-                    <p className="text-sm text-muted-foreground">Ø ADR</p>
-                    <p className="text-3xl font-bold">{monthlyStats.avgAdr.toFixed(0)} €</p>
-                  </div>
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <p className="text-sm text-muted-foreground">Logis-Umsatz</p>
-                    <p className="text-3xl font-bold text-green-600">{monthlyStats.totalRevenue.toLocaleString('de-DE')} €</p>
-                  </div>
-                  <div className="text-center p-4 bg-muted rounded-lg">
-                    <p className="text-sm text-muted-foreground">Check-ins</p>
-                    <p className="text-2xl font-bold">{monthlyStats.totalCheckins}</p>
-                  </div>
-                  <div className="text-center p-4 bg-red-50 rounded-lg">
-                    <p className="text-sm text-muted-foreground">No-Shows</p>
-                    <p className="text-2xl font-bold text-red-600">{monthlyStats.totalNoshows}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card>
-              <CardContent className="p-8 text-center text-muted-foreground">
-                Keine Daten für diesen Monat vorhanden
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-      </Tabs>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardContent className="p-8 text-center text-muted-foreground">
+                  {loading ? "Lade Daten..." : vjData.length === 0
+                    ? `Keine Vorjahresdaten für ${MONTHS[selMonth - 1]} ${selYear - 1} verfügbar`
+                    : "Keine Daten für den gewählten Zeitraum"
+                  }
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }
