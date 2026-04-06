@@ -1,112 +1,62 @@
-import { Konto, SaldoMonat, AbteilungKpi, Bereich, KpiKategorie } from '@/types/finance';
+import { Konto, SaldoMonat, AbteilungKpi, Bereich } from '@/types/finance';
 import { operativeAbteilungen, serviceAbteilungen } from './bereichMapping';
 
-/**
- * Berechnet die Abteilungs-KPIs für einen bestimmten Monat
- * 
- * Für operative Abteilungen (Logis, F&B, Spa, Ärztin, Shop):
- * - Umsatz: Summe aller Erlöskonten
- * - Wareneinsatz: Summe aller Wareneinsatzkonten
- * - Personal: Summe aller Personalkonten
- * - DB I = Umsatz - Wareneinsatz
- * - DB II = DB I - Personal
- * 
- * Für Service-Abteilungen (Verwaltung, Technik, Energie, Marketing, Personal):
- * - Kostenorientierte Darstellung
- */
 export function calculateAbteilungKpis(
   konten: Konto[],
   salden: SaldoMonat[],
   jahr: number,
   monat: number
 ): AbteilungKpi[] {
-  // Erstelle Maps für schnellen Zugriff
   const kontenMap = new Map(konten.map(k => [k.kontonummer, k]));
-  
-  // Filtere Salden für aktuellen und Vorjahresmonat
   const currentSalden = salden.filter(s => s.jahr === jahr && s.monat === monat);
   const vorjahrSalden = salden.filter(s => s.jahr === jahr - 1 && s.monat === monat);
-  
-  // Gruppiere nach Abteilung
   const allAbteilungen: Bereich[] = [...operativeAbteilungen, ...serviceAbteilungen];
   const kpis: AbteilungKpi[] = [];
 
   for (const abteilung of allAbteilungen) {
-    // Sammle alle Konten für diese Abteilung
     const abteilungKonten = konten.filter(k => k.bereich === abteilung);
-    
-    // Berechne KPIs für aktuellen Monat
-    const kpiValues = calculateKpiForPeriod(abteilungKonten, currentSalden, kontenMap);
-    const vorjahrValues = calculateKpiForPeriod(abteilungKonten, vorjahrSalden, kontenMap);
-    
-    // Berechne Deckungsbeiträge
-    const db1 = kpiValues.umsatz - kpiValues.wareneinsatz;
-    const db2 = db1 - kpiValues.personal;
-    
-    const db1Vorjahr = vorjahrValues.umsatz - vorjahrValues.wareneinsatz;
-    const db2Vorjahr = db1Vorjahr - vorjahrValues.personal;
-    
+    const v = calculateKpiForPeriod(abteilungKonten, currentSalden, kontenMap);
+    const vj = calculateKpiForPeriod(abteilungKonten, vorjahrSalden, kontenMap);
+
+    const umsatz = Math.abs(v.umsatz);
+    const wareneinsatz = Math.abs(v.wareneinsatz);
+    const personal = Math.abs(v.personal);
+    const db1 = umsatz - wareneinsatz;
+    const db2 = db1 - personal;
+
+    const umsatzVJ = Math.abs(vj.umsatz);
+    const wareneinsatzVJ = Math.abs(vj.wareneinsatz);
+    const personalVJ = Math.abs(vj.personal);
+    const db1VJ = umsatzVJ - wareneinsatzVJ;
+    const db2VJ = db1VJ - personalVJ;
+
     kpis.push({
-      abteilung,
-      jahr,
-      monat,
-      
-      // Operative KPIs (Erlöse als positive Werte)
-      umsatz: Math.abs(kpiValues.umsatz),
-      wareneinsatz: Math.abs(kpiValues.wareneinsatz),
-      personal: Math.abs(kpiValues.personal),
-      
-      // Deckungsbeiträge
-      db1: Math.abs(kpiValues.umsatz) - Math.abs(kpiValues.wareneinsatz),
-      db2: Math.abs(kpiValues.umsatz) - Math.abs(kpiValues.wareneinsatz) - Math.abs(kpiValues.personal),
-      
-      // Kostenarten
-      energie: Math.abs(kpiValues.energie),
-      marketing: Math.abs(kpiValues.marketing),
-      betriebsaufwand: Math.abs(kpiValues.betriebsaufwand),
-      abschreibung: Math.abs(kpiValues.abschreibung),
-      zins: Math.abs(kpiValues.zins),
-      
-      // Vorjahresvergleich
-      umsatzVorjahr: vorjahrValues.umsatz !== 0 ? Math.abs(vorjahrValues.umsatz) : null,
-      umsatzDiff: vorjahrValues.umsatz !== 0 
-        ? Math.abs(kpiValues.umsatz) - Math.abs(vorjahrValues.umsatz) 
-        : null,
-      umsatzDiffProzent: vorjahrValues.umsatz !== 0 
-        ? ((Math.abs(kpiValues.umsatz) - Math.abs(vorjahrValues.umsatz)) / Math.abs(vorjahrValues.umsatz)) * 100 
-        : null,
-        
-      db1Vorjahr: vorjahrValues.umsatz !== 0 ? Math.abs(vorjahrValues.umsatz) - Math.abs(vorjahrValues.wareneinsatz) : null,
-      db1Diff: vorjahrValues.umsatz !== 0 
-        ? (Math.abs(kpiValues.umsatz) - Math.abs(kpiValues.wareneinsatz)) - (Math.abs(vorjahrValues.umsatz) - Math.abs(vorjahrValues.wareneinsatz))
-        : null,
-      db1DiffProzent: vorjahrValues.umsatz !== 0 && (Math.abs(vorjahrValues.umsatz) - Math.abs(vorjahrValues.wareneinsatz)) !== 0
-        ? (((Math.abs(kpiValues.umsatz) - Math.abs(kpiValues.wareneinsatz)) - (Math.abs(vorjahrValues.umsatz) - Math.abs(vorjahrValues.wareneinsatz))) / Math.abs(Math.abs(vorjahrValues.umsatz) - Math.abs(vorjahrValues.wareneinsatz))) * 100
-        : null,
-        
-      db2Vorjahr: vorjahrValues.umsatz !== 0 
-        ? Math.abs(vorjahrValues.umsatz) - Math.abs(vorjahrValues.wareneinsatz) - Math.abs(vorjahrValues.personal)
-        : null,
-      db2Diff: vorjahrValues.umsatz !== 0 
-        ? (Math.abs(kpiValues.umsatz) - Math.abs(kpiValues.wareneinsatz) - Math.abs(kpiValues.personal)) 
-          - (Math.abs(vorjahrValues.umsatz) - Math.abs(vorjahrValues.wareneinsatz) - Math.abs(vorjahrValues.personal))
-        : null,
-      db2DiffProzent: null, // Zu komplex für Prozentberechnung wenn nahe 0
+      abteilung, jahr, monat,
+      umsatz, wareneinsatz, personal,
+      db1, db2,
+      energie: Math.abs(v.energie),
+      marketing: Math.abs(v.marketing),
+      betriebsaufwand: Math.abs(v.betriebsaufwand),
+      abschreibung: Math.abs(v.abschreibung),
+      zins: Math.abs(v.zins),
+      umsatzVorjahr: umsatzVJ !== 0 ? umsatzVJ : null,
+      umsatzDiff: umsatzVJ !== 0 ? umsatz - umsatzVJ : null,
+      umsatzDiffProzent: umsatzVJ !== 0 ? ((umsatz - umsatzVJ) / umsatzVJ) * 100 : null,
+      db1Vorjahr: umsatzVJ !== 0 ? db1VJ : null,
+      db1Diff: umsatzVJ !== 0 ? db1 - db1VJ : null,
+      db1DiffProzent: umsatzVJ !== 0 && db1VJ !== 0 ? ((db1 - db1VJ) / Math.abs(db1VJ)) * 100 : null,
+      db2Vorjahr: umsatzVJ !== 0 ? db2VJ : null,
+      db2Diff: umsatzVJ !== 0 ? db2 - db2VJ : null,
+      db2DiffProzent: umsatzVJ !== 0 && db2VJ !== 0 ? ((db2 - db2VJ) / Math.abs(db2VJ)) * 100 : null,
     });
   }
-  
   return kpis;
 }
 
 interface KpiValues {
-  umsatz: number;
-  wareneinsatz: number;
-  personal: number;
-  energie: number;
-  marketing: number;
-  betriebsaufwand: number;
-  abschreibung: number;
-  zins: number;
+  umsatz: number; wareneinsatz: number; personal: number;
+  energie: number; marketing: number; betriebsaufwand: number;
+  abschreibung: number; zins: number;
 }
 
 function calculateKpiForPeriod(
@@ -114,75 +64,80 @@ function calculateKpiForPeriod(
   periodSalden: SaldoMonat[],
   kontenMap: Map<string, Konto>
 ): KpiValues {
-  const values: KpiValues = {
-    umsatz: 0,
-    wareneinsatz: 0,
-    personal: 0,
-    energie: 0,
-    marketing: 0,
-    betriebsaufwand: 0,
-    abschreibung: 0,
-    zins: 0,
+  const v: KpiValues = {
+    umsatz: 0, wareneinsatz: 0, personal: 0,
+    energie: 0, marketing: 0, betriebsaufwand: 0,
+    abschreibung: 0, zins: 0,
   };
-  
   for (const konto of abteilungKonten) {
     const saldo = periodSalden.find(s => s.kontonummer === konto.kontonummer);
     if (!saldo) continue;
-    
-    const betrag = saldo.saldoMonat;
-    
+    const b = saldo.saldoMonat;
     switch (konto.kpiKategorie) {
-      case 'Erlös':
-        values.umsatz += betrag;
-        break;
-      case 'Wareneinsatz':
-        values.wareneinsatz += betrag;
-        break;
-      case 'Personal':
-        values.personal += betrag;
-        break;
-      case 'Energie':
-        values.energie += betrag;
-        break;
-      case 'Marketing':
-        values.marketing += betrag;
-        break;
-      case 'Betriebsaufwand':
-        values.betriebsaufwand += betrag;
-        break;
-      case 'Abschreibung':
-        values.abschreibung += betrag;
-        break;
-      case 'Zins':
-        values.zins += betrag;
-        break;
+      case 'Erlös': v.umsatz += b; break;
+      case 'Wareneinsatz': v.wareneinsatz += b; break;
+      case 'Personal': v.personal += b; break;
+      case 'Energie': v.energie += b; break;
+      case 'Marketing': v.marketing += b; break;
+      case 'Betriebsaufwand': v.betriebsaufwand += b; break;
+      case 'Abschreibung': v.abschreibung += b; break;
+      case 'Zins': v.zins += b; break;
     }
   }
-  
-  return values;
+  return v;
 }
 
-/**
- * Berechnet Gesamt-KPIs über alle operativen Abteilungen
- */
-export function calculateGesamtKpis(abteilungKpis: AbteilungKpi[]): {
+export interface GesamtKpis {
+  // Umsatz & Kosten
   gesamtUmsatz: number;
   gesamtWareneinsatz: number;
   gesamtPersonal: number;
-  gesamtDB1: number;
-  gesamtDB2: number;
   gesamtEnergie: number;
   gesamtMarketing: number;
-} {
+  gesamtBetriebsaufwand: number;
+  gesamtAbschreibung: number;
+  // Deckungsbeiträge (Abteilungsebene)
+  gesamtDB1: number;
+  gesamtDB2: number;
+  // GOP (Gesamthausebene - USALI)
+  // GOP I  = Σ DB II aller operativen Abteilungen
+  // GOP II = GOP I - Energie - Marketing - Verwaltung - Technik (Service-Kosten)
+  // EBITDA = GOP II + Abschreibungen
+  gop1: number;
+  gop2: number;
+  ebitda: number;
+  gop1Marge: number;
+  gop2Marge: number;
+}
+
+export function calculateGesamtKpis(abteilungKpis: AbteilungKpi[]): GesamtKpis {
   const operativ = abteilungKpis.filter(k => operativeAbteilungen.includes(k.abteilung));
-  
+  const alle = abteilungKpis;
+
+  const gesamtUmsatz = operativ.reduce((sum, k) => sum + k.umsatz, 0);
+  const gesamtWareneinsatz = operativ.reduce((sum, k) => sum + k.wareneinsatz, 0);
+  const gesamtPersonal = operativ.reduce((sum, k) => sum + k.personal, 0);
+  const gesamtDB1 = operativ.reduce((sum, k) => sum + k.db1, 0);
+  const gesamtDB2 = operativ.reduce((sum, k) => sum + k.db2, 0);
+
+  // Service-Kosten (Energie, Marketing, Verwaltung, Technik)
+  const gesamtEnergie = alle.reduce((sum, k) => sum + k.energie, 0);
+  const gesamtMarketing = alle.reduce((sum, k) => sum + k.marketing, 0);
+  const gesamtBetriebsaufwand = alle.reduce((sum, k) => sum + k.betriebsaufwand, 0);
+  const gesamtAbschreibung = alle.reduce((sum, k) => sum + k.abschreibung, 0);
+
+  // GOP Berechnung (Gesamthaus)
+  const gop1 = gesamtDB2; // GOP I = Summe aller DB II
+  const gop2 = gop1 - gesamtEnergie - gesamtMarketing - gesamtBetriebsaufwand;
+  const ebitda = gop2 + gesamtAbschreibung;
+  const gop1Marge = gesamtUmsatz > 0 ? (gop1 / gesamtUmsatz) * 100 : 0;
+  const gop2Marge = gesamtUmsatz > 0 ? (gop2 / gesamtUmsatz) * 100 : 0;
+
   return {
-    gesamtUmsatz: operativ.reduce((sum, k) => sum + k.umsatz, 0),
-    gesamtWareneinsatz: operativ.reduce((sum, k) => sum + k.wareneinsatz, 0),
-    gesamtPersonal: operativ.reduce((sum, k) => sum + k.personal, 0),
-    gesamtDB1: operativ.reduce((sum, k) => sum + k.db1, 0),
-    gesamtDB2: operativ.reduce((sum, k) => sum + k.db2, 0),
-    gesamtEnergie: abteilungKpis.reduce((sum, k) => sum + k.energie, 0),
-    gesamtMarketing: abteilungKpis.reduce((sum, k) => sum + k.marketing, 0),
+    gesamtUmsatz, gesamtWareneinsatz, gesamtPersonal,
+    gesamtEnergie, gesamtMarketing, gesamtBetriebsaufwand, gesamtAbschreibung,
+    gesamtDB1, gesamtDB2,
+    gop1, gop2, ebitda,
+    gop1Marge, gop2Marge,
   };
 }

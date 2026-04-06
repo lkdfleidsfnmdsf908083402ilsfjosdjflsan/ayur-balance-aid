@@ -14,302 +14,528 @@ export type Database = {
   }
   public: {
     Tables: {
-      abteilung_kpi_monat: {
+      abwesenheiten: {
         Row: {
-          abschreibung: number
-          abteilung: string
-          betriebsaufwand: number
-          created_at: string
-          db1: number
-          db1_diff: number | null
-          db1_diff_prozent: number | null
-          db1_vorjahr: number | null
-          db2: number
-          db2_diff: number | null
-          db2_diff_prozent: number | null
-          db2_vorjahr: number | null
-          energie: number
+          aktualisiert_am: string | null
+          bemerkung: string | null
+          bis_datum: string
+          erstellt_am: string | null
+          genehmigt_von: string | null
           id: string
-          jahr: number
-          marketing: number
-          monat: number
-          personal: number
-          umsatz: number
-          umsatz_diff: number | null
-          umsatz_diff_prozent: number | null
-          umsatz_vorjahr: number | null
-          updated_at: string
-          wareneinsatz: number
-          zins: number
+          mitarbeiter_id: string
+          status: string | null
+          typ: string
+          von_datum: string
         }
         Insert: {
-          abschreibung?: number
-          abteilung: string
-          betriebsaufwand?: number
-          created_at?: string
-          db1?: number
-          db1_diff?: number | null
-          db1_diff_prozent?: number | null
-          db1_vorjahr?: number | null
-          db2?: number
-          db2_diff?: number | null
-          db2_diff_prozent?: number | null
-          db2_vorjahr?: number | null
-          energie?: number
+          aktualisiert_am?: string | null
+          bemerkung?: string | null
+          bis_datum: string
+          erstellt_am?: string | null
+          genehmigt_von?: string | null
           id?: string
-          jahr: number
-          marketing?: number
-          monat: number
-          personal?: number
-          umsatz?: number
-          umsatz_diff?: number | null
-          umsatz_diff_prozent?: number | null
-          umsatz_vorjahr?: number | null
-          updated_at?: string
-          wareneinsatz?: number
-          zins?: number
+          mitarbeiter_id: string
+          status?: string | null
+          typ: string
+          von_datum: string
         }
         Update: {
-          abschreibung?: number
-          abteilung?: string
-          betriebsaufwand?: number
+          aktualisiert_am?: string | null
+          bemerkung?: string | null
+          bis_datum?: string
+          erstellt_am?: string | null
+          genehmigt_von?: string | null
+          id?: string
+          mitarbeiter_id?: string
+          status?: string | null
+          typ?: string
+          von_datum?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "abwesenheiten_mitarbeiter_id_fkey"
+            columns: ["mitarbeiter_id"]
+            isOneToOne: false
+            referencedRelation: "mitarbeiter"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_abnahme_protokoll: {
+        Row: {
+          abgenommen_von: string
+          auto_id: string
+          bemerkungen: string | null
+          bereich_anlage: string | null
+          check_1: string | null
+          check_2: string | null
+          check_3: string | null
+          check_4: string | null
+          check_5: string | null
+          check_6: string | null
+          created_at: string | null
+          datum: string
+          id: string
+          massnahme: string | null
+          source_id: string
+          source_table: string
+        }
+        Insert: {
+          abgenommen_von: string
+          auto_id: string
+          bemerkungen?: string | null
+          bereich_anlage?: string | null
+          check_1?: string | null
+          check_2?: string | null
+          check_3?: string | null
+          check_4?: string | null
+          check_5?: string | null
+          check_6?: string | null
+          created_at?: string | null
+          datum?: string
+          id?: string
+          massnahme?: string | null
+          source_id: string
+          source_table: string
+        }
+        Update: {
+          abgenommen_von?: string
+          auto_id?: string
+          bemerkungen?: string | null
+          bereich_anlage?: string | null
+          check_1?: string | null
+          check_2?: string | null
+          check_3?: string | null
+          check_4?: string | null
+          check_5?: string | null
+          check_6?: string | null
+          created_at?: string | null
+          datum?: string
+          id?: string
+          massnahme?: string | null
+          source_id?: string
+          source_table?: string
+        }
+        Relationships: []
+      }
+      admin_calendar_settings: {
+        Row: {
+          calendar_type: string | null
+          email_1: string | null
+          email_2: string | null
+          email_3: string | null
+          id: string
+          reminder_days_before: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          calendar_type?: string | null
+          email_1?: string | null
+          email_2?: string | null
+          email_3?: string | null
+          id?: string
+          reminder_days_before?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          calendar_type?: string | null
+          email_1?: string | null
+          email_2?: string | null
+          email_3?: string | null
+          id?: string
+          reminder_days_before?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      admin_reminder_log: {
+        Row: {
+          auto_id: string
+          error_message: string | null
+          faellig_am: string
+          id: string
+          reminder_type: string | null
+          sent_at: string | null
+          sent_to_email_1: boolean | null
+          sent_to_email_2: boolean | null
+          sent_to_email_3: boolean | null
+          source_id: string
+          source_table: string
+        }
+        Insert: {
+          auto_id: string
+          error_message?: string | null
+          faellig_am: string
+          id?: string
+          reminder_type?: string | null
+          sent_at?: string | null
+          sent_to_email_1?: boolean | null
+          sent_to_email_2?: boolean | null
+          sent_to_email_3?: boolean | null
+          source_id: string
+          source_table: string
+        }
+        Update: {
+          auto_id?: string
+          error_message?: string | null
+          faellig_am?: string
+          id?: string
+          reminder_type?: string | null
+          sent_at?: string | null
+          sent_to_email_1?: boolean | null
+          sent_to_email_2?: boolean | null
+          sent_to_email_3?: boolean | null
+          source_id?: string
+          source_table?: string
+        }
+        Relationships: []
+      }
+      admin_reparaturen: {
+        Row: {
+          abgenommen_von: string | null
+          abnahme_notiz: string | null
+          auto_id: string | null
+          bereich_anlage: string
+          calendar_event_created: boolean | null
+          calendar_event_id: string | null
+          check_1: string | null
+          check_2: string | null
+          check_3: string | null
+          check_4: string | null
+          check_5: string | null
+          check_6: string | null
+          created_at: string
+          dringlichkeit: string | null
+          erledigt_am: string | null
+          faellig_am: string | null
+          geplant: string | null
+          id: string
+          kategorie: string | null
+          kosten_geschaetzt: number | null
+          massnahme: string | null
+          reminder_sent: boolean | null
+          reminder_sent_at: string | null
+          risiko_bei_verzug: string | null
+          row_number: number
+          status: string | null
+          updated_at: string | null
+          versicherung_relevant: string | null
+          zustaendig: string | null
+        }
+        Insert: {
+          abgenommen_von?: string | null
+          abnahme_notiz?: string | null
+          auto_id?: string | null
+          bereich_anlage: string
+          calendar_event_created?: boolean | null
+          calendar_event_id?: string | null
+          check_1?: string | null
+          check_2?: string | null
+          check_3?: string | null
+          check_4?: string | null
+          check_5?: string | null
+          check_6?: string | null
           created_at?: string
-          db1?: number
-          db1_diff?: number | null
-          db1_diff_prozent?: number | null
-          db1_vorjahr?: number | null
-          db2?: number
-          db2_diff?: number | null
-          db2_diff_prozent?: number | null
-          db2_vorjahr?: number | null
-          energie?: number
+          dringlichkeit?: string | null
+          erledigt_am?: string | null
+          faellig_am?: string | null
+          geplant?: string | null
+          id?: string
+          kategorie?: string | null
+          kosten_geschaetzt?: number | null
+          massnahme?: string | null
+          reminder_sent?: boolean | null
+          reminder_sent_at?: string | null
+          risiko_bei_verzug?: string | null
+          row_number?: number
+          status?: string | null
+          updated_at?: string | null
+          versicherung_relevant?: string | null
+          zustaendig?: string | null
+        }
+        Update: {
+          abgenommen_von?: string | null
+          abnahme_notiz?: string | null
+          auto_id?: string | null
+          bereich_anlage?: string
+          calendar_event_created?: boolean | null
+          calendar_event_id?: string | null
+          check_1?: string | null
+          check_2?: string | null
+          check_3?: string | null
+          check_4?: string | null
+          check_5?: string | null
+          check_6?: string | null
+          created_at?: string
+          dringlichkeit?: string | null
+          erledigt_am?: string | null
+          faellig_am?: string | null
+          geplant?: string | null
+          id?: string
+          kategorie?: string | null
+          kosten_geschaetzt?: number | null
+          massnahme?: string | null
+          reminder_sent?: boolean | null
+          reminder_sent_at?: string | null
+          risiko_bei_verzug?: string | null
+          row_number?: number
+          status?: string | null
+          updated_at?: string | null
+          versicherung_relevant?: string | null
+          zustaendig?: string | null
+        }
+        Relationships: []
+      }
+      admin_tuev_wartungen: {
+        Row: {
+          abgenommen_von: string | null
+          abnahme_notiz: string | null
+          auto_id: string | null
+          bereich_anlage: string
+          calendar_event_created: boolean | null
+          calendar_event_id: string | null
+          check_1: string | null
+          check_2: string | null
+          check_3: string | null
+          check_4: string | null
+          check_5: string | null
+          check_6: string | null
+          created_at: string
+          dienstleister: string | null
+          erledigt_am: string | null
+          faellig_am: string | null
+          gesetzlich: string | null
+          id: string
+          intervall: string | null
+          kosten_geschaetzt: number | null
+          letzte_durchfuehrung: string | null
+          reminder_sent: boolean | null
+          reminder_sent_at: string | null
+          risiko_bei_verzug: string | null
+          row_number: number
+          status: string | null
+          updated_at: string | null
+          wartung_pruefung: string | null
+          zustaendig: string | null
+        }
+        Insert: {
+          abgenommen_von?: string | null
+          abnahme_notiz?: string | null
+          auto_id?: string | null
+          bereich_anlage: string
+          calendar_event_created?: boolean | null
+          calendar_event_id?: string | null
+          check_1?: string | null
+          check_2?: string | null
+          check_3?: string | null
+          check_4?: string | null
+          check_5?: string | null
+          check_6?: string | null
+          created_at?: string
+          dienstleister?: string | null
+          erledigt_am?: string | null
+          faellig_am?: string | null
+          gesetzlich?: string | null
+          id?: string
+          intervall?: string | null
+          kosten_geschaetzt?: number | null
+          letzte_durchfuehrung?: string | null
+          reminder_sent?: boolean | null
+          reminder_sent_at?: string | null
+          risiko_bei_verzug?: string | null
+          row_number?: number
+          status?: string | null
+          updated_at?: string | null
+          wartung_pruefung?: string | null
+          zustaendig?: string | null
+        }
+        Update: {
+          abgenommen_von?: string | null
+          abnahme_notiz?: string | null
+          auto_id?: string | null
+          bereich_anlage?: string
+          calendar_event_created?: boolean | null
+          calendar_event_id?: string | null
+          check_1?: string | null
+          check_2?: string | null
+          check_3?: string | null
+          check_4?: string | null
+          check_5?: string | null
+          check_6?: string | null
+          created_at?: string
+          dienstleister?: string | null
+          erledigt_am?: string | null
+          faellig_am?: string | null
+          gesetzlich?: string | null
+          id?: string
+          intervall?: string | null
+          kosten_geschaetzt?: number | null
+          letzte_durchfuehrung?: string | null
+          reminder_sent?: boolean | null
+          reminder_sent_at?: string | null
+          risiko_bei_verzug?: string | null
+          row_number?: number
+          status?: string | null
+          updated_at?: string | null
+          wartung_pruefung?: string | null
+          zustaendig?: string | null
+        }
+        Relationships: []
+      }
+      admin_versicherungen: {
+        Row: {
+          abgenommen_von: string | null
+          abnahme_notiz: string | null
+          aktenzeichen: string | null
+          aktueller_stand: string | null
+          auto_id: string | null
+          bereich_anlage: string
+          calendar_event_created: boolean | null
+          calendar_event_id: string | null
+          check_1: string | null
+          check_2: string | null
+          check_3: string | null
+          check_4: string | null
+          check_5: string | null
+          check_6: string | null
+          created_at: string
+          datum_meldung: string | null
+          erledigt_am: string | null
+          erstattet: number | null
+          faellig_am: string | null
+          id: string
+          kosten_geschaetzt: number | null
+          naechster_schritt: string | null
+          reminder_sent: boolean | null
+          reminder_sent_at: string | null
+          row_number: number
+          schaden_gemeldet: string | null
+          status: string | null
+          updated_at: string | null
+          versicherungsart: string | null
+          zustaendig: string | null
+        }
+        Insert: {
+          abgenommen_von?: string | null
+          abnahme_notiz?: string | null
+          aktenzeichen?: string | null
+          aktueller_stand?: string | null
+          auto_id?: string | null
+          bereich_anlage: string
+          calendar_event_created?: boolean | null
+          calendar_event_id?: string | null
+          check_1?: string | null
+          check_2?: string | null
+          check_3?: string | null
+          check_4?: string | null
+          check_5?: string | null
+          check_6?: string | null
+          created_at?: string
+          datum_meldung?: string | null
+          erledigt_am?: string | null
+          erstattet?: number | null
+          faellig_am?: string | null
+          id?: string
+          kosten_geschaetzt?: number | null
+          naechster_schritt?: string | null
+          reminder_sent?: boolean | null
+          reminder_sent_at?: string | null
+          row_number?: number
+          schaden_gemeldet?: string | null
+          status?: string | null
+          updated_at?: string | null
+          versicherungsart?: string | null
+          zustaendig?: string | null
+        }
+        Update: {
+          abgenommen_von?: string | null
+          abnahme_notiz?: string | null
+          aktenzeichen?: string | null
+          aktueller_stand?: string | null
+          auto_id?: string | null
+          bereich_anlage?: string
+          calendar_event_created?: boolean | null
+          calendar_event_id?: string | null
+          check_1?: string | null
+          check_2?: string | null
+          check_3?: string | null
+          check_4?: string | null
+          check_5?: string | null
+          check_6?: string | null
+          created_at?: string
+          datum_meldung?: string | null
+          erledigt_am?: string | null
+          erstattet?: number | null
+          faellig_am?: string | null
+          id?: string
+          kosten_geschaetzt?: number | null
+          naechster_schritt?: string | null
+          reminder_sent?: boolean | null
+          reminder_sent_at?: string | null
+          row_number?: number
+          schaden_gemeldet?: string | null
+          status?: string | null
+          updated_at?: string | null
+          versicherungsart?: string | null
+          zustaendig?: string | null
+        }
+        Relationships: []
+      }
+      budget_ziele: {
+        Row: {
+          abteilung: string
+          aktualisiert_am: string | null
+          bemerkung: string | null
+          erstellt_am: string | null
+          id: string
+          jahr: number
+          monat: number
+          ziel_aufwand: number | null
+          ziel_db1: number | null
+          ziel_db2: number | null
+          ziel_erloese: number | null
+          ziel_rohertrag: number | null
+        }
+        Insert: {
+          abteilung: string
+          aktualisiert_am?: string | null
+          bemerkung?: string | null
+          erstellt_am?: string | null
+          id?: string
+          jahr: number
+          monat: number
+          ziel_aufwand?: number | null
+          ziel_db1?: number | null
+          ziel_db2?: number | null
+          ziel_erloese?: number | null
+          ziel_rohertrag?: number | null
+        }
+        Update: {
+          abteilung?: string
+          aktualisiert_am?: string | null
+          bemerkung?: string | null
+          erstellt_am?: string | null
           id?: string
           jahr?: number
-          marketing?: number
           monat?: number
-          personal?: number
-          umsatz?: number
-          umsatz_diff?: number | null
-          umsatz_diff_prozent?: number | null
-          umsatz_vorjahr?: number | null
-          updated_at?: string
-          wareneinsatz?: number
-          zins?: number
-        }
-        Relationships: []
-      }
-      abteilungsleiter: {
-        Row: {
-          abteilung: string
-          aktiv: boolean
-          created_at: string
-          email: string
-          id: string
-          name: string
-          updated_at: string
-        }
-        Insert: {
-          abteilung: string
-          aktiv?: boolean
-          created_at?: string
-          email: string
-          id?: string
-          name: string
-          updated_at?: string
-        }
-        Update: {
-          abteilung?: string
-          aktiv?: boolean
-          created_at?: string
-          email?: string
-          id?: string
-          name?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      admin_daily_reports: {
-        Row: {
-          admin_hours_total: number
-          admin_staff_on_duty: number
-          applications_received: number
-          attendance_rate: number | null
-          created_at: string
-          daily_expenses: number
-          daily_revenue: number
-          deliveries_received: number
-          dpo_days: number | null
-          dso_days: number | null
-          id: string
-          it_availability_pct: number | null
-          it_resolution_rate_pct: number | null
-          it_tickets_open: number
-          it_tickets_resolved: number
-          monthly_turnover_rate_pct: number | null
-          new_hires: number
-          open_invoices_count: number
-          open_invoices_value: number
-          open_positions: number
-          open_positions_rate_pct: number | null
-          open_receivables: number
-          orders_placed: number
-          paid_invoices_count: number
-          payment_compliance_pct: number | null
-          planned_employees: number
-          reminders_sent: number
-          report_date: string
-          sick_days: number
-          sick_rate_pct: number | null
-          supplier_complaint_rate_pct: number | null
-          supplier_complaints: number
-          system_downtime_min: number
-          terminations: number
-          total_employees: number
-          turnover_rate: number | null
-          updated_at: string
-        }
-        Insert: {
-          admin_hours_total?: number
-          admin_staff_on_duty?: number
-          applications_received?: number
-          attendance_rate?: number | null
-          created_at?: string
-          daily_expenses?: number
-          daily_revenue?: number
-          deliveries_received?: number
-          dpo_days?: number | null
-          dso_days?: number | null
-          id?: string
-          it_availability_pct?: number | null
-          it_resolution_rate_pct?: number | null
-          it_tickets_open?: number
-          it_tickets_resolved?: number
-          monthly_turnover_rate_pct?: number | null
-          new_hires?: number
-          open_invoices_count?: number
-          open_invoices_value?: number
-          open_positions?: number
-          open_positions_rate_pct?: number | null
-          open_receivables?: number
-          orders_placed?: number
-          paid_invoices_count?: number
-          payment_compliance_pct?: number | null
-          planned_employees?: number
-          reminders_sent?: number
-          report_date: string
-          sick_days?: number
-          sick_rate_pct?: number | null
-          supplier_complaint_rate_pct?: number | null
-          supplier_complaints?: number
-          system_downtime_min?: number
-          terminations?: number
-          total_employees?: number
-          turnover_rate?: number | null
-          updated_at?: string
-        }
-        Update: {
-          admin_hours_total?: number
-          admin_staff_on_duty?: number
-          applications_received?: number
-          attendance_rate?: number | null
-          created_at?: string
-          daily_expenses?: number
-          daily_revenue?: number
-          deliveries_received?: number
-          dpo_days?: number | null
-          dso_days?: number | null
-          id?: string
-          it_availability_pct?: number | null
-          it_resolution_rate_pct?: number | null
-          it_tickets_open?: number
-          it_tickets_resolved?: number
-          monthly_turnover_rate_pct?: number | null
-          new_hires?: number
-          open_invoices_count?: number
-          open_invoices_value?: number
-          open_positions?: number
-          open_positions_rate_pct?: number | null
-          open_receivables?: number
-          orders_placed?: number
-          paid_invoices_count?: number
-          payment_compliance_pct?: number | null
-          planned_employees?: number
-          reminders_sent?: number
-          report_date?: string
-          sick_days?: number
-          sick_rate_pct?: number | null
-          supplier_complaint_rate_pct?: number | null
-          supplier_complaints?: number
-          system_downtime_min?: number
-          terminations?: number
-          total_employees?: number
-          turnover_rate?: number | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      budget_planung: {
-        Row: {
-          abteilung: string
-          created_at: string
-          db1_budget: number
-          db2_budget: number
-          energie_budget: number
-          id: string
-          jahr: number
-          marketing_budget: number
-          monat: number
-          personal_budget: number
-          umsatz_budget: number
-          updated_at: string
-          wareneinsatz_budget: number
-        }
-        Insert: {
-          abteilung: string
-          created_at?: string
-          db1_budget?: number
-          db2_budget?: number
-          energie_budget?: number
-          id?: string
-          jahr: number
-          marketing_budget?: number
-          monat: number
-          personal_budget?: number
-          umsatz_budget?: number
-          updated_at?: string
-          wareneinsatz_budget?: number
-        }
-        Update: {
-          abteilung?: string
-          created_at?: string
-          db1_budget?: number
-          db2_budget?: number
-          energie_budget?: number
-          id?: string
-          jahr?: number
-          marketing_budget?: number
-          monat?: number
-          personal_budget?: number
-          umsatz_budget?: number
-          updated_at?: string
-          wareneinsatz_budget?: number
+          ziel_aufwand?: number | null
+          ziel_db1?: number | null
+          ziel_db2?: number | null
+          ziel_erloese?: number | null
+          ziel_rohertrag?: number | null
         }
         Relationships: []
       }
       employee_shifts: {
         Row: {
-          abwesenheit: Database["public"]["Enums"]["absence_reason"]
-          abwesenheit_notiz: string | null
+          abwesenheit: string
           created_at: string
           datum: string
           employee_id: string
           id: string
-          ist_beginn: string | null
-          ist_ende: string | null
           ist_stunden: number | null
           nachmittag_beginn: string | null
           nachmittag_ende: string | null
-          pause_minuten: number | null
           schicht_beginn: string | null
           schicht_ende: string | null
           soll_stunden: number
@@ -319,18 +545,14 @@ export type Database = {
           vormittag_ende: string | null
         }
         Insert: {
-          abwesenheit?: Database["public"]["Enums"]["absence_reason"]
-          abwesenheit_notiz?: string | null
+          abwesenheit?: string
           created_at?: string
           datum: string
           employee_id: string
           id?: string
-          ist_beginn?: string | null
-          ist_ende?: string | null
           ist_stunden?: number | null
           nachmittag_beginn?: string | null
           nachmittag_ende?: string | null
-          pause_minuten?: number | null
           schicht_beginn?: string | null
           schicht_ende?: string | null
           soll_stunden?: number
@@ -340,18 +562,14 @@ export type Database = {
           vormittag_ende?: string | null
         }
         Update: {
-          abwesenheit?: Database["public"]["Enums"]["absence_reason"]
-          abwesenheit_notiz?: string | null
+          abwesenheit?: string
           created_at?: string
           datum?: string
           employee_id?: string
           id?: string
-          ist_beginn?: string | null
-          ist_ende?: string | null
           ist_stunden?: number | null
           nachmittag_beginn?: string | null
           nachmittag_ende?: string | null
-          pause_minuten?: number | null
           schicht_beginn?: string | null
           schicht_ende?: string | null
           soll_stunden?: number
@@ -430,7 +648,6 @@ export type Database = {
         Row: {
           abteilung: string
           aktiv: boolean
-          anstellungsart: Database["public"]["Enums"]["employment_type"]
           austrittsdatum: string | null
           created_at: string
           eintrittsdatum: string
@@ -448,10 +665,9 @@ export type Database = {
         Insert: {
           abteilung: string
           aktiv?: boolean
-          anstellungsart?: Database["public"]["Enums"]["employment_type"]
           austrittsdatum?: string | null
           created_at?: string
-          eintrittsdatum: string
+          eintrittsdatum?: string
           email?: string | null
           id?: string
           nachname: string
@@ -466,7 +682,6 @@ export type Database = {
         Update: {
           abteilung?: string
           aktiv?: boolean
-          anstellungsart?: Database["public"]["Enums"]["employment_type"]
           austrittsdatum?: string | null
           created_at?: string
           eintrittsdatum?: string
@@ -483,1195 +698,1101 @@ export type Database = {
         }
         Relationships: []
       }
-      frontoffice_daily_reports: {
-        Row: {
-          arrivals_total: number
-          attendance_rate: number | null
-          avg_checkin_time_sec: number
-          avg_checkout_time_sec: number
-          avg_fo_rating: number | null
-          avg_queue_time_sec: number | null
-          created_at: string
-          departures_total: number
-          fcr_pct: number | null
-          fo_complaint_rate_pct: number | null
-          fo_complaints: number
-          fo_hours_total: number
-          fo_ratings_count: number
-          fo_ratings_sum: number
-          fo_staff_on_duty: number
-          guests_per_fo_employee: number | null
-          id: string
-          report_date: string
-          requests_per_hour: number | null
-          requests_resolved_first_contact: number
-          requests_total: number
-          turnover_rate: number | null
-          updated_at: string
-          upsell_attempts: number
-          upsell_conversion_pct: number | null
-          upsell_rev_per_arrival: number | null
-          upsell_revenue: number
-          upsell_successes: number
-        }
-        Insert: {
-          arrivals_total?: number
-          attendance_rate?: number | null
-          avg_checkin_time_sec?: number
-          avg_checkout_time_sec?: number
-          avg_fo_rating?: number | null
-          avg_queue_time_sec?: number | null
-          created_at?: string
-          departures_total?: number
-          fcr_pct?: number | null
-          fo_complaint_rate_pct?: number | null
-          fo_complaints?: number
-          fo_hours_total?: number
-          fo_ratings_count?: number
-          fo_ratings_sum?: number
-          fo_staff_on_duty?: number
-          guests_per_fo_employee?: number | null
-          id?: string
-          report_date: string
-          requests_per_hour?: number | null
-          requests_resolved_first_contact?: number
-          requests_total?: number
-          turnover_rate?: number | null
-          updated_at?: string
-          upsell_attempts?: number
-          upsell_conversion_pct?: number | null
-          upsell_rev_per_arrival?: number | null
-          upsell_revenue?: number
-          upsell_successes?: number
-        }
-        Update: {
-          arrivals_total?: number
-          attendance_rate?: number | null
-          avg_checkin_time_sec?: number
-          avg_checkout_time_sec?: number
-          avg_fo_rating?: number | null
-          avg_queue_time_sec?: number | null
-          created_at?: string
-          departures_total?: number
-          fcr_pct?: number | null
-          fo_complaint_rate_pct?: number | null
-          fo_complaints?: number
-          fo_hours_total?: number
-          fo_ratings_count?: number
-          fo_ratings_sum?: number
-          fo_staff_on_duty?: number
-          guests_per_fo_employee?: number | null
-          id?: string
-          report_date?: string
-          requests_per_hour?: number | null
-          requests_resolved_first_contact?: number
-          requests_total?: number
-          turnover_rate?: number | null
-          updated_at?: string
-          upsell_attempts?: number
-          upsell_conversion_pct?: number | null
-          upsell_rev_per_arrival?: number | null
-          upsell_revenue?: number
-          upsell_successes?: number
-        }
-        Relationships: []
-      }
-      guest_daily_reports: {
+      frontdesk_daily_reports: {
         Row: {
           adr: number | null
-          aufenthaltsdauer_avg: number | null
-          belegungsrate_pct: number | null
-          bewertung_durchschnitt: number | null
-          bewertungen_anzahl: number | null
-          bewertungen_summe: number | null
-          buchungen_neu: number | null
-          created_at: string
-          gaeste_abreise: number | null
-          gaeste_anreise: number | null
-          gaeste_geschaeft: number | null
-          gaeste_inhouse: number | null
-          gaeste_kurgast: number | null
-          gaeste_retreat: number | null
-          gaeste_tagesgaeste: number | null
-          gaeste_wellness: number | null
+          cancellations: number | null
+          checkins_today: number | null
+          checkouts_today: number | null
+          complaints: number | null
+          created_at: string | null
+          guests_absent: number | null
+          guests_total: number | null
           id: string
-          no_shows: number | null
+          noshow_rate_pct: number | null
+          noshows: number | null
+          occupancy_pct: number | null
           report_date: string
           revpar: number | null
-          stornierungen: number | null
-          tagesumsatz_fb: number | null
-          tagesumsatz_gesamt: number | null
-          tagesumsatz_logis: number | null
-          tagesumsatz_sonstige: number | null
-          tagesumsatz_spa: number | null
-          umsatz_pro_gast: number | null
-          updated_at: string
-          wiederkehrende_gaeste: number | null
-          zimmer_belegt: number | null
-          zimmer_verfuegbar: number | null
+          room_revenue: number | null
+          rooms_occupied: number | null
+          staff_count: number | null
+          total_rooms: number | null
+          walkins: number | null
         }
         Insert: {
           adr?: number | null
-          aufenthaltsdauer_avg?: number | null
-          belegungsrate_pct?: number | null
-          bewertung_durchschnitt?: number | null
-          bewertungen_anzahl?: number | null
-          bewertungen_summe?: number | null
-          buchungen_neu?: number | null
-          created_at?: string
-          gaeste_abreise?: number | null
-          gaeste_anreise?: number | null
-          gaeste_geschaeft?: number | null
-          gaeste_inhouse?: number | null
-          gaeste_kurgast?: number | null
-          gaeste_retreat?: number | null
-          gaeste_tagesgaeste?: number | null
-          gaeste_wellness?: number | null
+          cancellations?: number | null
+          checkins_today?: number | null
+          checkouts_today?: number | null
+          complaints?: number | null
+          created_at?: string | null
+          guests_absent?: number | null
+          guests_total?: number | null
           id?: string
-          no_shows?: number | null
+          noshow_rate_pct?: number | null
+          noshows?: number | null
+          occupancy_pct?: number | null
           report_date: string
           revpar?: number | null
-          stornierungen?: number | null
-          tagesumsatz_fb?: number | null
-          tagesumsatz_gesamt?: number | null
-          tagesumsatz_logis?: number | null
-          tagesumsatz_sonstige?: number | null
-          tagesumsatz_spa?: number | null
-          umsatz_pro_gast?: number | null
-          updated_at?: string
-          wiederkehrende_gaeste?: number | null
-          zimmer_belegt?: number | null
-          zimmer_verfuegbar?: number | null
+          room_revenue?: number | null
+          rooms_occupied?: number | null
+          staff_count?: number | null
+          total_rooms?: number | null
+          walkins?: number | null
         }
         Update: {
           adr?: number | null
-          aufenthaltsdauer_avg?: number | null
-          belegungsrate_pct?: number | null
-          bewertung_durchschnitt?: number | null
-          bewertungen_anzahl?: number | null
-          bewertungen_summe?: number | null
-          buchungen_neu?: number | null
-          created_at?: string
-          gaeste_abreise?: number | null
-          gaeste_anreise?: number | null
-          gaeste_geschaeft?: number | null
-          gaeste_inhouse?: number | null
-          gaeste_kurgast?: number | null
-          gaeste_retreat?: number | null
-          gaeste_tagesgaeste?: number | null
-          gaeste_wellness?: number | null
+          cancellations?: number | null
+          checkins_today?: number | null
+          checkouts_today?: number | null
+          complaints?: number | null
+          created_at?: string | null
+          guests_absent?: number | null
+          guests_total?: number | null
           id?: string
-          no_shows?: number | null
+          noshow_rate_pct?: number | null
+          noshows?: number | null
+          occupancy_pct?: number | null
           report_date?: string
           revpar?: number | null
-          stornierungen?: number | null
-          tagesumsatz_fb?: number | null
-          tagesumsatz_gesamt?: number | null
-          tagesumsatz_logis?: number | null
-          tagesumsatz_sonstige?: number | null
-          tagesumsatz_spa?: number | null
-          umsatz_pro_gast?: number | null
-          updated_at?: string
-          wiederkehrende_gaeste?: number | null
-          zimmer_belegt?: number | null
-          zimmer_verfuegbar?: number | null
+          room_revenue?: number | null
+          rooms_occupied?: number | null
+          staff_count?: number | null
+          total_rooms?: number | null
+          walkins?: number | null
         }
         Relationships: []
       }
-      guest_stays: {
+      housekeeping_daily_reports: {
         Row: {
-          abreise: string
-          anreise: string
-          bewertung_fb: number | null
-          bewertung_gesamt: number | null
-          bewertung_service: number | null
-          bewertung_spa: number | null
-          bewertung_zimmer: number | null
-          buchungskanal: Database["public"]["Enums"]["booking_channel"] | null
-          created_at: string
-          fb_umsatz: number | null
-          feedback: string | null
-          gasttyp: Database["public"]["Enums"]["guest_type"]
-          gesamtpreis: number | null
-          guest_id: string
+          avg_time_per_room: number | null
+          checkouts_today: number | null
+          cleaning_rate_pct: number | null
+          cleaning_supplies_cost_week: number | null
+          complaint_rate_pct: number | null
+          complaints: number | null
+          created_at: string | null
+          deep_cleans: number | null
           id: string
-          kurtyp: Database["public"]["Enums"]["cure_type"] | null
-          naechte: number | null
-          sonstige_umsaetze: number | null
-          spa_umsatz: number | null
-          status: string | null
-          stornierungsgrund: string | null
-          updated_at: string
-          verpflegung: Database["public"]["Enums"]["meal_plan"] | null
-          zimmer_kategorie: string | null
-          zimmer_nummer: string | null
-          zimmerpreis_nacht: number | null
-        }
-        Insert: {
-          abreise: string
-          anreise: string
-          bewertung_fb?: number | null
-          bewertung_gesamt?: number | null
-          bewertung_service?: number | null
-          bewertung_spa?: number | null
-          bewertung_zimmer?: number | null
-          buchungskanal?: Database["public"]["Enums"]["booking_channel"] | null
-          created_at?: string
-          fb_umsatz?: number | null
-          feedback?: string | null
-          gasttyp?: Database["public"]["Enums"]["guest_type"]
-          gesamtpreis?: number | null
-          guest_id: string
-          id?: string
-          kurtyp?: Database["public"]["Enums"]["cure_type"] | null
-          naechte?: number | null
-          sonstige_umsaetze?: number | null
-          spa_umsatz?: number | null
-          status?: string | null
-          stornierungsgrund?: string | null
-          updated_at?: string
-          verpflegung?: Database["public"]["Enums"]["meal_plan"] | null
-          zimmer_kategorie?: string | null
-          zimmer_nummer?: string | null
-          zimmerpreis_nacht?: number | null
-        }
-        Update: {
-          abreise?: string
-          anreise?: string
-          bewertung_fb?: number | null
-          bewertung_gesamt?: number | null
-          bewertung_service?: number | null
-          bewertung_spa?: number | null
-          bewertung_zimmer?: number | null
-          buchungskanal?: Database["public"]["Enums"]["booking_channel"] | null
-          created_at?: string
-          fb_umsatz?: number | null
-          feedback?: string | null
-          gasttyp?: Database["public"]["Enums"]["guest_type"]
-          gesamtpreis?: number | null
-          guest_id?: string
-          id?: string
-          kurtyp?: Database["public"]["Enums"]["cure_type"] | null
-          naechte?: number | null
-          sonstige_umsaetze?: number | null
-          spa_umsatz?: number | null
-          status?: string | null
-          stornierungsgrund?: string | null
-          updated_at?: string
-          verpflegung?: Database["public"]["Enums"]["meal_plan"] | null
-          zimmer_kategorie?: string | null
-          zimmer_nummer?: string | null
-          zimmerpreis_nacht?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "guest_stays_guest_id_fkey"
-            columns: ["guest_id"]
-            isOneToOne: false
-            referencedRelation: "guests"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      guests: {
-        Row: {
-          allergien: string[] | null
-          anrede: string | null
-          anzahl_aufenthalte: number | null
-          arzt_freigabe: boolean | null
-          created_at: string
-          email: string | null
-          ernaehrungshinweise: string | null
-          erstbesuch_datum: string | null
-          gast_nummer: string
-          geburtsdatum: string | null
-          gesamtumsatz: number | null
-          herkunftsland: string | null
-          id: string
-          land: string | null
-          letzter_besuch: string | null
-          marketing_optin: boolean | null
-          medizinische_hinweise: string | null
-          mobil: string | null
-          nachname: string
-          newsletter_optin: boolean | null
-          notizen: string | null
-          ort: string | null
-          plz: string | null
-          sonderwuensche: string | null
-          sprache: string | null
-          strasse: string | null
-          telefon: string | null
-          updated_at: string
-          vip_status: boolean | null
-          vorname: string
-          zimmerpraeferenz: string | null
-        }
-        Insert: {
-          allergien?: string[] | null
-          anrede?: string | null
-          anzahl_aufenthalte?: number | null
-          arzt_freigabe?: boolean | null
-          created_at?: string
-          email?: string | null
-          ernaehrungshinweise?: string | null
-          erstbesuch_datum?: string | null
-          gast_nummer: string
-          geburtsdatum?: string | null
-          gesamtumsatz?: number | null
-          herkunftsland?: string | null
-          id?: string
-          land?: string | null
-          letzter_besuch?: string | null
-          marketing_optin?: boolean | null
-          medizinische_hinweise?: string | null
-          mobil?: string | null
-          nachname: string
-          newsletter_optin?: boolean | null
-          notizen?: string | null
-          ort?: string | null
-          plz?: string | null
-          sonderwuensche?: string | null
-          sprache?: string | null
-          strasse?: string | null
-          telefon?: string | null
-          updated_at?: string
-          vip_status?: boolean | null
-          vorname: string
-          zimmerpraeferenz?: string | null
-        }
-        Update: {
-          allergien?: string[] | null
-          anrede?: string | null
-          anzahl_aufenthalte?: number | null
-          arzt_freigabe?: boolean | null
-          created_at?: string
-          email?: string | null
-          ernaehrungshinweise?: string | null
-          erstbesuch_datum?: string | null
-          gast_nummer?: string
-          geburtsdatum?: string | null
-          gesamtumsatz?: number | null
-          herkunftsland?: string | null
-          id?: string
-          land?: string | null
-          letzter_besuch?: string | null
-          marketing_optin?: boolean | null
-          medizinische_hinweise?: string | null
-          mobil?: string | null
-          nachname?: string
-          newsletter_optin?: boolean | null
-          notizen?: string | null
-          ort?: string | null
-          plz?: string | null
-          sonderwuensche?: string | null
-          sprache?: string | null
-          strasse?: string | null
-          telefon?: string | null
-          updated_at?: string
-          vip_status?: boolean | null
-          vorname?: string
-          zimmerpraeferenz?: string | null
-        }
-        Relationships: []
-      }
-      hk_daily_reports: {
-        Row: {
-          attendance_rate: number | null
-          avg_minutes_per_room: number | null
-          cleaned_rooms: number
-          complaint_rate: number | null
-          complaints_cleanliness: number
-          created_at: string
-          hk_employees_on_duty: number
-          hk_hours_total: number | null
-          id: string
-          inspected_rooms: number
-          inspection_pass_rate: number | null
-          occupied_rooms: number
-          passed_rooms: number
+          laundry_kg_week: number | null
+          reclean_rate_pct: number | null
           report_date: string
-          rooms_in_sale: number
-          rooms_per_attendant: number | null
-          shift_minutes: number | null
-          total_cleaning_minutes: number | null
-          turnover_rate: number | null
-          updated_at: string
+          rooms_cleaned: number | null
+          rooms_per_employee: number | null
+          rooms_recleaned: number | null
+          rooms_to_clean: number | null
+          staff_count: number | null
+          stayovers: number | null
+          total_hours: number | null
         }
         Insert: {
-          attendance_rate?: number | null
-          avg_minutes_per_room?: number | null
-          cleaned_rooms?: number
-          complaint_rate?: number | null
-          complaints_cleanliness?: number
-          created_at?: string
-          hk_employees_on_duty?: number
-          hk_hours_total?: number | null
+          avg_time_per_room?: number | null
+          checkouts_today?: number | null
+          cleaning_rate_pct?: number | null
+          cleaning_supplies_cost_week?: number | null
+          complaint_rate_pct?: number | null
+          complaints?: number | null
+          created_at?: string | null
+          deep_cleans?: number | null
           id?: string
-          inspected_rooms?: number
-          inspection_pass_rate?: number | null
-          occupied_rooms?: number
-          passed_rooms?: number
+          laundry_kg_week?: number | null
+          reclean_rate_pct?: number | null
           report_date: string
-          rooms_in_sale?: number
-          rooms_per_attendant?: number | null
-          shift_minutes?: number | null
-          total_cleaning_minutes?: number | null
-          turnover_rate?: number | null
-          updated_at?: string
+          rooms_cleaned?: number | null
+          rooms_per_employee?: number | null
+          rooms_recleaned?: number | null
+          rooms_to_clean?: number | null
+          staff_count?: number | null
+          stayovers?: number | null
+          total_hours?: number | null
         }
         Update: {
-          attendance_rate?: number | null
-          avg_minutes_per_room?: number | null
-          cleaned_rooms?: number
-          complaint_rate?: number | null
-          complaints_cleanliness?: number
-          created_at?: string
-          hk_employees_on_duty?: number
-          hk_hours_total?: number | null
+          avg_time_per_room?: number | null
+          checkouts_today?: number | null
+          cleaning_rate_pct?: number | null
+          cleaning_supplies_cost_week?: number | null
+          complaint_rate_pct?: number | null
+          complaints?: number | null
+          created_at?: string | null
+          deep_cleans?: number | null
           id?: string
-          inspected_rooms?: number
-          inspection_pass_rate?: number | null
-          occupied_rooms?: number
-          passed_rooms?: number
+          laundry_kg_week?: number | null
+          reclean_rate_pct?: number | null
           report_date?: string
-          rooms_in_sale?: number
-          rooms_per_attendant?: number | null
-          shift_minutes?: number | null
-          total_cleaning_minutes?: number | null
-          turnover_rate?: number | null
-          updated_at?: string
+          rooms_cleaned?: number | null
+          rooms_per_employee?: number | null
+          rooms_recleaned?: number | null
+          rooms_to_clean?: number | null
+          staff_count?: number | null
+          stayovers?: number | null
+          total_hours?: number | null
         }
         Relationships: []
       }
       import_files: {
         Row: {
-          anzahl_konten: number
+          anzahl_konten: number | null
           filename: string
           id: string
-          imported_at: string
+          imported_at: string | null
           jahr: number
           monat: number
         }
         Insert: {
-          anzahl_konten?: number
+          anzahl_konten?: number | null
           filename: string
           id?: string
-          imported_at?: string
+          imported_at?: string | null
           jahr: number
           monat: number
         }
         Update: {
-          anzahl_konten?: number
+          anzahl_konten?: number | null
           filename?: string
           id?: string
-          imported_at?: string
+          imported_at?: string | null
           jahr?: number
           monat?: number
-        }
-        Relationships: []
-      }
-      invitations: {
-        Row: {
-          abteilung: string | null
-          created_at: string
-          email: string
-          expires_at: string
-          id: string
-          invited_by: string | null
-          role: Database["public"]["Enums"]["app_role"]
-          token: string
-          used_at: string | null
-        }
-        Insert: {
-          abteilung?: string | null
-          created_at?: string
-          email: string
-          expires_at?: string
-          id?: string
-          invited_by?: string | null
-          role?: Database["public"]["Enums"]["app_role"]
-          token?: string
-          used_at?: string | null
-        }
-        Update: {
-          abteilung?: string | null
-          created_at?: string
-          email?: string
-          expires_at?: string
-          id?: string
-          invited_by?: string | null
-          role?: Database["public"]["Enums"]["app_role"]
-          token?: string
-          used_at?: string | null
         }
         Relationships: []
       }
       kitchen_daily_reports: {
         Row: {
-          attendance_rate: number | null
-          complaint_rate_pct: number | null
-          correct_orders: number
+          base_cpc: number | null
+          beverage_cost_week: number
+          covers_breakfast: number
+          covers_dinner: number
+          covers_lunch: number
           covers_total: number
+          cpc_breakfast: number | null
+          cpc_dinner: number | null
+          cpc_lunch: number | null
+          cpgd: number | null
           created_at: string
           food_complaints: number
-          food_cost: number
-          food_cost_pct: number | null
-          food_cost_per_cover: number | null
-          food_revenue: number
-          food_waste_pct: number | null
-          food_waste_value: number | null
+          food_cost_week: number
+          guests_absent: number
           id: string
           kitchen_hours_total: number
-          kitchen_labour_cost: number | null
-          kitchen_labour_pct: number | null
-          kitchen_staff_on_duty: number
+          kitchen_staff_count: number
           meals_per_employee: number | null
-          order_accuracy_pct: number | null
-          orders_total: number
-          plates_per_hour: number | null
-          plates_total: number
-          prime_cost_pct: number | null
           report_date: string
-          turnover_rate: number | null
           updated_at: string
+          waste_pct: number | null
+          waste_value_week: number
+          weighted_covers: number
         }
         Insert: {
-          attendance_rate?: number | null
-          complaint_rate_pct?: number | null
-          correct_orders?: number
+          base_cpc?: number | null
+          beverage_cost_week?: number
+          covers_breakfast?: number
+          covers_dinner?: number
+          covers_lunch?: number
           covers_total?: number
+          cpc_breakfast?: number | null
+          cpc_dinner?: number | null
+          cpc_lunch?: number | null
+          cpgd?: number | null
           created_at?: string
           food_complaints?: number
-          food_cost?: number
-          food_cost_pct?: number | null
-          food_cost_per_cover?: number | null
-          food_revenue?: number
-          food_waste_pct?: number | null
-          food_waste_value?: number | null
+          food_cost_week?: number
+          guests_absent?: number
           id?: string
           kitchen_hours_total?: number
-          kitchen_labour_cost?: number | null
-          kitchen_labour_pct?: number | null
-          kitchen_staff_on_duty?: number
+          kitchen_staff_count?: number
           meals_per_employee?: number | null
-          order_accuracy_pct?: number | null
-          orders_total?: number
-          plates_per_hour?: number | null
-          plates_total?: number
-          prime_cost_pct?: number | null
           report_date: string
-          turnover_rate?: number | null
           updated_at?: string
+          waste_pct?: number | null
+          waste_value_week?: number
+          weighted_covers?: number
         }
         Update: {
-          attendance_rate?: number | null
-          complaint_rate_pct?: number | null
-          correct_orders?: number
+          base_cpc?: number | null
+          beverage_cost_week?: number
+          covers_breakfast?: number
+          covers_dinner?: number
+          covers_lunch?: number
           covers_total?: number
+          cpc_breakfast?: number | null
+          cpc_dinner?: number | null
+          cpc_lunch?: number | null
+          cpgd?: number | null
           created_at?: string
           food_complaints?: number
-          food_cost?: number
-          food_cost_pct?: number | null
-          food_cost_per_cover?: number | null
-          food_revenue?: number
-          food_waste_pct?: number | null
-          food_waste_value?: number | null
+          food_cost_week?: number
+          guests_absent?: number
           id?: string
           kitchen_hours_total?: number
-          kitchen_labour_cost?: number | null
-          kitchen_labour_pct?: number | null
-          kitchen_staff_on_duty?: number
+          kitchen_staff_count?: number
           meals_per_employee?: number | null
-          order_accuracy_pct?: number | null
-          orders_total?: number
-          plates_per_hour?: number | null
-          plates_total?: number
-          prime_cost_pct?: number | null
           report_date?: string
-          turnover_rate?: number | null
           updated_at?: string
+          waste_pct?: number | null
+          waste_value_week?: number
+          weighted_covers?: number
         }
         Relationships: []
       }
       konten: {
         Row: {
+          aktualisiert_am: string | null
           bereich: string
-          created_at: string
+          beschreibung: string | null
+          erstellt_am: string | null
           id: string
-          kontobezeichnung: string
-          kontoklasse: string
+          klasse: string
           kontonummer: string
-          kostenartt_typ: string
-          kpi_kategorie: string
-          updated_at: string
+          kostentyp: string
+          kpi_kategorie: string | null
         }
         Insert: {
-          bereich?: string
-          created_at?: string
+          aktualisiert_am?: string | null
+          bereich: string
+          beschreibung?: string | null
+          erstellt_am?: string | null
           id?: string
-          kontobezeichnung: string
-          kontoklasse: string
+          klasse: string
           kontonummer: string
-          kostenartt_typ?: string
-          kpi_kategorie?: string
-          updated_at?: string
+          kostentyp: string
+          kpi_kategorie?: string | null
         }
         Update: {
+          aktualisiert_am?: string | null
           bereich?: string
-          created_at?: string
+          beschreibung?: string | null
+          erstellt_am?: string | null
           id?: string
-          kontobezeichnung?: string
-          kontoklasse?: string
+          klasse?: string
           kontonummer?: string
-          kostenartt_typ?: string
-          kpi_kategorie?: string
-          updated_at?: string
+          kostentyp?: string
+          kpi_kategorie?: string | null
         }
         Relationships: []
       }
-      kpi_schwellenwerte: {
+      mitarbeiter: {
         Row: {
           abteilung: string
-          alarm_aktiv: boolean
-          created_at: string
+          aktiv: boolean | null
+          aktualisiert_am: string | null
+          berufsbezeichnung: string | null
+          brutto_monatsgehalt: number | null
+          eintrittsdatum: string | null
+          email: string | null
+          erstellt_am: string | null
           id: string
-          kpi_typ: string
-          schwellenwert_max: number | null
-          schwellenwert_min: number | null
-          updated_at: string
+          nachname: string
+          position: string | null
+          rolle: string | null
+          stundenlohn: number | null
+          telefon: string | null
+          vorname: string
+          wochenstunden: number | null
         }
         Insert: {
           abteilung: string
-          alarm_aktiv?: boolean
-          created_at?: string
+          aktiv?: boolean | null
+          aktualisiert_am?: string | null
+          berufsbezeichnung?: string | null
+          brutto_monatsgehalt?: number | null
+          eintrittsdatum?: string | null
+          email?: string | null
+          erstellt_am?: string | null
           id?: string
-          kpi_typ: string
-          schwellenwert_max?: number | null
-          schwellenwert_min?: number | null
-          updated_at?: string
+          nachname: string
+          position?: string | null
+          rolle?: string | null
+          stundenlohn?: number | null
+          telefon?: string | null
+          vorname: string
+          wochenstunden?: number | null
         }
         Update: {
           abteilung?: string
-          alarm_aktiv?: boolean
-          created_at?: string
+          aktiv?: boolean | null
+          aktualisiert_am?: string | null
+          berufsbezeichnung?: string | null
+          brutto_monatsgehalt?: number | null
+          eintrittsdatum?: string | null
+          email?: string | null
+          erstellt_am?: string | null
           id?: string
-          kpi_typ?: string
-          schwellenwert_max?: number | null
-          schwellenwert_min?: number | null
-          updated_at?: string
+          nachname?: string
+          position?: string | null
+          rolle?: string | null
+          stundenlohn?: number | null
+          telefon?: string | null
+          vorname?: string
+          wochenstunden?: number | null
         }
         Relationships: []
       }
-      profiles: {
+      nps_monat: {
         Row: {
-          abteilung: string | null
-          created_at: string
-          email: string
+          bewertungen_anzahl: number | null
+          created_at: string | null
+          detraktoren_pct: number | null
           id: string
-          name: string | null
-          updated_at: string
+          jahr: number
+          monat: number
+          nps_score: number
+          promotoren_pct: number | null
+          quelle: string | null
+          updated_at: string | null
         }
         Insert: {
-          abteilung?: string | null
-          created_at?: string
-          email: string
-          id: string
-          name?: string | null
-          updated_at?: string
+          bewertungen_anzahl?: number | null
+          created_at?: string | null
+          detraktoren_pct?: number | null
+          id?: string
+          jahr: number
+          monat: number
+          nps_score: number
+          promotoren_pct?: number | null
+          quelle?: string | null
+          updated_at?: string | null
         }
         Update: {
-          abteilung?: string | null
-          created_at?: string
-          email?: string
+          bewertungen_anzahl?: number | null
+          created_at?: string | null
+          detraktoren_pct?: number | null
           id?: string
-          name?: string | null
-          updated_at?: string
+          jahr?: number
+          monat?: number
+          nps_score?: number
+          promotoren_pct?: number | null
+          quelle?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      protel_config: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          database: string
+          db_password_enc: string
+          db_user: string
+          hotel_name: string
+          id: string
+          instance: string | null
+          port: number | null
+          server: string
+          setup_complete: boolean | null
+          table_names: Json | null
+          total_rooms: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          database: string
+          db_password_enc: string
+          db_user: string
+          hotel_name?: string
+          id?: string
+          instance?: string | null
+          port?: number | null
+          server: string
+          setup_complete?: boolean | null
+          table_names?: Json | null
+          total_rooms?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          database?: string
+          db_password_enc?: string
+          db_user?: string
+          hotel_name?: string
+          id?: string
+          instance?: string | null
+          port?: number | null
+          server?: string
+          setup_complete?: boolean | null
+          table_names?: Json | null
+          total_rooms?: number | null
+          updated_at?: string | null
         }
         Relationships: []
       }
       salden_monat: {
         Row: {
-          created_at: string
+          aktualisiert_am: string | null
+          erstellt_am: string | null
+          haben_betrag: number | null
           id: string
           jahr: number
-          kontonummer: string
+          konto_id: string
           monat: number
-          saldo_haben_monat: number
-          saldo_monat: number
-          saldo_soll_monat: number
+          soll_betrag: number | null
         }
         Insert: {
-          created_at?: string
+          aktualisiert_am?: string | null
+          erstellt_am?: string | null
+          haben_betrag?: number | null
           id?: string
           jahr: number
-          kontonummer: string
+          konto_id: string
           monat: number
-          saldo_haben_monat?: number
-          saldo_monat?: number
-          saldo_soll_monat?: number
+          soll_betrag?: number | null
         }
         Update: {
-          created_at?: string
+          aktualisiert_am?: string | null
+          erstellt_am?: string | null
+          haben_betrag?: number | null
           id?: string
           jahr?: number
-          kontonummer?: string
+          konto_id?: string
           monat?: number
-          saldo_haben_monat?: number
-          saldo_monat?: number
-          saldo_soll_monat?: number
+          soll_betrag?: number | null
         }
         Relationships: [
           {
-            foreignKeyName: "salden_monat_kontonummer_fkey"
-            columns: ["kontonummer"]
+            foreignKeyName: "salden_monat_konto_id_fkey"
+            columns: ["konto_id"]
             isOneToOne: false
             referencedRelation: "konten"
-            referencedColumns: ["kontonummer"]
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      schichten: {
+        Row: {
+          aktualisiert_am: string | null
+          bemerkung: string | null
+          datum: string
+          diensttyp: string | null
+          endzeit: string
+          erstellt_am: string | null
+          id: string
+          mitarbeiter_id: string
+          pause_minuten: number | null
+          schichttyp: string | null
+          startzeit: string
+        }
+        Insert: {
+          aktualisiert_am?: string | null
+          bemerkung?: string | null
+          datum: string
+          diensttyp?: string | null
+          endzeit: string
+          erstellt_am?: string | null
+          id?: string
+          mitarbeiter_id: string
+          pause_minuten?: number | null
+          schichttyp?: string | null
+          startzeit: string
+        }
+        Update: {
+          aktualisiert_am?: string | null
+          bemerkung?: string | null
+          datum?: string
+          diensttyp?: string | null
+          endzeit?: string
+          erstellt_am?: string | null
+          id?: string
+          mitarbeiter_id?: string
+          pause_minuten?: number | null
+          schichttyp?: string | null
+          startzeit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schichten_mitarbeiter_id_fkey"
+            columns: ["mitarbeiter_id"]
+            isOneToOne: false
+            referencedRelation: "mitarbeiter"
+            referencedColumns: ["id"]
           },
         ]
       }
       service_daily_reports: {
         Row: {
-          attendance_rate: number | null
-          avg_service_rating: number | null
-          covers_per_server_per_hour: number | null
-          covers_total: number
-          created_at: string
-          csat_pct: number | null
-          csat_positive_count: number | null
-          csat_total_respondents: number | null
+          complaint_rate_pct: number | null
+          complaints: number | null
+          covers_breakfast: number | null
+          covers_dinner: number | null
+          covers_lunch: number | null
+          covers_per_employee: number | null
+          covers_total: number | null
+          created_at: string | null
+          extra_beverage_revenue: number | null
+          extra_food_revenue: number | null
+          extra_revenue_per_cover: number | null
+          guests_absent: number | null
           id: string
-          items_total: number
           report_date: string
-          sales_per_cover: number | null
-          sales_per_server: number | null
-          service_complaint_rate_pct: number | null
-          service_complaints: number
-          service_error_rate_pct: number | null
-          service_errors: number
-          service_hours_total: number
-          service_ratings_count: number
-          service_ratings_sum: number
-          service_revenue: number
-          service_staff_on_duty: number
-          table_turnover_rate: number | null
-          tables_available: number | null
-          tables_served: number
-          turnover_rate: number | null
-          updated_at: string
+          staff_count: number | null
+          total_hours: number | null
         }
         Insert: {
-          attendance_rate?: number | null
-          avg_service_rating?: number | null
-          covers_per_server_per_hour?: number | null
-          covers_total?: number
-          created_at?: string
-          csat_pct?: number | null
-          csat_positive_count?: number | null
-          csat_total_respondents?: number | null
+          complaint_rate_pct?: number | null
+          complaints?: number | null
+          covers_breakfast?: number | null
+          covers_dinner?: number | null
+          covers_lunch?: number | null
+          covers_per_employee?: number | null
+          covers_total?: number | null
+          created_at?: string | null
+          extra_beverage_revenue?: number | null
+          extra_food_revenue?: number | null
+          extra_revenue_per_cover?: number | null
+          guests_absent?: number | null
           id?: string
-          items_total?: number
           report_date: string
-          sales_per_cover?: number | null
-          sales_per_server?: number | null
-          service_complaint_rate_pct?: number | null
-          service_complaints?: number
-          service_error_rate_pct?: number | null
-          service_errors?: number
-          service_hours_total?: number
-          service_ratings_count?: number
-          service_ratings_sum?: number
-          service_revenue?: number
-          service_staff_on_duty?: number
-          table_turnover_rate?: number | null
-          tables_available?: number | null
-          tables_served?: number
-          turnover_rate?: number | null
-          updated_at?: string
+          staff_count?: number | null
+          total_hours?: number | null
         }
         Update: {
-          attendance_rate?: number | null
-          avg_service_rating?: number | null
-          covers_per_server_per_hour?: number | null
-          covers_total?: number
-          created_at?: string
-          csat_pct?: number | null
-          csat_positive_count?: number | null
-          csat_total_respondents?: number | null
+          complaint_rate_pct?: number | null
+          complaints?: number | null
+          covers_breakfast?: number | null
+          covers_dinner?: number | null
+          covers_lunch?: number | null
+          covers_per_employee?: number | null
+          covers_total?: number | null
+          created_at?: string | null
+          extra_beverage_revenue?: number | null
+          extra_food_revenue?: number | null
+          extra_revenue_per_cover?: number | null
+          guests_absent?: number | null
           id?: string
-          items_total?: number
           report_date?: string
-          sales_per_cover?: number | null
-          sales_per_server?: number | null
-          service_complaint_rate_pct?: number | null
-          service_complaints?: number
-          service_error_rate_pct?: number | null
-          service_errors?: number
-          service_hours_total?: number
-          service_ratings_count?: number
-          service_ratings_sum?: number
-          service_revenue?: number
-          service_staff_on_duty?: number
-          table_turnover_rate?: number | null
-          tables_available?: number | null
-          tables_served?: number
-          turnover_rate?: number | null
-          updated_at?: string
+          staff_count?: number | null
+          total_hours?: number | null
         }
         Relationships: []
+      }
+      shift_suggestion_rejections: {
+        Row: {
+          abteilungsleiter_id: string
+          begruendung: string
+          created_at: string
+          datum: string
+          employee_id: string
+          id: string
+          ueberstunden_aktuell: number
+        }
+        Insert: {
+          abteilungsleiter_id: string
+          begruendung: string
+          created_at?: string
+          datum: string
+          employee_id: string
+          id?: string
+          ueberstunden_aktuell?: number
+        }
+        Update: {
+          abteilungsleiter_id?: string
+          begruendung?: string
+          created_at?: string
+          datum?: string
+          employee_id?: string
+          id?: string
+          ueberstunden_aktuell?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shift_suggestion_rejections_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       spa_daily_reports: {
         Row: {
-          attendance_rate: number | null
-          available_treatment_hours: number
-          avg_spa_rating: number | null
-          booked_treatment_hours: number
-          bookings_total: number
-          cancellations: number
-          complaint_rate_pct: number | null
-          created_at: string
-          guests_total: number
+          available_slots: number | null
+          avg_revenue_per_treatment: number | null
+          booked_slots: number | null
+          complaints: number | null
+          created_at: string | null
           id: string
-          no_show_rate_pct: number | null
-          no_shows: number
+          product_attachment_rate: number | null
           report_date: string
-          retail_ratio_pct: number | null
-          retail_revenue: number
-          revenue_per_guest: number | null
-          revpath: number | null
-          room_utilization_pct: number | null
-          spa_complaints: number
-          spa_ratings_count: number
-          spa_ratings_sum: number
-          spa_revenue: number
-          therapist_hours_total: number
-          therapist_utilization_pct: number | null
-          therapists_on_duty: number
+          revenue_ayurveda: number | null
+          revenue_classic: number | null
+          revenue_cosmetic: number | null
+          revenue_products: number | null
+          revenue_total: number | null
+          revenue_yoga: number | null
+          therapists_count: number | null
+          total_hours: number | null
+          treatment_rooms_total: number | null
+          treatments_ayurveda: number | null
+          treatments_classic: number | null
+          treatments_cosmetic: number | null
+          treatments_other: number | null
           treatments_per_therapist: number | null
-          treatments_total: number
-          turnover_rate: number | null
-          updated_at: string
+          treatments_total: number | null
+          treatments_yoga: number | null
+          utilization_pct: number | null
         }
         Insert: {
-          attendance_rate?: number | null
-          available_treatment_hours?: number
-          avg_spa_rating?: number | null
-          booked_treatment_hours?: number
-          bookings_total?: number
-          cancellations?: number
-          complaint_rate_pct?: number | null
-          created_at?: string
-          guests_total?: number
+          available_slots?: number | null
+          avg_revenue_per_treatment?: number | null
+          booked_slots?: number | null
+          complaints?: number | null
+          created_at?: string | null
           id?: string
-          no_show_rate_pct?: number | null
-          no_shows?: number
+          product_attachment_rate?: number | null
           report_date: string
-          retail_ratio_pct?: number | null
-          retail_revenue?: number
-          revenue_per_guest?: number | null
-          revpath?: number | null
-          room_utilization_pct?: number | null
-          spa_complaints?: number
-          spa_ratings_count?: number
-          spa_ratings_sum?: number
-          spa_revenue?: number
-          therapist_hours_total?: number
-          therapist_utilization_pct?: number | null
-          therapists_on_duty?: number
+          revenue_ayurveda?: number | null
+          revenue_classic?: number | null
+          revenue_cosmetic?: number | null
+          revenue_products?: number | null
+          revenue_total?: number | null
+          revenue_yoga?: number | null
+          therapists_count?: number | null
+          total_hours?: number | null
+          treatment_rooms_total?: number | null
+          treatments_ayurveda?: number | null
+          treatments_classic?: number | null
+          treatments_cosmetic?: number | null
+          treatments_other?: number | null
           treatments_per_therapist?: number | null
-          treatments_total?: number
-          turnover_rate?: number | null
-          updated_at?: string
+          treatments_total?: number | null
+          treatments_yoga?: number | null
+          utilization_pct?: number | null
         }
         Update: {
-          attendance_rate?: number | null
-          available_treatment_hours?: number
-          avg_spa_rating?: number | null
-          booked_treatment_hours?: number
-          bookings_total?: number
-          cancellations?: number
-          complaint_rate_pct?: number | null
-          created_at?: string
-          guests_total?: number
+          available_slots?: number | null
+          avg_revenue_per_treatment?: number | null
+          booked_slots?: number | null
+          complaints?: number | null
+          created_at?: string | null
           id?: string
-          no_show_rate_pct?: number | null
-          no_shows?: number
+          product_attachment_rate?: number | null
           report_date?: string
-          retail_ratio_pct?: number | null
-          retail_revenue?: number
-          revenue_per_guest?: number | null
-          revpath?: number | null
-          room_utilization_pct?: number | null
-          spa_complaints?: number
-          spa_ratings_count?: number
-          spa_ratings_sum?: number
-          spa_revenue?: number
-          therapist_hours_total?: number
-          therapist_utilization_pct?: number | null
-          therapists_on_duty?: number
+          revenue_ayurveda?: number | null
+          revenue_classic?: number | null
+          revenue_cosmetic?: number | null
+          revenue_products?: number | null
+          revenue_total?: number | null
+          revenue_yoga?: number | null
+          therapists_count?: number | null
+          total_hours?: number | null
+          treatment_rooms_total?: number | null
+          treatments_ayurveda?: number | null
+          treatments_classic?: number | null
+          treatments_cosmetic?: number | null
+          treatments_other?: number | null
           treatments_per_therapist?: number | null
-          treatments_total?: number
-          turnover_rate?: number | null
-          updated_at?: string
+          treatments_total?: number | null
+          treatments_yoga?: number | null
+          utilization_pct?: number | null
         }
         Relationships: []
       }
-      technical_daily_reports: {
+      technik_bestellungen: {
         Row: {
-          attendance_rate: number | null
-          avg_resolution_time_min: number
-          cost_per_ticket: number | null
+          amount: number
+          approver_id: string | null
+          approver_role: string | null
           created_at: string
-          emergency_rate_pct: number | null
-          emergency_repairs: number
-          energy_consumption_kwh: number
-          energy_per_room: number | null
-          external_costs: number
+          currency: string
+          department: string
           id: string
-          material_costs: number
-          new_tickets: number
-          occupied_rooms: number
-          open_tickets: number
-          preventive_maintenance_done: number
-          preventive_maintenance_pct: number | null
-          preventive_maintenance_planned: number
-          report_date: string
-          resolved_tickets: number
-          same_day_resolution_pct: number | null
-          technician_hours_total: number
-          technicians_on_duty: number
-          ticket_backlog_rate_pct: number | null
-          tickets_per_technician: number | null
-          turnover_rate: number | null
+          invoice_url: string | null
+          month_start: string
+          notes: string | null
+          ordered_at: string | null
+          received: boolean
+          received_at: string | null
+          requester_id: string
+          requester_name: string | null
+          status: string
           updated_at: string
+          vendor: string
+          vendor_url: string | null
         }
         Insert: {
-          attendance_rate?: number | null
-          avg_resolution_time_min?: number
-          cost_per_ticket?: number | null
+          amount: number
+          approver_id?: string | null
+          approver_role?: string | null
           created_at?: string
-          emergency_rate_pct?: number | null
-          emergency_repairs?: number
-          energy_consumption_kwh?: number
-          energy_per_room?: number | null
-          external_costs?: number
+          currency?: string
+          department: string
           id?: string
-          material_costs?: number
-          new_tickets?: number
-          occupied_rooms?: number
-          open_tickets?: number
-          preventive_maintenance_done?: number
-          preventive_maintenance_pct?: number | null
-          preventive_maintenance_planned?: number
-          report_date: string
-          resolved_tickets?: number
-          same_day_resolution_pct?: number | null
-          technician_hours_total?: number
-          technicians_on_duty?: number
-          ticket_backlog_rate_pct?: number | null
-          tickets_per_technician?: number | null
-          turnover_rate?: number | null
+          invoice_url?: string | null
+          month_start: string
+          notes?: string | null
+          ordered_at?: string | null
+          received?: boolean
+          received_at?: string | null
+          requester_id: string
+          requester_name?: string | null
+          status?: string
           updated_at?: string
+          vendor: string
+          vendor_url?: string | null
         }
         Update: {
-          attendance_rate?: number | null
-          avg_resolution_time_min?: number
-          cost_per_ticket?: number | null
+          amount?: number
+          approver_id?: string | null
+          approver_role?: string | null
           created_at?: string
-          emergency_rate_pct?: number | null
-          emergency_repairs?: number
-          energy_consumption_kwh?: number
-          energy_per_room?: number | null
-          external_costs?: number
+          currency?: string
+          department?: string
           id?: string
-          material_costs?: number
-          new_tickets?: number
-          occupied_rooms?: number
-          open_tickets?: number
-          preventive_maintenance_done?: number
-          preventive_maintenance_pct?: number | null
-          preventive_maintenance_planned?: number
-          report_date?: string
-          resolved_tickets?: number
-          same_day_resolution_pct?: number | null
-          technician_hours_total?: number
-          technicians_on_duty?: number
-          ticket_backlog_rate_pct?: number | null
-          tickets_per_technician?: number | null
-          turnover_rate?: number | null
+          invoice_url?: string | null
+          month_start?: string
+          notes?: string | null
+          ordered_at?: string | null
+          received?: boolean
+          received_at?: string | null
+          requester_id?: string
+          requester_name?: string | null
+          status?: string
           updated_at?: string
+          vendor?: string
+          vendor_url?: string | null
+        }
+        Relationships: []
+      }
+      technik_daily_reports: {
+        Row: {
+          avg_response_hours: number | null
+          completion_rate_pct: number | null
+          created_at: string | null
+          external_service_cost_week: number | null
+          id: string
+          material_cost_week: number | null
+          preventive_tasks: number | null
+          report_date: string
+          staff_count: number | null
+          tickets_completed: number | null
+          tickets_kitchen: number | null
+          tickets_low: number | null
+          tickets_new: number | null
+          tickets_normal: number | null
+          tickets_open: number | null
+          tickets_outdoor: number | null
+          tickets_per_employee: number | null
+          tickets_public: number | null
+          tickets_rooms: number | null
+          tickets_spa: number | null
+          tickets_urgent: number | null
+          total_hours: number | null
+        }
+        Insert: {
+          avg_response_hours?: number | null
+          completion_rate_pct?: number | null
+          created_at?: string | null
+          external_service_cost_week?: number | null
+          id?: string
+          material_cost_week?: number | null
+          preventive_tasks?: number | null
+          report_date: string
+          staff_count?: number | null
+          tickets_completed?: number | null
+          tickets_kitchen?: number | null
+          tickets_low?: number | null
+          tickets_new?: number | null
+          tickets_normal?: number | null
+          tickets_open?: number | null
+          tickets_outdoor?: number | null
+          tickets_per_employee?: number | null
+          tickets_public?: number | null
+          tickets_rooms?: number | null
+          tickets_spa?: number | null
+          tickets_urgent?: number | null
+          total_hours?: number | null
+        }
+        Update: {
+          avg_response_hours?: number | null
+          completion_rate_pct?: number | null
+          created_at?: string | null
+          external_service_cost_week?: number | null
+          id?: string
+          material_cost_week?: number | null
+          preventive_tasks?: number | null
+          report_date?: string
+          staff_count?: number | null
+          tickets_completed?: number | null
+          tickets_kitchen?: number | null
+          tickets_low?: number | null
+          tickets_new?: number | null
+          tickets_normal?: number | null
+          tickets_open?: number | null
+          tickets_outdoor?: number | null
+          tickets_per_employee?: number | null
+          tickets_public?: number | null
+          tickets_rooms?: number | null
+          tickets_spa?: number | null
+          tickets_urgent?: number | null
+          total_hours?: number | null
+        }
+        Relationships: []
+      }
+      ueberstunden: {
+        Row: {
+          aktualisiert_am: string | null
+          ausbezahlt: boolean | null
+          erstellt_am: string | null
+          id: string
+          ist_stunden: number | null
+          jahr: number
+          mitarbeiter_id: string
+          monat: number
+          soll_stunden: number | null
+          ueberstunden: number | null
+        }
+        Insert: {
+          aktualisiert_am?: string | null
+          ausbezahlt?: boolean | null
+          erstellt_am?: string | null
+          id?: string
+          ist_stunden?: number | null
+          jahr: number
+          mitarbeiter_id: string
+          monat: number
+          soll_stunden?: number | null
+          ueberstunden?: number | null
+        }
+        Update: {
+          aktualisiert_am?: string | null
+          ausbezahlt?: boolean | null
+          erstellt_am?: string | null
+          id?: string
+          ist_stunden?: number | null
+          jahr?: number
+          mitarbeiter_id?: string
+          monat?: number
+          soll_stunden?: number | null
+          ueberstunden?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ueberstunden_mitarbeiter_id_fkey"
+            columns: ["mitarbeiter_id"]
+            isOneToOne: false
+            referencedRelation: "mitarbeiter"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      uploaded_files: {
+        Row: {
+          accounts_created: number | null
+          balances_created: number | null
+          error_message: string | null
+          file_size: number | null
+          filename: string
+          id: string
+          records_processed: number | null
+          status: string | null
+          uploaded_at: string | null
+          uploaded_by: string | null
+        }
+        Insert: {
+          accounts_created?: number | null
+          balances_created?: number | null
+          error_message?: string | null
+          file_size?: number | null
+          filename: string
+          id?: string
+          records_processed?: number | null
+          status?: string | null
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Update: {
+          accounts_created?: number | null
+          balances_created?: number | null
+          error_message?: string | null
+          file_size?: number | null
+          filename?: string
+          id?: string
+          records_processed?: number | null
+          status?: string | null
+          uploaded_at?: string | null
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          abteilung: string | null
+          created_at: string | null
+          eintrittsdatum: string | null
+          email: string
+          id: string
+          ist_aktiv: boolean | null
+          letzter_login: string | null
+          nachname: string | null
+          sprache: string | null
+          telefon: string | null
+          updated_at: string | null
+          vorname: string | null
+        }
+        Insert: {
+          abteilung?: string | null
+          created_at?: string | null
+          eintrittsdatum?: string | null
+          email: string
+          id: string
+          ist_aktiv?: boolean | null
+          letzter_login?: string | null
+          nachname?: string | null
+          sprache?: string | null
+          telefon?: string | null
+          updated_at?: string | null
+          vorname?: string | null
+        }
+        Update: {
+          abteilung?: string | null
+          created_at?: string | null
+          eintrittsdatum?: string | null
+          email?: string
+          id?: string
+          ist_aktiv?: boolean | null
+          letzter_login?: string | null
+          nachname?: string | null
+          sprache?: string | null
+          telefon?: string | null
+          updated_at?: string | null
+          vorname?: string | null
         }
         Relationships: []
       }
       user_roles: {
         Row: {
-          created_at: string
+          created_at: string | null
           id: string
-          role: Database["public"]["Enums"]["app_role"]
+          role: string
           user_id: string
         }
         Insert: {
-          created_at?: string
+          created_at?: string | null
           id?: string
-          role: Database["public"]["Enums"]["app_role"]
+          role: string
           user_id: string
         }
         Update: {
-          created_at?: string
+          created_at?: string | null
           id?: string
-          role?: Database["public"]["Enums"]["app_role"]
+          role?: string
           user_id?: string
         }
         Relationships: []
       }
+      zeiterfassung: {
+        Row: {
+          aktualisiert_am: string | null
+          bemerkung: string | null
+          datum: string
+          diensttyp: string | null
+          endzeit: string | null
+          erstellt_am: string | null
+          id: string
+          ist_stunden: number | null
+          mitarbeiter_id: string
+          pause_minuten: number | null
+          startzeit: string | null
+        }
+        Insert: {
+          aktualisiert_am?: string | null
+          bemerkung?: string | null
+          datum: string
+          diensttyp?: string | null
+          endzeit?: string | null
+          erstellt_am?: string | null
+          id?: string
+          ist_stunden?: number | null
+          mitarbeiter_id: string
+          pause_minuten?: number | null
+          startzeit?: string | null
+        }
+        Update: {
+          aktualisiert_am?: string | null
+          bemerkung?: string | null
+          datum?: string
+          diensttyp?: string | null
+          endzeit?: string | null
+          erstellt_am?: string | null
+          id?: string
+          ist_stunden?: number | null
+          mitarbeiter_id?: string
+          pause_minuten?: number | null
+          startzeit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zeiterfassung_mitarbeiter_id_fkey"
+            columns: ["mitarbeiter_id"]
+            isOneToOne: false
+            referencedRelation: "mitarbeiter"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
-      v_daily_department_hours: {
+      admin_anstehende_termine: {
         Row: {
-          abteilung: string | null
-          datum: string | null
-          gesamt_ist_stunden: number | null
-          gesamt_personalkosten: number | null
-          gesamt_soll_stunden: number | null
-          gesamt_ueberstunden: number | null
-          mitarbeiter_anwesend: number | null
-          mitarbeiter_krank: number | null
-          mitarbeiter_urlaub: number | null
+          auto_id: string | null
+          bereich_anlage: string | null
+          faellig_am: string | null
+          reminder_sent: boolean | null
+          status: string | null
+          tage_bis_faellig: number | null
+          typ: string | null
+          zustaendig: string | null
         }
         Relationships: []
       }
-      v_department_monthly_staff_kpis: {
+      admin_erinnerungen_faellig: {
         Row: {
-          abteilung: string | null
-          anwesenheitsquote_pct: number | null
-          arbeitstage: number | null
-          fortbildungstage: number | null
-          ist_stunden_monat: number | null
-          jahr: number | null
-          krankenquote_pct: number | null
-          krankheitstage: number | null
-          mitarbeiter_gesamt: number | null
-          monat: number | null
-          personalkosten_monat: number | null
-          soll_stunden_monat: number | null
-          ueberstunden_monat: number | null
-          urlaubstage: number | null
+          auto_id: string | null
+          bereich_anlage: string | null
+          faellig_am: string | null
+          source_id: string | null
+          source_table: string | null
+          typ: string | null
         }
         Relationships: []
       }
-      v_department_staff_kpis: {
+      v_employee_rejection_count: {
         Row: {
-          abteilung: string | null
-          anwesenheitsquote_pct: number | null
-          datum: string | null
-          durchschnitt_stunden_pro_ma: number | null
-          durchschnitt_stundenlohn: number | null
-          ist_stunden: number | null
-          krankenquote_pct: number | null
-          mitarbeiter_anwesend: number | null
-          mitarbeiter_geplant: number | null
-          mitarbeiter_krank: number | null
-          mitarbeiter_urlaub: number | null
-          personalkosten: number | null
-          soll_stunden: number | null
-          ueberstunden: number | null
+          ablehnungen_gesamt: number | null
+          ablehnungen_letzter_monat: number | null
+          employee_id: string | null
         }
-        Relationships: []
-      }
-      v_employee_department_stats: {
-        Row: {
-          abteilung: string | null
-          aktive_mitarbeiter: number | null
-          aushilfe_count: number | null
-          durchschnitt_stundenlohn: number | null
-          gesamt_wochenstunden_soll: number | null
-          inaktive_mitarbeiter: number | null
-          minijob_count: number | null
-          teilzeit_count: number | null
-          vollzeit_count: number | null
-        }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "shift_suggestion_rejections_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Functions: {
-      get_department_staff_stats: {
-        Args: { p_abteilung: string; p_datum: string }
+      call_reminder_edge_function: { Args: never; Returns: undefined }
+      call_send_reminder: { Args: never; Returns: undefined }
+      check_and_log_reminders: {
+        Args: never
         Returns: {
-          anwesenheitsquote_pct: number
-          ist_stunden: number
-          mitarbeiter_anwesend: number
-          mitarbeiter_krank: number
-          mitarbeiter_urlaub: number
-          personalkosten: number
-          soll_stunden: number
-          ueberstunden: number
+          auto_id: string
+          bereich_anlage: string
+          faellig_am: string
+          typ: string
+          zustaendig: string
         }[]
       }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
-      is_readonly: { Args: { _user_id: string }; Returns: boolean }
+      get_current_employee_id: { Args: never; Returns: string }
+      get_user_role: { Args: { check_user_id: string }; Returns: string }
+      is_admin: { Args: { check_user_id: string }; Returns: boolean }
     }
     Enums: {
-      absence_reason:
-        | "Arbeit"
-        | "Urlaub"
-        | "Krank"
-        | "Fortbildung"
-        | "Frei"
-        | "Überstundenabbau"
-        | "Elternzeit"
-        | "Sonstiges"
-      app_role: "admin" | "abteilungsleiter" | "mitarbeiter" | "readonly"
-      booking_channel:
-        | "Website"
-        | "Telefon"
-        | "Email"
-        | "Booking.com"
-        | "Expedia"
-        | "HRS"
-        | "Reisebüro"
-        | "Empfehlung"
-        | "Stammgast"
-        | "Kooperation"
-        | "Sonstige"
-      cure_type:
-        | "Fastenkur"
-        | "Basenkur"
-        | "Detox"
-        | "Ayurveda"
-        | "TCM"
-        | "Physiotherapie"
-        | "Rehabilitation"
-        | "Mental Wellness"
-        | "Gewichtsmanagement"
-        | "Burnout-Prävention"
-        | "Keine"
-      employment_type:
-        | "Vollzeit"
-        | "Teilzeit"
-        | "Mini-Job"
-        | "Aushilfe"
-        | "Praktikant"
-        | "Azubi"
-      guest_type:
-        | "Wellness"
-        | "Kurgast"
-        | "Retreat"
-        | "Tagesgast"
-        | "Geschäftsreisend"
-        | "Privat"
-      meal_plan:
-        | "Vollpension"
-        | "Halbpension"
-        | "Frühstück"
-        | "Ohne Verpflegung"
-        | "Spezialdiät"
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1798,67 +1919,6 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {
-      absence_reason: [
-        "Arbeit",
-        "Urlaub",
-        "Krank",
-        "Fortbildung",
-        "Frei",
-        "Überstundenabbau",
-        "Elternzeit",
-        "Sonstiges",
-      ],
-      app_role: ["admin", "abteilungsleiter", "mitarbeiter", "readonly"],
-      booking_channel: [
-        "Website",
-        "Telefon",
-        "Email",
-        "Booking.com",
-        "Expedia",
-        "HRS",
-        "Reisebüro",
-        "Empfehlung",
-        "Stammgast",
-        "Kooperation",
-        "Sonstige",
-      ],
-      cure_type: [
-        "Fastenkur",
-        "Basenkur",
-        "Detox",
-        "Ayurveda",
-        "TCM",
-        "Physiotherapie",
-        "Rehabilitation",
-        "Mental Wellness",
-        "Gewichtsmanagement",
-        "Burnout-Prävention",
-        "Keine",
-      ],
-      employment_type: [
-        "Vollzeit",
-        "Teilzeit",
-        "Mini-Job",
-        "Aushilfe",
-        "Praktikant",
-        "Azubi",
-      ],
-      guest_type: [
-        "Wellness",
-        "Kurgast",
-        "Retreat",
-        "Tagesgast",
-        "Geschäftsreisend",
-        "Privat",
-      ],
-      meal_plan: [
-        "Vollpension",
-        "Halbpension",
-        "Frühstück",
-        "Ohne Verpflegung",
-        "Spezialdiät",
-      ],
-    },
+    Enums: {},
   },
 } as const

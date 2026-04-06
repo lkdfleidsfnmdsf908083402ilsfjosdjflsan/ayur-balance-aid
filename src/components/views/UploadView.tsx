@@ -7,12 +7,14 @@ import { Upload, FileText, X, Check, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/hooks/useAuth';
 
 export function UploadView() {
   const { uploadFile, uploadedFiles, removeFile, isLoading } = useFinanceStore();
   const [uploadStatus, setUploadStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { canEdit } = useAuth();
   
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     for (const file of acceptedFiles) {
@@ -142,6 +144,7 @@ export function UploadView() {
                       variant="ghost"
                       size="icon"
                       onClick={() => removeFile(file.name)}
+                      disabled={!canEdit}
                       className="text-muted-foreground hover:text-destructive"
                     >
                       <X className="h-4 w-4" />

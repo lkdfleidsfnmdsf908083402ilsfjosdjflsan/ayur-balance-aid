@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { 
-  LayoutDashboard, 
+  LayoutDashboard,
   Upload, 
   Table2, 
-  BarChart3, 
+    BarChart3, 
   GitCompare,
   ChevronLeft,
   ChevronRight,
@@ -29,7 +29,12 @@ import {
   Heart,
   LogOut,
   LucideIcon,
-  ClipboardCheck
+  ClipboardCheck,
+  Package,
+  Activity,
+  Hotel,
+  Star,
+  Key,
 } from 'lucide-react';
 import { MandiraLogo } from '@/components/MandiraLogo';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -46,7 +51,7 @@ interface NavItem {
   id: string;
   labelKey: string;
   icon: LucideIcon;
-  requiredRole?: 'admin' | 'abteilungsleiter' | 'mitarbeiter';
+  requiredRole?: 'admin' | 'abteilungsleiter' | 'mitarbeiter' | 'ceo' | 'advisor';
 }
 
 interface NavGroup {
@@ -54,7 +59,7 @@ interface NavGroup {
   labelKey: string;
   icon: LucideIcon;
   items: NavItem[];
-  requiredRole?: 'admin' | 'abteilungsleiter' | 'mitarbeiter';
+  requiredRole?: 'admin' | 'abteilungsleiter' | 'mitarbeiter' | 'ceo' | 'advisor';
 }
 
 type NavEntry = NavItem | NavGroup;
@@ -82,13 +87,18 @@ const SIDEBAR_STORAGE_KEY = 'sidebar-open-groups';
 const navStructure: NavEntry[] = [
   { id: 'dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard, requiredRole: 'abteilungsleiter' },
   { id: 'gaeste', labelKey: 'nav.guestManagement', icon: Heart, requiredRole: 'abteilungsleiter' },
+  // Influencer-Kalender: sichtbar für Admin, CEO, Advisor — kein requiredRole = alle sehen es
+  // Sichtbarkeitssteuerung erfolgt in filteredNavStructure via advisorAllowedItems
+  { id: 'influencer', labelKey: 'nav.influencer', icon: Star, requiredRole: 'ceo' },
+  { id: 'token-verwaltung', labelKey: 'nav.tokenVerwaltung', icon: Key, requiredRole: 'admin' },
+  { id: 'kampagnen', labelKey: 'nav.kampagnen', icon: Users, requiredRole: 'admin' },
   { 
     id: 'abteilung-kpis',
     labelKey: 'nav.departmentKpis',
     icon: PieChart,
     items: [
-      { id: 'abteilung-kpi', labelKey: 'nav.overview', icon: PieChart, requiredRole: 'admin' },
-      { id: 'kpi-trends', labelKey: 'nav.kpiTrends', icon: TrendingUp, requiredRole: 'admin' },
+      { id: 'abteilung-kpi', labelKey: 'nav.overview', icon: PieChart, requiredRole: 'ceo' },
+      { id: 'kpi-trends', labelKey: 'nav.kpiTrends', icon: TrendingUp, requiredRole: 'ceo' },
       { id: 'housekeeping', labelKey: 'nav.housekeeping', icon: Sparkles },
       { id: 'kitchen', labelKey: 'nav.kitchen', icon: ChefHat },
       { id: 'service', labelKey: 'nav.service', icon: UtensilsCrossed },
@@ -102,6 +112,7 @@ const navStructure: NavEntry[] = [
     id: 'personal-gruppe',
     labelKey: 'nav.personnelManagement',
     icon: Users,
+    requiredRole: 'abteilungsleiter',
     items: [
       { id: 'mitarbeiter', labelKey: 'nav.employees', icon: UserCircle, requiredRole: 'abteilungsleiter' },
       { id: 'schichtplanung', labelKey: 'nav.shiftPlanningAll', icon: CalendarDays, requiredRole: 'abteilungsleiter' },
@@ -111,6 +122,7 @@ const navStructure: NavEntry[] = [
     ]
   },
   { id: 'verwaltung', labelKey: 'nav.adminTracker', icon: ClipboardCheck, requiredRole: 'admin' },
+  { id: 'technik-bestellungen', labelKey: 'nav.technikBestellungen', icon: Package, requiredRole: 'abteilungsleiter' },
   {
     id: 'planung-gruppe',
     labelKey: 'nav.planningAlarms',
@@ -118,7 +130,7 @@ const navStructure: NavEntry[] = [
     requiredRole: 'abteilungsleiter',
     items: [
       { id: 'budget', labelKey: 'nav.budgetPlanning', icon: Target },
-      { id: 'alarme', labelKey: 'nav.kpiAlarms', icon: Bell },
+      { id: 'alarme', labelKey: 'nav.kpiAlarms', icon: Bell, requiredRole: 'abteilungsleiter' },
       { id: 'abteilungsleiter', labelKey: 'nav.departmentHeads', icon: Users, requiredRole: 'admin' },
       { id: 'benutzerverwaltung', labelKey: 'nav.userManagement', icon: ShieldCheck, requiredRole: 'admin' },
     ]
@@ -127,14 +139,18 @@ const navStructure: NavEntry[] = [
     id: 'daten-gruppe',
     labelKey: 'nav.dataAnalysis',
     icon: BarChart3,
-    requiredRole: 'admin',
+    requiredRole: 'abteilungsleiter',
     items: [
-      { id: 'upload', labelKey: 'nav.dataImport', icon: Upload },
+      { id: 'upload', labelKey: 'nav.dataImport', icon: Upload, requiredRole: 'admin' },
       { id: 'konten', labelKey: 'nav.accountMaster', icon: Table2 },
       { id: 'vergleich', labelKey: 'nav.periodComparison', icon: GitCompare },
       { id: 'bereiche', labelKey: 'nav.areaAnalysis', icon: BarChart3 },
-      { id: 'datenqualitaet', labelKey: 'nav.dataQuality', icon: ShieldCheck },
-    ]
+      { id: 'datenqualitaet', labelKey: 'nav.dataQuality', icon: ShieldCheck, requiredRole: 'abteilungsleiter' },
+      { id: 'revenue-intelligence', labelKey: 'nav.revenueIntelligence', icon: TrendingUp, requiredRole: 'admin' },
+      { id: 'gast-analytics', labelKey: 'nav.gastAnalytics', icon: Users, requiredRole: 'admin' },
+      { id: 'enterprise-value', labelKey: 'nav.enterpriseValue', icon: TrendingUp, requiredRole: 'ceo' },
+      { id: 'protel-comparison', labelKey: 'nav.protelComparison', icon: GitCompare, requiredRole: 'ceo' },
+    ]  
   },
 ];
 
@@ -143,60 +159,89 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
   const { t } = useLanguage();
   const { userRole, userProfile, isAdmin, isAbteilungsleiter } = useAuth();
   
-  // Get the user's department KPI view
   const userAbteilungKpiView = userProfile?.abteilung 
     ? abteilungToKpiView[userProfile.abteilung] 
     : null;
 
-  // Logout function
   const handleLogout = async () => {
     await supabase.auth.signOut();
     window.location.href = '/auth';
   };
 
-  // Role hierarchy check
-  const hasRole = (requiredRole?: 'admin' | 'abteilungsleiter' | 'mitarbeiter') => {
+  const hasRole = (requiredRole?: 'admin' | 'abteilungsleiter' | 'mitarbeiter' | 'ceo' | 'advisor') => {
     if (!requiredRole) return true;
-    const roleHierarchy = { admin: 3, abteilungsleiter: 2, mitarbeiter: 1, readonly: 1 };
-    const userRoleLevel = roleHierarchy[userRole as keyof typeof roleHierarchy] || 1;
-    const requiredRoleLevel = roleHierarchy[requiredRole];
-    return userRoleLevel >= requiredRoleLevel;
+
+    // Admin sieht alles
+    if (userRole === 'admin') return true;
+
+    // CEO: alles außer admin-only
+    if (userRole === 'ceo') {
+      return requiredRole !== 'admin';
+    }
+
+    // Advisor: nur dashboard, abteilung-kpis (alle), budget, konten, vergleich, bereiche
+    if (userRole === 'advisor') {
+      if (requiredRole === 'admin') return false;
+      if (requiredRole === 'ceo') return false;
+      return true;
+    }
+
+    // Abteilungsleiter
+    if (userRole === 'abteilungsleiter') {
+      return requiredRole === 'abteilungsleiter' || requiredRole === 'mitarbeiter';
+    }
+
+    // Mitarbeiter
+    if (userRole === 'mitarbeiter') {
+      return requiredRole === 'mitarbeiter';
+    }
+
+    return false;
   };
 
-  // Filter navigation based on role and department
+  // Advisor: welche Gruppen-IDs und Items darf er sehen?
+  const advisorAllowedGroups = ['dashboard', 'abteilung-kpis', 'planung-gruppe', 'daten-gruppe', 'influencer'];
+  const advisorAllowedItems = [
+    'dashboard', 'abteilung-kpi', 'kpi-trends',
+    'housekeeping', 'kitchen', 'service', 'frontoffice', 'spa', 'technical', 'admin',
+    'budget', 'konten', 'vergleich', 'bereiche',
+    'influencer',
+  ];
+
   const filteredNavStructure = useMemo(() => {
     return navStructure
       .filter(entry => {
-        // Check group-level permission
-        if (isNavGroup(entry)) {
-          if (!hasRole(entry.requiredRole)) return false;
-        } else {
-          if (!hasRole(entry.requiredRole)) return false;
+        // Advisor: nur erlaubte Gruppen/Items
+        if (userRole === 'advisor') {
+          return advisorAllowedGroups.includes(entry.id);
         }
-        return true;
+        if (isNavGroup(entry)) {
+          return hasRole(entry.requiredRole);
+        } else {
+          return hasRole(entry.requiredRole);
+        }
       })
       .map(entry => {
         if (isNavGroup(entry)) {
-          // Filter items within the group
-          let filteredItems = entry.items.filter(item => hasRole(item.requiredRole));
+          let filteredItems = entry.items.filter(item => {
+            // Advisor: nur erlaubte Items
+            if (userRole === 'advisor') {
+              return advisorAllowedItems.includes(item.id);
+            }
+            return hasRole(item.requiredRole);
+          });
           
-          // For mitarbeiter: only show their department's KPI
+          // Für mitarbeiter: nur ihre Abteilung
           if (userRole === 'mitarbeiter' && entry.id === 'abteilung-kpis') {
-            filteredItems = filteredItems.filter(item => 
-              item.id === userAbteilungKpiView
-            );
+            filteredItems = filteredItems.filter(item => item.id === userAbteilungKpiView);
           }
           
-          // For abteilungsleiter (not admin): only show their department's KPI
+          // Für abteilungsleiter (nicht admin): nur ihre Abteilung
           if (userRole === 'abteilungsleiter' && !isAdmin && entry.id === 'abteilung-kpis') {
-            filteredItems = filteredItems.filter(item => 
-              item.id === userAbteilungKpiView
-            );
+            filteredItems = filteredItems.filter(item => item.id === userAbteilungKpiView);
           }
           
-          // Don't show empty groups
           if (filteredItems.length === 0) return null;
-          
           return { ...entry, items: filteredItems };
         }
         return entry;
@@ -204,20 +249,16 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
       .filter(Boolean) as NavEntry[];
   }, [userRole, userAbteilungKpiView, isAdmin, isAbteilungsleiter]);
   
-  // Load saved state from LocalStorage
   const [openGroups, setOpenGroups] = useState<string[]>(() => {
     try {
       const saved = localStorage.getItem(SIDEBAR_STORAGE_KEY);
-      if (saved) {
-        return JSON.parse(saved);
-      }
+      if (saved) return JSON.parse(saved);
     } catch (e) {
       console.error('Error loading sidebar state:', e);
     }
     return ['abteilung-kpis', 'personal-gruppe'];
   });
 
-  // Save state to LocalStorage whenever it changes
   useEffect(() => {
     try {
       localStorage.setItem(SIDEBAR_STORAGE_KEY, JSON.stringify(openGroups));
@@ -277,7 +318,6 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
     const hasActiveItem = isActiveInGroup(group);
 
     if (collapsed) {
-      // Im eingeklappten Zustand nur das Icon der Gruppe zeigen
       return (
         <div key={group.id} className="space-y-1">
           <button
@@ -374,9 +414,10 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
         {!collapsed && userProfile && (
           <div className="mb-2 px-3 py-2 text-xs text-sidebar-foreground/60">
             <div className="font-medium text-sidebar-foreground/80 truncate">
-              {userProfile.vorname} {userProfile.nachname}
+              {userProfile.name}
             </div>
             <div className="truncate">{userProfile.email}</div>
+            <div className="truncate capitalize text-primary/70">{userRole}</div>
           </div>
         )}
         <button

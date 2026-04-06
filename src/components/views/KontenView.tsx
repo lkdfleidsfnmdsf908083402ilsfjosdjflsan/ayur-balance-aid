@@ -12,6 +12,7 @@ import { bereichColors, kpiKategorieColors } from '@/lib/bereichMapping';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/hooks/useAuth';
 import { translateBereich, translateKpiKategorie, translateKostenarttTyp } from '@/lib/translationMappings';
 
 const allBereiche: Bereich[] = [
@@ -32,6 +33,7 @@ interface EditedKonto {
 export function KontenView() {
   const { konten, initialize } = useFinanceStore();
   const { t } = useLanguage();
+  const { canEdit } = useAuth();
   const [search, setSearch] = useState('');
   const [bereichFilter, setBereichFilter] = useState<string>('alle');
   const [typFilter, setTypFilter] = useState<string>('alle');
@@ -210,8 +212,8 @@ export function KontenView() {
 
           {hasChanges && (
             <Button 
-              onClick={saveChanges} 
-              disabled={isSaving}
+              onClick={saveChanges}
+              disabled={!canEdit || isSaving} 
               className="gap-2"
             >
               <Save className="h-4 w-4" />

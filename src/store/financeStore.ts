@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Konto, SaldoMonat, UploadedFile, SaldoVergleich, BereichAggregation } from '@/types/finance';
-import { parseCSV, extractKonten, extractSalden, parseFileName } from '@/lib/csvParser';
+import { parseCSV, extractKonten, extractSalden, parseFileName, preprocessCSV } from '@/lib/csvParser';
 import { calculateVergleich, aggregateByBereich } from '@/lib/calculations';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -144,14 +144,22 @@ export const useFinanceStore = create<FinanceState>((set, get) => ({
     set({ isLoading: true });
     
     try {
-      const text = await file.text();
-      const parsed = parseFileName(file.name);
-      
-      if (!parsed) {
-        throw new Error('Dateiname entspricht nicht dem erwarteten Format: Saldenliste-MM-YYYY.csv');
+      const rawText = await file.text();
+
+      // Automatischer Preprocessor — normalisiert Originaldatei aus Buchhaltungssystem
+      const { normalizedCSV, detectedMonth, detectedYear } = preprocessCSV(rawText);
+
+      // Versuche Monat/Jahr aus Dateiname, dann aus Spaltenheadern
+      let parsed = parseFileName(file.name);
+      if (!parsed && detectedMonth && detectedYear) {
+        parsed = { month: detectedMonth, year: detectedYear };
       }
       
-      const rawData = parseCSV(text);
+      if (!parsed) {
+        throw new Error('Monat/Jahr konnte nicht erkannt werden. Dateiname: Saldenliste-MM-YYYY.csv');
+      }
+      
+      const rawData = parseCSV(normalizedCSV);
       const newKonten = extractKonten(rawData);
       const newSalden = extractSalden(rawData, parsed.year, parsed.month);
       

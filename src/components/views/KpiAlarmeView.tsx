@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 import { exportKpiDocumentation } from '@/lib/pdfExport';
 import { KpiSchwellenwerteExportButton } from '@/components/KpiSchwellenwerteExportButton';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/hooks/useAuth';
 import {
   Bell,
   BellOff,
@@ -71,9 +72,18 @@ interface DailyReportData {
 }
 
 export function KpiAlarmeView() {
+  const { userRole } = useAuth();
+  const canEdit = userRole === 'admin' || userRole === 'ceo' || userRole === 'direktor';
   const { konten, salden, selectedYear, selectedMonth, uploadedFiles } = useFinanceStore();
   const { t } = useLanguage();
   const [schwellenwerte, setSchwellenwerte] = useState<KpiSchwellenwert[]>([]);
+  const [protelKpi, setProtelKpi] = useState<{
+    auslastung: number | null;
+    revpar: number | null;
+    adr: number | null;
+    zimmer_belegt: number | null;
+    logis_netto: number | null;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [dailyReports, setDailyReports] = useState<DailyReportData>({
@@ -157,6 +167,33 @@ export function KpiAlarmeView() {
       });
     } catch (error) {
       console.error('Fehler beim Laden der Daily Reports:', error);
+    }
+  };
+
+  const loadProtelKpi = async () => {
+    try {
+      const heute = new Date();
+      const monatStart = new Date(heute.getFullYear(), heute.getMonth(), 1).toISOString().split('T')[0];
+      const heute_str = heute.toISOString().split('T')[0];
+      const { data } = await supabase
+        .from('protel_kpi_tag')
+        .select('auslastung_pct, revpar, adr, zimmer_belegt, logis_netto')
+        .gte('datum', monatStart)
+        .lte('datum', heute_str)
+        .order('datum', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data) {
+        setProtelKpi({
+          auslastung: data.auslastung_pct,
+          revpar: data.revpar,
+          adr: data.adr,
+          zimmer_belegt: data.zimmer_belegt,
+          logis_netto: data.logis_netto,
+        });
+      }
+    } catch (e) {
+      console.error('Protel KPI Ladefehler:', e);
     }
   };
 
@@ -295,6 +332,17 @@ export function KpiAlarmeView() {
         case 'admin_turnover_rate': return admin.monthly_turnover_rate_pct;
         case 'admin_it_availability': return admin.it_availability_pct;
         case 'admin_payment_compliance': return admin.payment_compliance_pct;
+        default: return null;
+      }
+    }
+
+    // Guest / Protel KPIs
+    if (kpiTyp.startsWith('guest_')) {
+      if (!protelKpi) return null;
+      switch (kpiTyp) {
+        case 'guest_occupancy_rate': return protelKpi.auslastung;
+        case 'guest_revpar': return protelKpi.revpar;
+        case 'guest_adr': return protelKpi.adr;
         default: return null;
       }
     }
@@ -501,6 +549,7 @@ export function KpiAlarmeView() {
               <Download className="h-4 w-4" />
               <span className="hidden sm:inline">{t('kpiAlarm.exportDoc')}</span>
             </Button>
+            {canEdit && (
             <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
               <DialogTrigger asChild>
                 <Button className="gap-2">
@@ -611,6 +660,7 @@ export function KpiAlarmeView() {
               </div>
             </DialogContent>
           </Dialog>
+            )}
           </div>
         </div>
 
@@ -737,6 +787,7 @@ export function KpiAlarmeView() {
                             )}
                           </TableCell>
                           <TableCell>
+                            {canEdit && (
                             <Button 
                               variant="ghost" 
                               size="icon"
@@ -744,6 +795,7 @@ export function KpiAlarmeView() {
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
+                            )}
                           </TableCell>
                         </TableRow>
                       );

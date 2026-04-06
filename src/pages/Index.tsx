@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { DashboardView } from '@/components/views/DashboardView';
 import { AbteilungKpiView } from '@/components/views/AbteilungKpiView';
@@ -9,6 +9,7 @@ import { ServiceKpiView } from '@/components/views/ServiceKpiView';
 import { FrontOfficeKpiView } from '@/components/views/FrontOfficeKpiView';
 import { SpaKpiView } from '@/components/views/SpaKpiView';
 import { TechnicalKpiView } from '@/components/views/TechnicalKpiView';
+import { TechnikBestellungenView } from '@/components/views/TechnikBestellungenView';
 import { AdminKpiView } from '@/components/views/AdminKpiView';
 import { MitarbeiterStammdatenView } from '@/components/views/MitarbeiterStammdatenView';
 import { SchichtplanungView } from '@/components/views/SchichtplanungView';
@@ -31,13 +32,22 @@ import { IntelligentSchichtplanungView } from '@/components/views/IntelligentSch
 import { MitarbeiterSchichtplanView } from '@/components/views/MitarbeiterSchichtplanView';
 import { AbteilungsleiterDashboardView } from '@/components/views/AbteilungsleiterDashboardView';
 import { GaesteVerwaltungView } from '@/components/views/GaesteVerwaltungView';
+import { InfluencerView } from '@/components/views/InfluencerView';
+import { TokenVerwaltungView } from '@/components/views/TokenVerwaltungView';
+import { KampagnenView } from '@/components/views/KampagnenView';
 import { VerwaltungsTrackerView } from '@/components/views/VerwaltungsTrackerView';
 import { useFinanceStore } from '@/store/financeStore';
 import { useAuth } from '@/hooks/useAuth';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useNavigation } from '@/contexts/NavigationContext';
+import { SplashScreen } from '@/components/views/SplashScreen';
+import { EnterpriseValueView } from '@/components/views/EnterpriseValueView';
+import { RevenueIntelligenceView } from '@/components/views/RevenueIntelligenceView';
+import { GastAnalyticsView } from '@/components/views/GastAnalyticsView';
+import { ProtelComparisonView } from '@/components/views/ProtelComparisonView';
 
 const Index = () => {
+  const [splashDone, setSplashDone] = useState(false);
   const { activeView, setActiveView } = useNavigation();
   const { initialize, isInitialized, isLoading } = useFinanceStore();
   const { isAdmin, isAbteilungsleiter, userRole } = useAuth();
@@ -89,6 +99,8 @@ const Index = () => {
         return <SpaKpiView />;
       case 'technical':
         return <TechnicalKpiView />;
+      case 'technik-bestellungen':
+        return <TechnikBestellungenView />;
       case 'admin':
         return <AdminKpiView />;
       case 'mitarbeiter':
@@ -131,12 +143,30 @@ const Index = () => {
         return <DatenqualitaetView />;
       case 'gaeste':
         return <GaesteVerwaltungView />;
+      case 'influencer':
+        return <InfluencerView />;
+      case 'token-verwaltung':
+        return <TokenVerwaltungView />;
+      case 'kampagnen':
+        return <KampagnenView />;
       case 'verwaltung':
-          return <VerwaltungsTrackerView />;  
+          return <VerwaltungsTrackerView />; 
+        case 'revenue-intelligence':                          
+        return <RevenueIntelligenceView />;
+      case 'gast-analytics':                          //
+        return <GastAnalyticsView />;                                     
+      case 'protel-comparison':
+        return <ProtelComparisonView />;
+      case 'enterprise-value':
+        return <EnterpriseValueView />;
       default:
         return <DashboardView />;
     }
   };
+
+  if (!splashDone) {
+    return <SplashScreen onEnter={() => setSplashDone(true)} />;
+  }
 
   return (
     <div className="flex h-screen bg-background">
