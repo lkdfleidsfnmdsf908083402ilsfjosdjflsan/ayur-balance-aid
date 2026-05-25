@@ -1,3 +1,4 @@
+import { ProtelUmsatzHeader } from "@/components/ProtelUmsatzHeader";
 import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -257,6 +258,7 @@ export function TechnicalKpiView() {
 
   return (
     <div className="space-y-6">
+      <ProtelUmsatzHeader abteilung="extras" />
       <div className="flex items-center gap-3">
         <Wrench className="h-8 w-8 text-primary" />
         <div>

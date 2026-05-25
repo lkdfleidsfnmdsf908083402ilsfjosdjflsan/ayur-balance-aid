@@ -1,13 +1,17 @@
+import type { CSSProperties } from "react";
+
 interface MandiraLogoProps {
   className?: string;
+  style?: CSSProperties;
 }
 
-export function MandiraLogo({ className = "h-8 w-8" }: MandiraLogoProps) {
+export function MandiraLogo({ className = "h-8 w-8", style }: MandiraLogoProps) {
   return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      viewBox="0 0 65.6 41.26" 
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 65.6 41.26"
       className={className}
+      style={style}
       fill="currentColor"
     >
       <g>

@@ -1,3 +1,4 @@
+import { ProtelUmsatzHeader } from "@/components/ProtelUmsatzHeader";
 import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -225,6 +226,7 @@ export function HousekeepingKpiView() {
 
   return (
     <div className="space-y-6">
+      <ProtelUmsatzHeader abteilung="rezeption" />
       <div className="flex items-center gap-3">
         <Bed className="h-8 w-8 text-primary" />
         <div>
