@@ -270,9 +270,32 @@ export function DashboardView() {
   const gop2Marge = Math.abs(erlöseGesamt) > 0 ? (gop2 / Math.abs(erlöseGesamt)) * 100 : 0;
   const ebitda = gop2 + abschreibungenGesamt;
 
-  const rohertrag = Math.abs(erlöseGesamt) - aufwandGesamt;
-  const rohertragVormonat = Math.abs(erlöseVormonat) - aufwandVormonat;
-  const rohertragVorjahr = Math.abs(erlöseVorjahr) - aufwandVorjahr;
+  // Materialaufwand (Klasse 5)
+  const materialaufwandGesamt = aufwandNachKlassen.find(k => k.klasse === '5')?.value ?? 0;
+  const materialaufwandVormonat = aufwandNachKlassen.find(k => k.klasse === '5')?.valueVormonat ?? 0;
+  const materialaufwandVorjahr = aufwandNachKlassen.find(k => k.klasse === '5')?.valueVorjahr ?? 0;
+
+  // Sonstiger Aufwand (Klasse 8)
+  const sonstigerAufwandGesamt = aufwandNachKlassen.find(k => k.klasse === '8')?.value ?? 0;
+  const sonstigerAufwandVormonat = aufwandNachKlassen.find(k => k.klasse === '8')?.valueVormonat ?? 0;
+  const sonstigerAufwandVorjahr = aufwandNachKlassen.find(k => k.klasse === '8')?.valueVorjahr ?? 0;
+
+  // Rohertrag = Erlöse - Materialaufwand (nur Klasse 5)
+  const rohertrag = Math.abs(erlöseGesamt) - materialaufwandGesamt;
+  const rohertragVormonat = Math.abs(erlöseVormonat) - materialaufwandVormonat;
+  const rohertragVorjahr = Math.abs(erlöseVorjahr) - materialaufwandVorjahr;
+
+  // DB I = Rohertrag - Personalkosten (Klasse 6)
+  const db1 = rohertrag - personalkostenGesamt;
+  const db1Vormonat = rohertragVormonat - personalkostenVormonat;
+  const db1Vorjahr = rohertragVorjahr - personalkostenVorjahr;
+  const db1Marge = Math.abs(erlöseGesamt) > 0 ? (db1 / Math.abs(erlöseGesamt)) * 100 : 0;
+
+  // DB II = DB I - Sonstiger Aufwand (Klasse 8) - Abschreibungen (Klasse 7)
+  const db2 = db1 - sonstigerAufwandGesamt - abschreibungenGesamt;
+  const db2Vormonat = db1Vormonat - sonstigerAufwandVormonat - abschreibungenVormonat;
+  const db2Vorjahr = db1Vorjahr - sonstigerAufwandVorjahr - abschreibungenVorjahr;
+  const db2Marge = Math.abs(erlöseGesamt) > 0 ? (db2 / Math.abs(erlöseGesamt)) * 100 : 0;
 
   // F&B Erlöse - MIT FILTER
   const fbErloese = useMemo(() => {
@@ -404,10 +427,34 @@ export function DashboardView() {
     const ytdPersonal = Math.abs(sumByKonten(ytdSalden.filter(s => personalKontonummern.includes(s.kontonummer))));
     const ytdPersonalVorjahr = Math.abs(sumByKonten(ytdSaldenVorjahr.filter(s => personalKontonummern.includes(s.kontonummer))));
 
-    const ytdRohertrag = ytdErloese - ytdAufwand;
-    const ytdRohertragVorjahr = ytdErloeseVorjahr - ytdAufwandVorjahr;
+    // YTD Materialaufwand (Klasse 5)
+    const materialKontonummern = konten.filter(k => k.kontoklasse === '5').map(k => k.kontonummer);
+    const ytdMaterial = Math.abs(sumByKonten(ytdSalden.filter(s => materialKontonummern.includes(s.kontonummer))));
+    const ytdMaterialVorjahr = Math.abs(sumByKonten(ytdSaldenVorjahr.filter(s => materialKontonummern.includes(s.kontonummer))));
+
+    // YTD Sonstiger Aufwand (Klasse 8)
+    const sonstigerKontonummern = konten.filter(k => k.kontoklasse === '8').map(k => k.kontonummer);
+    const ytdSonstiger = Math.abs(sumByKonten(ytdSalden.filter(s => sonstigerKontonummern.includes(s.kontonummer))));
+    const ytdSonstigerVorjahr = Math.abs(sumByKonten(ytdSaldenVorjahr.filter(s => sonstigerKontonummern.includes(s.kontonummer))));
+
+    // YTD Rohertrag = Erlöse - Materialaufwand (nur Klasse 5)
+    const ytdRohertrag = ytdErloese - ytdMaterial;
+    const ytdRohertragVorjahr = ytdErloeseVorjahr - ytdMaterialVorjahr;
     const ytdRohmarge = ytdErloese !== 0 ? (ytdRohertrag / ytdErloese) * 100 : 0;
     const ytdRohmargeVorjahr = ytdErloeseVorjahr !== 0 ? (ytdRohertragVorjahr / ytdErloeseVorjahr) * 100 : 0;
+
+    // YTD DB I = Rohertrag - Personal
+    const ytdDb1 = ytdRohertrag - ytdPersonal;
+    const ytdDb1Vorjahr = ytdRohertragVorjahr - ytdPersonalVorjahr;
+
+    // YTD Abschreibungen (Klasse 7)
+    const abschreibKontonummern = konten.filter(k => k.kontoklasse === '7').map(k => k.kontonummer);
+    const ytdAbschreib = Math.abs(sumByKonten(ytdSalden.filter(s => abschreibKontonummern.includes(s.kontonummer))));
+    const ytdAbschreibVorjahr = Math.abs(sumByKonten(ytdSaldenVorjahr.filter(s => abschreibKontonummern.includes(s.kontonummer))));
+
+    // YTD DB II = DB I - Sonstiger Aufwand - Abschreibungen
+    const ytdDb2 = ytdDb1 - ytdSonstiger - ytdAbschreib;
+    const ytdDb2Vorjahr = ytdDb1Vorjahr - ytdSonstigerVorjahr - ytdAbschreibVorjahr;
 
     const fbAufwandKontonummern = konten
       .filter(k => k.kontoklasse === '5' && aktiveFbBereiche.some(fb => k.bereich.includes(fb)))
@@ -432,6 +479,10 @@ export function DashboardView() {
       rohertragVorjahr: ytdRohertragVorjahr,
       rohmarge: ytdRohmarge,
       rohmargeVorjahr: ytdRohmargeVorjahr,
+      db1: ytdDb1,
+      db1Vorjahr: ytdDb1Vorjahr,
+      db2: ytdDb2,
+      db2Vorjahr: ytdDb2Vorjahr,
     };
   }, [salden, konten, selectedYear, selectedMonth, aktiveFbBereiche, aufwandsKlassen]);
 
@@ -547,6 +598,9 @@ export function DashboardView() {
               tooltip={t('tooltip.personnel')}
             />
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div className="cursor-pointer transition-transform hover:scale-[1.02]" onClick={() => setRohertragModalOpen(true)}>
             <KPICard
               title={t('kpi.grossProfit')}
@@ -561,9 +615,29 @@ export function DashboardView() {
           <KPICard
             title={t('kpi.grossMargin')}
             value={erlöseGesamt !== 0 ? (rohertrag / Math.abs(erlöseGesamt)) * 100 : 0}
+            previousValue={erlöseVormonat !== 0 ? (rohertragVormonat / Math.abs(erlöseVormonat)) * 100 : null}
+            previousYearValue={erlöseVorjahr !== 0 ? (rohertragVorjahr / Math.abs(erlöseVorjahr)) * 100 : null}
             icon={Wallet}
             variant="default"
             tooltip={t('tooltip.grossMargin')}
+          />
+          <KPICard
+            title="DB I"
+            value={db1}
+            previousValue={db1Vormonat || null}
+            previousYearValue={db1Vorjahr || null}
+            icon={TrendingUp}
+            variant={db1 > 0 ? 'success' : 'warning'}
+            tooltip={`Deckungsbeitrag I = Erlöse − Materialaufwand (Kl.5) − Personalkosten (Kl.6)\n\n= €${Math.abs(erlöseGesamt).toLocaleString('de-DE', {minimumFractionDigits: 0})} − €${materialaufwandGesamt.toLocaleString('de-DE', {minimumFractionDigits: 0})} − €${personalkostenGesamt.toLocaleString('de-DE', {minimumFractionDigits: 0})}\n\nDB I Marge: ${db1Marge.toFixed(1)}%`}
+          />
+          <KPICard
+            title="DB II"
+            value={db2}
+            previousValue={db2Vormonat || null}
+            previousYearValue={db2Vorjahr || null}
+            icon={TrendingUp}
+            variant={db2 > 0 ? 'success' : 'warning'}
+            tooltip={`Deckungsbeitrag II = DB I − Sonstiger Aufwand (Kl.8) − Abschreibungen (Kl.7)\n\n= €${db1.toLocaleString('de-DE', {minimumFractionDigits: 0})} − €${sonstigerAufwandGesamt.toLocaleString('de-DE', {minimumFractionDigits: 0})} − €${abschreibungenGesamt.toLocaleString('de-DE', {minimumFractionDigits: 0})}\n\nDB II Marge: ${db2Marge.toFixed(1)}%`}
           />
         </div>
 
@@ -633,6 +707,24 @@ export function DashboardView() {
             variant="default"
             periodLabel={ytdData.periodLabel}
             tooltip={`Durchschnittliche Rohmarge von Januar bis ${selectedMonth}. ${selectedYear}`}
+          />
+          <YTDKPICard
+            title="DB I"
+            value={ytdData.db1}
+            previousYearValue={ytdData.db1Vorjahr || null}
+            icon={TrendingUp}
+            variant={ytdData.db1 > 0 ? 'success' : 'warning'}
+            periodLabel={ytdData.periodLabel}
+            tooltip={`Kumulierter Deckungsbeitrag I (Erlöse − Material − Personal) von Januar bis ${selectedMonth}. ${selectedYear}`}
+          />
+          <YTDKPICard
+            title="DB II"
+            value={ytdData.db2}
+            previousYearValue={ytdData.db2Vorjahr || null}
+            icon={TrendingUp}
+            variant={ytdData.db2 > 0 ? 'success' : 'warning'}
+            periodLabel={ytdData.periodLabel}
+            tooltip={`Kumulierter Deckungsbeitrag II (DB I − Sonstiger Aufwand) von Januar bis ${selectedMonth}. ${selectedYear}`}
           />
         </div>
 

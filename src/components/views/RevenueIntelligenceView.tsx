@@ -36,7 +36,7 @@ import {
 // Konstanten
 // ─────────────────────────────────────────────────────────────────────────────
 
-const VERKAUFS_ZIMMER = 60;
+const VERKAUFS_ZIMMER = 59;
 const YEARS = [2022, 2023, 2024, 2025, 2026];
 const MONTHS = [
   'Jän','Feb','Mär','Apr','Mai','Jun',
@@ -273,11 +273,20 @@ export function RevenueIntelligenceView() {
   const [revMonat, setRevMonat] = useState<RevenuMonat[]>([]);
   const [roomtypeData, setRoomtypeData] = useState<RevparRoomtype[]>([]);
   const [saisonKpi, setSaisonKpi] = useState<SaisonKpi[]>([]);
+  const [kpiTageVJ, setKpiTageVJ] = useState<KpiTag[]>([]);
+  const [roomtypeDataVJ, setRoomtypeDataVJ] = useState<RevparRoomtype[]>([]);
+  const [revMonatVJ, setRevMonatVJ] = useState<RevenuMonat[]>([]);
+  const [periode, setPeriode] = useState<{ from: string; to: string; vjFrom: string; vjTo: string } | null>(null);
   const [ziele, setZiele] = useState<RevenueZiel[]>([]);
   const [supplements, setSupplements] = useState<Supplement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+
+  // Tages-KPI (heute + gestern + VJ-heute)
+  const [todayKpi, setTodayKpi] = useState<KpiTag | null>(null);
+  const [yesterdayKpi, setYesterdayKpi] = useState<KpiTag | null>(null);
+  const [vjTodayKpi, setVjTodayKpi] = useState<KpiTag | null>(null);
 
   // Supplement-Simulator
   const [simSupplements, setSimSupplements] = useState<Record<string, number>>({});
@@ -293,12 +302,24 @@ export function RevenueIntelligenceView() {
       const dateFrom = selMonth
         ? `${selYear}-${String(selMonth).padStart(2,'0')}-01`
         : `${selYear}-01-01`;
-      const dateTo = selMonth
+      const rawTo = selMonth
         ? new Date(selYear, selMonth, 0).toISOString().split('T')[0]
         : `${selYear}-12-31`;
+      // YTD-Kappung: nie über heute hinaus — damit VJ-Vergleich Stichtag-fair ist
+      const heuteStr = new Date().toISOString().split('T')[0];
+      const dateTo = rawTo > heuteStr ? heuteStr : rawTo;
+      // Vorjahres-Zeitraum: identisches Fenster, 1 Jahr zurück (29.02. → 28.02.)
+      const minus1J = (d: string) => {
+        const rest = d.slice(5) === '02-29' ? '02-28' : d.slice(5);
+        return `${parseInt(d.slice(0, 4)) - 1}-${rest}`;
+      };
+      const vjFrom = minus1J(dateFrom);
+      const vjTo = minus1J(dateTo);
+      setPeriode({ from: dateFrom, to: dateTo, vjFrom, vjTo });
 
       const [
-        kpiRes, revRes, roomRes, saisonRes, zieleRes, suppRes
+        kpiRes, revRes, roomRes, saisonRes, zieleRes, suppRes,
+        kpiVjRes, revVjRes, roomVjRes
       ] = await Promise.all([
         supabase
           .from('protel_kpi_tag')
@@ -327,6 +348,20 @@ export function RevenueIntelligenceView() {
           .from('revenue_supplement')
           .select('*')
           .order('tier').order('saison').order('belegung'),
+        supabase
+          .from('protel_kpi_tag')
+          .select('datum,auslastung_pct,adr,revpar,logis_netto,zimmer_belegt,ankuenfte,abreisen')
+          .gte('datum', vjFrom).lte('datum', vjTo)
+          .order('datum'),
+        supabase
+          .from('v_revenue_monat')
+          .select('*')
+          .eq('jahr', selYear - 1)
+          .order('monat_nr'),
+        supabase
+          .from('v_revpar_by_roomtype')
+          .select('datum,zimmer_typ,tier,fluegel,zimmer_belegt,gaeste_naechte,logis_umsatz_netto,arr_netto,revpar_netto,saison')
+          .gte('datum', vjFrom).lte('datum', vjTo),
       ]);
 
       if (kpiRes.error) throw kpiRes.error;
@@ -338,6 +373,9 @@ export function RevenueIntelligenceView() {
       setRevMonat((revRes.data as RevenuMonat[]) || []);
       setRoomtypeData((roomRes.data as RevparRoomtype[]) || []);
       setSaisonKpi((saisonRes.data as SaisonKpi[]) || []);
+      setKpiTageVJ((kpiVjRes.data as KpiTag[]) || []);
+      setRevMonatVJ((revVjRes.data as RevenuMonat[]) || []);
+      setRoomtypeDataVJ((roomVjRes.data as RevparRoomtype[]) || []);
       setZiele((zieleRes.data as RevenueZiel[]) || []);
 
       const suppData = (suppRes.data as Supplement[]) || [];
@@ -350,6 +388,45 @@ export function RevenueIntelligenceView() {
       });
       setSimSupplements(simInit);
       setSimDirty(false);
+
+      // ── Tages-KPIs laden (heute, sonst Vortag als Fallback) ──
+      const todayStr = new Date().toISOString().split('T')[0];
+      const yesterdayStr = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+      // Erst heute versuchen
+      const todayCheck = await supabase.from('protel_kpi_tag')
+        .select('datum,auslastung_pct,adr,revpar,logis_netto,zimmer_belegt,ankuenfte,abreisen')
+        .eq('datum', todayStr).maybeSingle();
+
+      // Fallback auf Vortag wenn heute leer
+      const latestDay = todayCheck.data
+        ? todayCheck.data
+        : (await supabase.from('protel_kpi_tag')
+            .select('datum,auslastung_pct,adr,revpar,logis_netto,zimmer_belegt,ankuenfte,abreisen')
+            .eq('datum', yesterdayStr).maybeSingle()).data;
+
+      if (latestDay) {
+        const latestDatum = latestDay.datum;
+        const prevDay = new Date(new Date(latestDatum).getTime() - 86400000).toISOString().split('T')[0];
+        const vjDatum = `${new Date(latestDatum).getFullYear() - 1}-${latestDatum.slice(5)}`;
+
+        const [prevRes, vjRes] = await Promise.all([
+          supabase.from('protel_kpi_tag')
+            .select('datum,auslastung_pct,adr,revpar,logis_netto,zimmer_belegt,ankuenfte,abreisen')
+            .eq('datum', prevDay).maybeSingle(),
+          supabase.from('protel_kpi_tag')
+            .select('datum,auslastung_pct,adr,revpar,logis_netto,zimmer_belegt,ankuenfte,abreisen')
+            .eq('datum', vjDatum).maybeSingle(),
+        ]);
+
+        setTodayKpi(latestDay as KpiTag);
+        setYesterdayKpi(prevRes.data as KpiTag | null);
+        setVjTodayKpi(vjRes.data as KpiTag | null);
+      } else {
+        setTodayKpi(null);
+        setYesterdayKpi(null);
+        setVjTodayKpi(null);
+      }
 
       setLastUpdated(new Date());
     } catch (e: any) {
@@ -374,16 +451,17 @@ export function RevenueIntelligenceView() {
     return { avgArr, avgOcc, avgRevpar, sumLogis };
   }, [kpiTage]);
 
-  // Vorjahresdaten aus v_saison_kpi
+  // Vorjahresdaten: identische Aggregation über echten VJ-Zeitraum (Stichtag-fair)
   const vjSummary = useMemo(() => {
-    if (!saisonKpi.length) return null;
-    const valid = saisonKpi.filter(k => k.vj_arr != null);
+    if (!kpiTageVJ.length) return null;
+    const valid = kpiTageVJ.filter(k => k.adr != null);
     if (!valid.length) return null;
-    const avgArr = valid.reduce((s, k) => s + (k.vj_arr ?? 0), 0) / valid.length;
-    const avgOcc = valid.reduce((s, k) => s + (k.vj_auslastung_pct ?? 0), 0) / valid.length;
-    const avgRevpar = valid.reduce((s, k) => s + (k.vj_revpar ?? 0), 0) / valid.length;
-    return { avgArr, avgOcc, avgRevpar };
-  }, [saisonKpi]);
+    const avgArr = valid.reduce((s, k) => s + (k.adr ?? 0), 0) / valid.length;
+    const avgOcc = valid.reduce((s, k) => s + (k.auslastung_pct ?? 0), 0) / valid.length;
+    const avgRevpar = valid.reduce((s, k) => s + (k.revpar ?? 0), 0) / valid.length;
+    const sumLogis = kpiTageVJ.reduce((s, k) => s + (k.logis_netto ?? 0), 0);
+    return { avgArr, avgOcc, avgRevpar, sumLogis };
+  }, [kpiTageVJ]);
 
   // Budget-Ziele
   const budgetZiele = useMemo(() => {
@@ -394,15 +472,23 @@ export function RevenueIntelligenceView() {
 
   // Monatschart-Daten (Dual Revenue)
   const dualRevenueChart = useMemo(() => {
+    const vjByMonat = new Map(revMonatVJ.map(m => [m.monat_nr, m]));
     return revMonat.map(m => ({
       monat: MONTHS[m.monat_nr - 1],
       monat_nr: m.monat_nr,
       bereinigt: Math.round(m.gesamt_bereinigt),
       brutto: Math.round(m.gesamt_brutto),
       logis: Math.round(m.logis_bereinigt),
+      bereinigt_vj: vjByMonat.has(m.monat_nr) ? Math.round(vjByMonat.get(m.monat_nr)!.gesamt_bereinigt) : null,
       saison: m.saison,
     }));
-  }, [revMonat]);
+  }, [revMonat, revMonatVJ]);
+
+  // VJ-Summe nur über Monate, für die das aktuelle Jahr Daten hat (fairer Vergleich)
+  const dualVjSumme = useMemo(() => {
+    const monate = new Set(revMonat.map(m => m.monat_nr));
+    return revMonatVJ.filter(m => monate.has(m.monat_nr)).reduce((s, m) => s + m.gesamt_bereinigt, 0);
+  }, [revMonat, revMonatVJ]);
 
   // Zimmertyp-Aggregation
   const roomtypeAgg = useMemo(() => {
@@ -415,14 +501,30 @@ export function RevenueIntelligenceView() {
       existing.tage.add(r.datum);
       map.set(key, existing);
     });
+    // VJ-Aggregation (gleiches Fenster im Vorjahr)
+    const vjMap = new Map<string, { naechte: number; umsatz: number }>();
+    roomtypeDataVJ.forEach(r => {
+      const e = vjMap.get(r.zimmer_typ) || { naechte: 0, umsatz: 0 };
+      e.naechte += r.zimmer_belegt || 0;
+      e.umsatz  += r.logis_umsatz_netto || 0;
+      vjMap.set(r.zimmer_typ, e);
+    });
     return Array.from(map.values())
-      .map(r => ({
-        ...r,
-        arr: r.naechte > 0 ? r.umsatz / r.naechte : 0,
-        anzTage: r.tage.size,
-      }))
+      .map(r => {
+        const arr = r.naechte > 0 ? r.umsatz / r.naechte : 0;
+        const vj = vjMap.get(r.typ);
+        const arrVj = vj && vj.naechte > 0 ? vj.umsatz / vj.naechte : null;
+        return {
+          ...r,
+          arr,
+          arrVj,
+          arrDelta: arrVj ? (arr - arrVj) / arrVj * 100 : null,
+          naechteVj: vj?.naechte ?? null,
+          anzTage: r.tage.size,
+        };
+      })
       .sort((a, b) => a.tier - b.tier);
-  }, [roomtypeData]);
+  }, [roomtypeData, roomtypeDataVJ]);
 
   // Heatmap-Daten: Auslastung 12 Monate × 3 Jahre
   const heatmapData = useMemo(() => {
@@ -476,16 +578,18 @@ export function RevenueIntelligenceView() {
       const logisZiel = ziele.find(z =>
         z.jahr === selYear && z.monat_nr === monat_nr && z.kategorie === 'logis' && z.quelle === 'budget'
       );
+      const vj = revMonatVJ.find(r => r.monat_nr === monat_nr);
       return {
         monat,
         monat_nr,
         actual_gesamt: actual ? Math.round(actual.gesamt_bereinigt) : null,
         actual_logis:  actual ? Math.round(actual.logis_bereinigt) : null,
+        vj_gesamt:     vj ? Math.round(vj.gesamt_bereinigt) : null,
         budget_gesamt: budgetZiel ? Math.round(budgetZiel.betrag) : null,
         budget_logis:  logisZiel  ? Math.round(logisZiel.betrag) : null,
       };
     });
-  }, [revMonat, ziele, selYear]);
+  }, [revMonat, revMonatVJ, ziele, selYear]);
 
   // ── Supplement-Simulator Speichern ───────────────────────────────────────
 
@@ -533,6 +637,9 @@ export function RevenueIntelligenceView() {
     : null;
   const revparDelta = kpiSummary && vjSummary
     ? ((kpiSummary.avgRevpar ?? 0) - vjSummary.avgRevpar) / vjSummary.avgRevpar * 100
+    : null;
+  const logisDelta = kpiSummary && vjSummary && vjSummary.sumLogis > 0
+    ? (kpiSummary.sumLogis - vjSummary.sumLogis) / vjSummary.sumLogis * 100
     : null;
   const logisVsZiel = kpiSummary && budgetZiele.logis
     ? (kpiSummary.sumLogis / budgetZiele.logis) * 100
@@ -606,13 +713,74 @@ export function RevenueIntelligenceView() {
       </div>
 
       {/* ══════════════════════════════════════════════════════════════════
-          SEKTION 1 — KPI-Übersicht
+          SEKTION 0 — Tages-KPI (TD)
       ══════════════════════════════════════════════════════════════════ */}
       <section>
         <SectionHeader
           icon={BarChart3}
-          title="KPI-Übersicht"
-          sub={`${selMonth ? MONTHS[selMonth - 1] + ' ' : ''}${selYear} · Protel-Echtdaten vs. Vorjahr vs. Budget 2026`}
+          title="KPI-Übersicht · TD"
+          sub={todayKpi
+            ? `${new Date(todayKpi.datum).toLocaleDateString('de-DE', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })} · Protel-Echtdaten vs. Vortag vs. Vorjahr`
+            : 'Letzter verfügbarer Tag · Protel-Echtdaten vs. Vortag vs. Vorjahr'}
+        />
+        {todayKpi ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <KpiCard
+              title="ARR (Logis)"
+              value={fmtEur(todayKpi.adr)}
+              sub="Average Room Rate"
+              delta={vjTodayKpi?.adr ? ((todayKpi.adr ?? 0) - vjTodayKpi.adr) / vjTodayKpi.adr * 100 : null}
+              deltaLabel="ggü. Vorjahr"
+              ziel={vjTodayKpi?.adr != null ? `VJ: ${fmtEur(vjTodayKpi.adr)}` : yesterdayKpi?.adr != null ? `Vortag: ${fmtEur(yesterdayKpi.adr)}` : undefined}
+              tooltip={`ARR = Logiserlös ÷ belegte Zimmer\nDatum: ${todayKpi.datum}\nVortag: ${yesterdayKpi?.adr != null ? fmtEur(yesterdayKpi.adr) : '—'}`}
+              highlight={vjTodayKpi?.adr != null && (todayKpi.adr ?? 0) > vjTodayKpi.adr}
+            />
+            <KpiCard
+              title="Auslastung"
+              value={fmtPct(todayKpi.auslastung_pct)}
+              sub={`${todayKpi.zimmer_belegt ?? 0} von ${VERKAUFS_ZIMMER} Zimmern belegt`}
+              delta={vjTodayKpi?.auslastung_pct ? ((todayKpi.auslastung_pct ?? 0) - vjTodayKpi.auslastung_pct) / vjTodayKpi.auslastung_pct * 100 : null}
+              deltaLabel="ggü. Vorjahr"
+              ziel={vjTodayKpi?.auslastung_pct != null ? `VJ: ${fmtPct(vjTodayKpi.auslastung_pct)}` : yesterdayKpi?.auslastung_pct != null ? `Vortag: ${fmtPct(yesterdayKpi.auslastung_pct)}` : undefined}
+              tooltip={`Auslastung = belegte Zimmer ÷ ${VERKAUFS_ZIMMER} Verkaufszimmer × 100\n⚠ Ohne: 101,102,103,105,214,401\nVortag: ${yesterdayKpi?.auslastung_pct != null ? fmtPct(yesterdayKpi.auslastung_pct) : '—'}`}
+            />
+            <KpiCard
+              title="RevPAR"
+              value={fmtEur(todayKpi.revpar)}
+              sub="Revenue per Available Room"
+              delta={vjTodayKpi?.revpar ? ((todayKpi.revpar ?? 0) - vjTodayKpi.revpar) / vjTodayKpi.revpar * 100 : null}
+              deltaLabel="ggü. Vorjahr"
+              ziel={vjTodayKpi?.revpar != null ? `VJ: ${fmtEur(vjTodayKpi.revpar)}` : yesterdayKpi?.revpar != null ? `Vortag: ${fmtEur(yesterdayKpi.revpar)}` : undefined}
+              tooltip={`RevPAR = Logiserlös ÷ ${VERKAUFS_ZIMMER} Verkaufszimmer\nVortag: ${yesterdayKpi?.revpar != null ? fmtEur(yesterdayKpi.revpar) : '—'}`}
+              highlight={vjTodayKpi?.revpar != null && (todayKpi.revpar ?? 0) > vjTodayKpi.revpar}
+            />
+            <KpiCard
+              title="Logis-Umsatz"
+              value={fmtEur(todayKpi.logis_netto, true)}
+              sub={`Ankünfte: ${todayKpi.ankuenfte ?? 0} · Abreisen: ${todayKpi.abreisen ?? 0}`}
+              ziel={vjTodayKpi?.logis_netto != null ? `VJ: ${fmtEur(vjTodayKpi.logis_netto, true)}` : yesterdayKpi?.logis_netto != null ? `Vortag: ${fmtEur(yesterdayKpi.logis_netto, true)}` : undefined}
+              tooltip={`Summe Logis-Netto am ${todayKpi.datum}\nVortag: ${yesterdayKpi?.logis_netto != null ? fmtEur(yesterdayKpi.logis_netto, true) : '—'}`}
+            />
+          </div>
+        ) : (
+          <Card className="glass-card border-border border-dashed">
+            <CardContent className="p-6 text-center text-muted-foreground text-sm">
+              Keine Tagesdaten vorhanden.
+            </CardContent>
+          </Card>
+        )}
+      </section>
+
+      {/* ══════════════════════════════════════════════════════════════════
+          SEKTION 1 — KPI-Übersicht (YTD)
+      ══════════════════════════════════════════════════════════════════ */}
+      <section>
+        <SectionHeader
+          icon={BarChart3}
+          title="KPI-Übersicht · YTD"
+          sub={periode
+            ? `${periode.from.split('-').reverse().join('.')} – ${periode.to.split('-').reverse().join('.')} vs. VJ ${periode.vjFrom.split('-').reverse().join('.')} – ${periode.vjTo.split('-').reverse().join('.')} · Stichtag-fairer Vergleich`
+            : `${selMonth ? MONTHS[selMonth - 1] + ' ' : ''}${selYear} · Protel-Echtdaten vs. Vorjahr`}
         />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <KpiCard
@@ -632,7 +800,7 @@ export function RevenueIntelligenceView() {
             delta={occDelta}
             deltaLabel="ggü. Vorjahr"
             ziel={vjSummary ? `VJ: ${fmtPct(vjSummary.avgOcc)}` : undefined}
-            tooltip="Auslastung = belegte Zimmer ÷ 60 Verkaufszimmer × 100\n⚠ Ohne: 101,102,103,105,214,401"
+            tooltip="Auslastung = belegte Zimmer ÷ 59 Verkaufszimmer × 100\n⚠ Ohne: 101,102,103,105,214,401"
           />
           <KpiCard
             title="RevPAR"
@@ -641,15 +809,18 @@ export function RevenueIntelligenceView() {
             delta={revparDelta}
             deltaLabel="ggü. Vorjahr"
             ziel={vjSummary ? `VJ: ${fmtEur(vjSummary.avgRevpar)}` : undefined}
-            tooltip="RevPAR = Logiserlös ÷ 60 Verkaufszimmer\nNUR Logis — nicht Gesamtumsatz!"
+            tooltip="RevPAR = Logiserlös ÷ 59 Verkaufszimmer\nNUR Logis — nicht Gesamtumsatz!"
             highlight={(revparDelta ?? 0) > 0}
           />
           <KpiCard
             title="Logis-Umsatz"
             value={fmtEur(kpiSummary?.sumLogis, true)}
             sub={logisVsZiel != null ? `${logisVsZiel.toFixed(1)} % des Jahresziels` : 'Budget 2026: € 2.250.000'}
-            ziel={budgetZiele.logis ? `Ziel: ${fmtEur(budgetZiele.logis, true)}` : undefined}
-            tooltip="Summe Logis-Netto im gewählten Zeitraum\nBudget 2026: € 2.250.000"
+            delta={logisDelta}
+            deltaLabel="ggü. VJ (gleicher Zeitraum)"
+            ziel={vjSummary ? `VJ: ${fmtEur(vjSummary.sumLogis, true)}` : budgetZiele.logis ? `Ziel: ${fmtEur(budgetZiele.logis, true)}` : undefined}
+            tooltip="Summe Logis-Netto im gewählten Zeitraum\nVJ = identisches Datumsfenster im Vorjahr\nBudget 2026: € 2.250.000"
+            highlight={(logisDelta ?? 0) > 0}
           />
         </div>
       </section>
@@ -661,7 +832,7 @@ export function RevenueIntelligenceView() {
         <SectionHeader
           icon={Hotel}
           title="Zimmertyp-Performance"
-          sub="ARR und Auslastung pro Zimmertyp · aus Protel-Belegungsdaten"
+          sub="ARR pro Zimmertyp · aktueller Zeitraum vs. identisches VJ-Fenster · Nächte als Ist / VJ"
         />
         {roomtypeAgg.length === 0 ? (
           <Card className="glass-card border-border">
@@ -679,6 +850,8 @@ export function RevenueIntelligenceView() {
                     <tr className="border-b border-border">
                       <th className="text-left text-xs text-muted-foreground font-medium px-4 py-3">Zimmertyp</th>
                       <th className="text-right text-xs text-muted-foreground font-medium px-4 py-3">Ø ARR</th>
+                      <th className="text-right text-xs text-muted-foreground font-medium px-4 py-3">Ø ARR VJ</th>
+                      <th className="text-right text-xs text-muted-foreground font-medium px-4 py-3">Δ</th>
                       <th className="text-right text-xs text-muted-foreground font-medium px-4 py-3">Nächte</th>
                       <th className="text-right text-xs text-muted-foreground font-medium px-4 py-3">Umsatz</th>
                     </tr>
@@ -701,8 +874,14 @@ export function RevenueIntelligenceView() {
                         <td className="px-4 py-2.5 text-right font-mono text-xs font-medium text-foreground">
                           {fmtEur(r.arr)}
                         </td>
+                        <td className="px-4 py-2.5 text-right font-mono text-xs text-muted-foreground">
+                          {r.arrVj != null ? fmtEur(r.arrVj) : '—'}
+                        </td>
+                        <td className="px-4 py-2.5 text-right">
+                          <DeltaBadge val={r.arrDelta} />
+                        </td>
                         <td className="px-4 py-2.5 text-right text-xs text-muted-foreground">
-                          {fmtNum(r.naechte)}
+                          {fmtNum(r.naechte)}{r.naechteVj != null ? ` / ${fmtNum(r.naechteVj)}` : ''}
                         </td>
                         <td className="px-4 py-2.5 text-right font-mono text-xs font-medium text-foreground">
                           {fmtEur(r.umsatz, true)}
@@ -770,6 +949,7 @@ export function RevenueIntelligenceView() {
                   { label: 'Gesamt bereinigt', val: revMonat.reduce((s,r) => s + r.gesamt_bereinigt, 0), color: '#6366f1' },
                   { label: 'Gesamt brutto', val: revMonat.reduce((s,r) => s + r.gesamt_brutto, 0), color: '#94a3b8' },
                   { label: 'Logis', val: revMonat.reduce((s,r) => s + r.logis_bereinigt, 0), color: '#10b981' },
+                  { label: `Bereinigt ${selYear - 1} (gleiche Monate)`, val: dualVjSumme, color: '#f59e0b' },
                 ].map(item => (
                   <div key={item.label} className="flex items-center gap-2">
                     <span className="h-2 w-4 rounded-full" style={{ background: item.color }} />
@@ -805,11 +985,12 @@ export function RevenueIntelligenceView() {
                   <Area type="monotone" dataKey="brutto"    name="Brutto (Excel)"    stroke="#94a3b8" fill="url(#gradBrutto)"    strokeWidth={1.5} strokeDasharray="4 2" />
                   <Area type="monotone" dataKey="bereinigt" name="Bereinigt (App)"   stroke="#6366f1" fill="url(#gradBereinigt)" strokeWidth={2} />
                   <Area type="monotone" dataKey="logis"     name="Logis bereinigt"   stroke="#10b981" fill="url(#gradLogis)"     strokeWidth={2} />
+                  <Area type="monotone" dataKey="bereinigt_vj" name={`Bereinigt ${selYear - 1}`} stroke="#f59e0b" fill="none" strokeWidth={2} strokeDasharray="6 3" />
                 </AreaChart>
               </ResponsiveContainer>
 
               <p className="text-xs text-muted-foreground/60 mt-2 px-2">
-                Differenz bereinigt vs. brutto = Durchlaufkonten (4999/4280/4861). Logis ist in beiden Linien identisch.
+                Differenz bereinigt vs. brutto = Durchlaufkonten (4999/4280/4861). Gestrichelt = Vorjahr (gleiche Monate). Laufender Monat ist unvollständig.
               </p>
             </CardContent>
           </Card>
@@ -1056,6 +1237,7 @@ export function RevenueIntelligenceView() {
                     <YAxis tick={{ fontSize: 10 }} tickFormatter={v => `€${(v/1000).toFixed(0)}k`} />
                     <ReTooltip content={<ChartTooltip />} />
                     <Legend wrapperStyle={{ fontSize: 11 }} />
+                    <Bar dataKey="vj_gesamt"     name={`Ist ${selYear - 1}`} fill="#f59e0b" opacity={0.5} radius={[2,2,0,0]} />
                     <Bar dataKey="budget_gesamt" name="Budget Gesamt" fill="#6366f1" opacity={0.4} radius={[2,2,0,0]} />
                     <Bar dataKey="actual_gesamt" name="Ist Gesamt"    fill="#6366f1"             radius={[2,2,0,0]} />
                     <Bar dataKey="budget_logis"  name="Budget Logis"  fill="#10b981" opacity={0.4} radius={[2,2,0,0]} />

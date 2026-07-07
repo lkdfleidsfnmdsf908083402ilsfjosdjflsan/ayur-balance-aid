@@ -7,6 +7,7 @@ import { HousekeepingKpiView } from '@/components/views/HousekeepingKpiView';
 import { KitchenKpiView } from '@/components/views/KitchenKpiView';
 import { ServiceKpiView } from '@/components/views/ServiceKpiView';
 import { FrontOfficeKpiView } from '@/components/views/FrontOfficeKpiView';
+import { ErstanamnseView } from "@/components/views/ErstanamnseView";
 import { SpaKpiView } from '@/components/views/SpaKpiView';
 import { TechnicalKpiView } from '@/components/views/TechnicalKpiView';
 import { TechnikBestellungenView } from '@/components/views/TechnikBestellungenView';
@@ -34,6 +35,8 @@ import { AbteilungsleiterDashboardView } from '@/components/views/Abteilungsleit
 import { GaesteVerwaltungView } from '@/components/views/GaesteVerwaltungView';
 import { InfluencerView } from '@/components/views/InfluencerView';
 import { TokenVerwaltungView } from '@/components/views/TokenVerwaltungView';
+import { MenueWeinbegleitungView } from "@/components/views/MenueWeinbegleitungView";
+import { WeinScannerView } from "@/components/views/WeinScannerView";
 import { KampagnenView } from '@/components/views/KampagnenView';
 import { VerwaltungsTrackerView } from '@/components/views/VerwaltungsTrackerView';
 import { useFinanceStore } from '@/store/financeStore';
@@ -44,6 +47,7 @@ import { SplashScreen } from '@/components/views/SplashScreen';
 import { EnterpriseValueView } from '@/components/views/EnterpriseValueView';
 import { RevenueIntelligenceView } from '@/components/views/RevenueIntelligenceView';
 import { GastAnalyticsView } from '@/components/views/GastAnalyticsView';
+import SommerKampagneView from '@/components/views/SommerKampagneView';
 import { ProtelComparisonView } from '@/components/views/ProtelComparisonView';
 
 const Index = () => {
@@ -95,6 +99,7 @@ const Index = () => {
         return <ServiceKpiView />;
       case 'frontoffice':
         return <FrontOfficeKpiView />;
+      case 'erstanamnese': return <ErstanamnseView />;
       case 'spa':
         return <SpaKpiView />;
       case 'technical':
@@ -147,6 +152,10 @@ const Index = () => {
         return <InfluencerView />;
       case 'token-verwaltung':
         return <TokenVerwaltungView />;
+      case 'menue-weinbegleitung':
+        return <MenueWeinbegleitungView />;
+      case 'weinscanner':
+        return <WeinScannerView />;
       case 'kampagnen':
         return <KampagnenView />;
       case 'verwaltung':
@@ -155,6 +164,8 @@ const Index = () => {
         return <RevenueIntelligenceView />;
       case 'gast-analytics':                          //
         return <GastAnalyticsView />;                                     
+      case 'sommer-kampagne':
+        return <SommerKampagneView />;
       case 'protel-comparison':
         return <ProtelComparisonView />;
       case 'enterprise-value':
@@ -171,7 +182,7 @@ const Index = () => {
   return (
     <div className="flex h-screen bg-background">
       <Sidebar activeView={activeView} onViewChange={setActiveView} />
-      <main className="flex-1 flex flex-col overflow-hidden w-full">
+      <main className="flex-1 overflow-y-auto overflow-x-auto w-full min-h-0">
         {renderView()}
       </main>
     </div>

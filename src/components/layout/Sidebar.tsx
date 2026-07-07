@@ -27,6 +27,7 @@ import {
   Clock,
   ClipboardList,
   Heart,
+  Sun,
   LogOut,
   LucideIcon,
   ClipboardCheck,
@@ -35,6 +36,9 @@ import {
   Hotel,
   Star,
   Key,
+  Wine,
+  Stethoscope,
+  ScanLine,
 } from 'lucide-react';
 import { MandiraLogo } from '@/components/MandiraLogo';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -87,11 +91,15 @@ const SIDEBAR_STORAGE_KEY = 'sidebar-open-groups';
 const navStructure: NavEntry[] = [
   { id: 'dashboard', labelKey: 'nav.dashboard', icon: LayoutDashboard, requiredRole: 'abteilungsleiter' },
   { id: 'gaeste', labelKey: 'nav.guestManagement', icon: Heart, requiredRole: 'abteilungsleiter' },
+  { id: 'sommer-kampagne', labelKey: 'Sommer-Kampagne', icon: Sun, requiredRole: 'admin' },
   // Influencer-Kalender: sichtbar für Admin, CEO, Advisor — kein requiredRole = alle sehen es
   // Sichtbarkeitssteuerung erfolgt in filteredNavStructure via advisorAllowedItems
   { id: 'influencer', labelKey: 'nav.influencer', icon: Star, requiredRole: 'ceo' },
   { id: 'token-verwaltung', labelKey: 'nav.tokenVerwaltung', icon: Key, requiredRole: 'admin' },
   { id: 'kampagnen', labelKey: 'nav.kampagnen', icon: Users, requiredRole: 'admin' },
+  { id: 'menue-weinbegleitung', labelKey: 'Menü & Weinbegleitung', icon: Wine },
+  { id: 'weinscanner', labelKey: 'Weinscanner', icon: ScanLine },
+  { id: 'erstanamnese', labelKey: 'Erstanamnese', icon: Stethoscope },
   { 
     id: 'abteilung-kpis',
     labelKey: 'nav.departmentKpis',

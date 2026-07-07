@@ -1,0 +1,2324 @@
+[
+  {
+    "kategorie": "Aperitifs",
+    "typ": "sekt",
+    "weine": [
+      {
+        "name": "Muskatellersekt",
+        "weingut": "Weingut Harkamp, Flamberg",
+        "region": "Steiermark",
+        "rebsorte": "Muskateller",
+        "jahrgang": null,
+        "groessen": [
+          {
+            "menge": "0,1l",
+            "preis": 6.9
+          }
+        ]
+      },
+      {
+        "name": "Schilchersekt",
+        "weingut": "Weingut Glatz, Wagerberg",
+        "region": "Steiermark",
+        "rebsorte": "Schilcher",
+        "jahrgang": null,
+        "groessen": [
+          {
+            "menge": "0,1l",
+            "preis": 6.9
+          }
+        ]
+      },
+      {
+        "name": "S'Uhudler Frizzante",
+        "weingut": "Weingut Glatz, Wagerberg",
+        "region": "Steiermark",
+        "rebsorte": "Uhudler",
+        "jahrgang": null,
+        "groessen": [
+          {
+            "menge": "0,1l",
+            "preis": 6.9
+          }
+        ]
+      },
+      {
+        "name": "Rosésekt",
+        "weingut": "Weingut Loimer, Langenlois",
+        "region": "Kamptal",
+        "rebsorte": "Rosé",
+        "jahrgang": null,
+        "groessen": [
+          {
+            "menge": "0,1l",
+            "preis": 6.9
+          }
+        ]
+      },
+      {
+        "name": "Sekt 'zero dosage'",
+        "weingut": "Weingut Loimer, Langenlois",
+        "region": "Kamptal",
+        "jahrgang": null,
+        "groessen": [
+          {
+            "menge": "0,1l",
+            "preis": 7.5
+          }
+        ]
+      },
+      {
+        "name": "Champagner 'Rosé Reserve'",
+        "weingut": "Charles Heidsieck, Reims",
+        "region": "Champagne",
+        "jahrgang": null,
+        "groessen": [
+          {
+            "menge": "0,1l",
+            "preis": 13.9
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kategorie": "Weine glasweise National",
+    "typ": "glasweise",
+    "weine": [
+      {
+        "name": "Welschriesling 'Vulkanland DAC' 2024",
+        "weingut": "Weingut Pieber, Wagerberg",
+        "region": "Vulkanland Steiermark",
+        "rebsorte": "Welschriesling",
+        "jahrgang": 2024,
+        "farbe": "weiss",
+        "groessen": [
+          {
+            "menge": "1/8l",
+            "preis": 5.2
+          }
+        ]
+      },
+      {
+        "name": "Gelber Muskateller 2024",
+        "weingut": "Weingut Frauwallner, Straden",
+        "region": "Vulkanland Steiermark",
+        "rebsorte": "Gelber Muskateller",
+        "jahrgang": 2024,
+        "farbe": "weiss",
+        "groessen": [
+          {
+            "menge": "1/8l",
+            "preis": 5.9
+          }
+        ]
+      },
+      {
+        "name": "Weißburgunder 2024",
+        "weingut": "Weingut Wohlmut, Kitzeck",
+        "region": "Südsteiermark",
+        "rebsorte": "Weißburgunder",
+        "jahrgang": 2024,
+        "farbe": "weiss",
+        "groessen": [
+          {
+            "menge": "1/8l",
+            "preis": 5.9
+          }
+        ]
+      },
+      {
+        "name": "Urbanus 2024",
+        "weingut": "Weingut Höfler, Gschmaier",
+        "region": "Vulkanland Steiermark",
+        "rebsorte": "Urbanus",
+        "jahrgang": 2024,
+        "farbe": "weiss",
+        "groessen": [
+          {
+            "menge": "1/8l",
+            "preis": 5.9
+          }
+        ]
+      },
+      {
+        "name": "Sauvignon Blanc 'Sernauberg' 2022",
+        "weingut": "Weingut Sattlerhof, Gamlitz",
+        "region": "Südsteiermark",
+        "rebsorte": "Sauvignon Blanc",
+        "jahrgang": 2022,
+        "farbe": "weiss",
+        "groessen": [
+          {
+            "menge": "1/8l",
+            "preis": 6.5
+          }
+        ]
+      },
+      {
+        "name": "Morillon 'Vulkanland DAC' 2024",
+        "weingut": "Weingut Frauwallner, Straden",
+        "region": "Vulkanland Steiermark",
+        "rebsorte": "Morillon",
+        "jahrgang": 2024,
+        "farbe": "weiss",
+        "groessen": [
+          {
+            "menge": "1/8l",
+            "preis": 5.9
+          }
+        ]
+      },
+      {
+        "name": "Merlot 2021",
+        "weingut": "Weingut Glatz, Wagerberg",
+        "region": "Vulkanland Steiermark",
+        "rebsorte": "Merlot",
+        "jahrgang": 2021,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "1/8l",
+            "preis": 6.5
+          }
+        ]
+      },
+      {
+        "name": "Cuvée Noah 2017",
+        "weingut": "Weingut Lenz Moser, Rohrendorf",
+        "region": "Niederösterreich",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2017,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "1/8l",
+            "preis": 8.9
+          }
+        ]
+      },
+      {
+        "name": "Zweigelt 2022",
+        "weingut": "Weingut Glatz, Wagerberg",
+        "region": "Vulkanland Steiermark",
+        "rebsorte": "Zweigelt",
+        "jahrgang": 2022,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "1/8l",
+            "preis": 5.9
+          }
+        ]
+      },
+      {
+        "name": "Cuvée 'O Dora' CS/CF 2019",
+        "weingut": "WG Klosterkeller Siegendorf",
+        "region": "Burgenland",
+        "rebsorte": "CS/CF",
+        "jahrgang": 2019,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "1/8l",
+            "preis": 7.5
+          }
+        ]
+      },
+      {
+        "name": "Grande Cuvée Magnum 2018",
+        "weingut": "Weingut Salzl, Illmitz",
+        "region": "Neusiedlersee",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2018,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "1/8l",
+            "preis": 7.9
+          }
+        ]
+      },
+      {
+        "name": "Rosé 2024",
+        "weingut": "Weingut Wendelin, Gols",
+        "region": "Neusiedlersee",
+        "rebsorte": "Rosé",
+        "jahrgang": 2024,
+        "farbe": "rose",
+        "groessen": [
+          {
+            "menge": "1/8l",
+            "preis": 5.6
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kategorie": "Weißweine Vulkanland Steiermark",
+    "typ": "weisswein",
+    "weine": [
+      {
+        "name": "Gelber Muskateller 'Vulkanland' DAC 2024",
+        "weingut": "Weingut Frauwallner, Straden",
+        "rebsorte": "Gelber Muskateller",
+        "jahrgang": 2024,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 35.0
+          }
+        ]
+      },
+      {
+        "name": "Welschriesling 'Vulkanland' DAC 2024",
+        "weingut": "Weingut Pieber, Wagerberg",
+        "rebsorte": "Welschriesling",
+        "jahrgang": 2024,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 27.0
+          }
+        ]
+      },
+      {
+        "name": "Rosé 2024",
+        "weingut": "Weingut Glatz, Wagerberg",
+        "rebsorte": "Rosé",
+        "jahrgang": 2024,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 29.0
+          }
+        ]
+      },
+      {
+        "name": "Urbanus 'Scheurebe' 2024",
+        "weingut": "Weingut Pieber, Wagerberg",
+        "rebsorte": "Scheurebe",
+        "jahrgang": 2024,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 31.0
+          }
+        ]
+      },
+      {
+        "name": "Gelber Muskateller 'Vulkanland' DAC 2024",
+        "weingut": "Weingut Fassold, Neusetz/Straden",
+        "rebsorte": "Gelber Muskateller",
+        "jahrgang": 2024,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 33.0
+          }
+        ]
+      },
+      {
+        "name": "Gelber Muskateller 'Vulkanland' DAC 2024",
+        "weingut": "Weingut Pieber, Wagerberg",
+        "rebsorte": "Gelber Muskateller",
+        "jahrgang": 2024,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 32.0
+          }
+        ]
+      },
+      {
+        "name": "Weißburgunder 'Vulkanland' DAC 2024",
+        "weingut": "Weingut Fassold, Neusetz/Straden",
+        "rebsorte": "Weißburgunder",
+        "jahrgang": 2024,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 33.0
+          }
+        ]
+      },
+      {
+        "name": "Weißburgunder 'Vulkanland' DAC 2024",
+        "weingut": "Weingut Pieber, Wagerberg",
+        "rebsorte": "Weißburgunder",
+        "jahrgang": 2024,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 29.0
+          }
+        ]
+      },
+      {
+        "name": "Morillon 'Vulkanland' DAC 2024",
+        "weingut": "Weingut Frauwallner, Straden",
+        "rebsorte": "Morillon",
+        "jahrgang": 2024,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 39.0
+          }
+        ]
+      },
+      {
+        "name": "Morillon 'Vulkanland' DAC 2024",
+        "weingut": "Weingut Glatz, Wagerberg",
+        "rebsorte": "Morillon",
+        "jahrgang": 2024,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 32.0
+          }
+        ]
+      },
+      {
+        "name": "Morillon 'Ried-Buch' 1 STK 2020",
+        "weingut": "Weingut Frauwallner, Straden",
+        "rebsorte": "Morillon",
+        "jahrgang": 2020,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 59.0
+          }
+        ]
+      },
+      {
+        "name": "Sauvignon Blanc 'Vulkanland' DAC 2024",
+        "weingut": "Weingut Fassold, Neusetz/Straden",
+        "rebsorte": "Sauvignon Blanc",
+        "jahrgang": 2024,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 35.0
+          }
+        ]
+      },
+      {
+        "name": "Sauvignon Blanc 'Vulkanland' DAC 2024",
+        "weingut": "Weingut Glatz, Wagerberg",
+        "rebsorte": "Sauvignon Blanc",
+        "jahrgang": 2024,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 35.0
+          }
+        ]
+      },
+      {
+        "name": "Sauvignon Blanc 'Kirchleiten' G STK 2017",
+        "weingut": "Weingut Winkler-Hermaden, Klöch",
+        "rebsorte": "Sauvignon Blanc",
+        "jahrgang": 2017,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 69.0
+          }
+        ]
+      },
+      {
+        "name": "Sauvignon Blanc 'Moarfeitl' G STK 2019",
+        "weingut": "Weingut Neumeister, Straden",
+        "rebsorte": "Sauvignon Blanc",
+        "jahrgang": 2019,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 84.0
+          }
+        ]
+      },
+      {
+        "name": "Grauburgunder 'Saziani' G STK 2020",
+        "weingut": "Weingut Neumeister, Straden",
+        "rebsorte": "Grauburgunder",
+        "jahrgang": 2020,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 79.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kategorie": "Weißweine Südsteiermark",
+    "typ": "weisswein",
+    "weine": [
+      {
+        "name": "Gelber Muskateller 'Krepskogel' 1 STK 2022",
+        "weingut": "Weingut Sabathi, Leutschach",
+        "rebsorte": "Gelber Muskateller",
+        "jahrgang": 2022,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 49.0
+          }
+        ]
+      },
+      {
+        "name": "Weißburgunder 'Südsteiermark' DAC 2024",
+        "weingut": "Weingut Riegelnegg, Gamlitz",
+        "rebsorte": "Weißburgunder",
+        "jahrgang": 2024,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 37.0
+          }
+        ]
+      },
+      {
+        "name": "Weißburgunder 'Zieregg' 2015",
+        "weingut": "Weingut Tement, Berghausen",
+        "rebsorte": "Weißburgunder",
+        "jahrgang": 2015,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 79.0
+          }
+        ]
+      },
+      {
+        "name": "Morillon 'Obegg' 2017",
+        "weingut": "Weingut Polz, Spielfeld",
+        "rebsorte": "Morillon",
+        "jahrgang": 2017,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 79.0
+          }
+        ]
+      },
+      {
+        "name": "Morillon 'Zieregg' 2013",
+        "weingut": "Weingut Tement, Berghausen",
+        "rebsorte": "Morillon",
+        "jahrgang": 2013,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 79.0
+          }
+        ]
+      },
+      {
+        "name": "Morillon 'Pfarrweingarten' G STK 2017",
+        "weingut": "Weingut Sattlerhof, Gamlitz",
+        "rebsorte": "Morillon",
+        "jahrgang": 2017,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 79.0
+          }
+        ]
+      },
+      {
+        "name": "Morillon 'Grubthal' 2018",
+        "weingut": "Weingut Muster, Gamlitz",
+        "rebsorte": "Morillon",
+        "jahrgang": 2018,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 69.0
+          }
+        ]
+      },
+      {
+        "name": "Chardonnay 'Ried Pössnitzberger Kapelle' 2017",
+        "weingut": "Weingut Erwin Sabathi, Leutschach",
+        "rebsorte": "Chardonnay",
+        "jahrgang": 2017,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 129.0
+          }
+        ]
+      },
+      {
+        "name": "Sauvignon Blanc 'Südsteiermark' DAC 2024",
+        "weingut": "Weingut Riegelnegg, Gamlitz",
+        "rebsorte": "Sauvignon Blanc",
+        "jahrgang": 2024,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 39.0
+          }
+        ]
+      },
+      {
+        "name": "Sauvignon Blanc 'Sernauberg' 2021",
+        "weingut": "Weingut Sattlerhof, Gamlitz",
+        "rebsorte": "Sauvignon Blanc",
+        "jahrgang": 2021,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 65.0
+          }
+        ]
+      },
+      {
+        "name": "Sauvignon Blanc 'Ried Nussberg' 2017",
+        "weingut": "Weingut Gross, Ratsch",
+        "rebsorte": "Sauvignon Blanc",
+        "jahrgang": 2017,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 69.0
+          }
+        ]
+      },
+      {
+        "name": "Sauvignon Blanc 'Kranachberg' G STK 2016",
+        "weingut": "Weingut Sattlerhof, Gamlitz",
+        "rebsorte": "Sauvignon Blanc",
+        "jahrgang": 2016,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 69.0
+          }
+        ]
+      },
+      {
+        "name": "Sauvignon Blanc 'Grubthal' 2018",
+        "weingut": "Weingut Muster, Gamlitz",
+        "rebsorte": "Sauvignon Blanc",
+        "jahrgang": 2018,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 69.0
+          }
+        ]
+      },
+      {
+        "name": "Sauvignon Blanc 'Ried Pössnitzberger Kapelle' 2017",
+        "weingut": "Weingut Erwin Sabathi, Leutschach",
+        "rebsorte": "Sauvignon Blanc",
+        "jahrgang": 2017,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 129.0
+          }
+        ]
+      },
+      {
+        "name": "Grauburgunder 2021",
+        "weingut": "Weingut Scheucher, Labuttendorf",
+        "rebsorte": "Grauburgunder",
+        "jahrgang": 2021,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 35.0
+          }
+        ]
+      },
+      {
+        "name": "Grauburgunder 'Pfarrweingarten' G STK 2015",
+        "weingut": "Weingut Sattlerhof, Gamlitz",
+        "rebsorte": "Grauburgunder",
+        "jahrgang": 2015,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 79.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kategorie": "Weißweine Wachau",
+    "typ": "weisswein",
+    "weine": [
+      {
+        "name": "Riesling 'Loibner Federspiel' 2024",
+        "weingut": "Weingut Knoll, Oberloiben",
+        "rebsorte": "Riesling",
+        "jahrgang": 2024,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 39.0
+          }
+        ]
+      },
+      {
+        "name": "Grüner Veltliner 'Kreutles Federspiel' 2021",
+        "weingut": "Weingut Knoll, Oberloiben",
+        "rebsorte": "Grüner Veltliner",
+        "jahrgang": 2021,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 59.0
+          }
+        ]
+      },
+      {
+        "name": "Riesling 'Loibenberg' 2012",
+        "weingut": "Weingut Pichler-Krutzler, Wachau",
+        "rebsorte": "Riesling",
+        "jahrgang": 2012,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 59.0
+          }
+        ]
+      },
+      {
+        "name": "Riesling Smaragd 'Singerriedl' 2019",
+        "weingut": "Weingut Hirtzberger, Spitz",
+        "rebsorte": "Riesling",
+        "jahrgang": 2019,
+        "groessen": [
+          {
+            "menge": "0,375l",
+            "preis": 69.0
+          }
+        ]
+      },
+      {
+        "name": "Riesling Smaragd 'Steinertal' 2018",
+        "weingut": "Weingut F.X.Pichler, Oberloiben",
+        "rebsorte": "Riesling",
+        "jahrgang": 2018,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 79.0
+          }
+        ]
+      },
+      {
+        "name": "Grüner Veltliner Smaragd 'Zwerithaler Kammergut' 2019",
+        "weingut": "Weingut Prager, Weissenkirchen",
+        "rebsorte": "Grüner Veltliner",
+        "jahrgang": 2019,
+        "groessen": [
+          {
+            "menge": "1,5l",
+            "preis": 149.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kategorie": "Weißweine Kamptal",
+    "typ": "weisswein",
+    "weine": [
+      {
+        "name": "Grüner Veltliner 'Renner' 1 ÖTW 2016",
+        "weingut": "Weingut Hirsch, Langenlois",
+        "rebsorte": "Grüner Veltliner",
+        "jahrgang": 2016,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 49.0
+          }
+        ]
+      },
+      {
+        "name": "Grüner Veltliner 'Lamm' 1 ÖTW 2022",
+        "weingut": "Schloss Gobelsburg, Langenlois",
+        "rebsorte": "Grüner Veltliner",
+        "jahrgang": 2022,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 49.0
+          }
+        ]
+      },
+      {
+        "name": "Grüner Veltliner 'Lamm' Reserve 2012",
+        "weingut": "Weingut Hirsch, Kammern",
+        "rebsorte": "Grüner Veltliner",
+        "jahrgang": 2012,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 59.0
+          }
+        ]
+      },
+      {
+        "name": "Grüner Veltliner 'Lamm' 1 ÖTW 2019",
+        "weingut": "Schloss Gobelsburg, Langenlois",
+        "rebsorte": "Grüner Veltliner",
+        "jahrgang": 2019,
+        "groessen": [
+          {
+            "menge": "1,5l",
+            "preis": 89.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kategorie": "Weiß- und Roséweine Burgenland",
+    "typ": "weisswein",
+    "weine": [
+      {
+        "name": "Rosé 2021",
+        "weingut": "Weingut Wendelin, Gols",
+        "rebsorte": "Rosé",
+        "jahrgang": 2021,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 35.0
+          }
+        ]
+      },
+      {
+        "name": "Chardonnay 'Glagsatz' 2019",
+        "weingut": "Weingut Mariell, Großhöflein",
+        "rebsorte": "Chardonnay",
+        "jahrgang": 2019,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 59.0
+          }
+        ]
+      },
+      {
+        "name": "Chardonnay 'Glagsatz' 2020",
+        "weingut": "Weingut Mariell, Großhöflein",
+        "rebsorte": "Chardonnay",
+        "jahrgang": 2020,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 59.0
+          }
+        ]
+      },
+      {
+        "name": "Chardonnay 'Tatschler' 2018",
+        "weingut": "Weingut Kollwentz, Grosshöflein",
+        "rebsorte": "Chardonnay",
+        "jahrgang": 2018,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 79.0
+          }
+        ]
+      },
+      {
+        "name": "Chardonnay 'Tatschler' 2019",
+        "weingut": "Weingut Kollwentz, Grosshöflein",
+        "rebsorte": "Chardonnay",
+        "jahrgang": 2019,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 79.0
+          }
+        ]
+      },
+      {
+        "name": "Chardonnay 'Tatschler' 2020",
+        "weingut": "Weingut Kollwentz, Grosshöflein",
+        "rebsorte": "Chardonnay",
+        "jahrgang": 2020,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 79.0
+          }
+        ]
+      },
+      {
+        "name": "Chardonnay 'Katterstein' 2019",
+        "weingut": "Weingut Kollwentz, Grosshöflein",
+        "rebsorte": "Chardonnay",
+        "jahrgang": 2019,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 79.0
+          }
+        ]
+      },
+      {
+        "name": "Chardonnay 'Katterstein' 2020",
+        "weingut": "Weingut Kollwentz, Grosshöflein",
+        "rebsorte": "Chardonnay",
+        "jahrgang": 2020,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 79.0
+          }
+        ]
+      },
+      {
+        "name": "Chardonnay 'Gloria' 2019",
+        "weingut": "Weingut Kollwentz, Grosshöflein",
+        "rebsorte": "Chardonnay",
+        "jahrgang": 2019,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 79.0
+          }
+        ]
+      },
+      {
+        "name": "Chardonnay 'Gloria' 2020",
+        "weingut": "Weingut Kollwentz, Grosshöflein",
+        "rebsorte": "Chardonnay",
+        "jahrgang": 2020,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 79.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kategorie": "Rotweine Vulkanland Steiermark",
+    "typ": "rotwein",
+    "weine": [
+      {
+        "name": "Zweigelt 2022",
+        "weingut": "Weingut Pieber, Wagerberg",
+        "rebsorte": "Zweigelt",
+        "jahrgang": 2022,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 29.5
+          }
+        ]
+      },
+      {
+        "name": "Zweigelt 2021",
+        "weingut": "Weingut Glatz, Wagerberg",
+        "rebsorte": "Zweigelt",
+        "jahrgang": 2021,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 32.0
+          }
+        ]
+      },
+      {
+        "name": "Cuvèe Feminin (ZW, PN)",
+        "weingut": "Weingut Glatz, Wagerberg",
+        "rebsorte": "Zweigelt/Pinot Noir",
+        "jahrgang": null,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 34.0
+          }
+        ]
+      },
+      {
+        "name": "Cuvée Rochus (CS, ME, ZW, BB) 2017",
+        "weingut": "Weingut Thaller, Maierhofbergen",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2017,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 44.0
+          }
+        ]
+      },
+      {
+        "name": "Moarhof (CS, CF, ME) 2017",
+        "weingut": "Weingut Thaller, Maierhofbergen",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2017,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 44.0
+          }
+        ]
+      },
+      {
+        "name": "Cuvée de Merin (ZW, ME, CS) 2018",
+        "weingut": "Weingut Neumeister, Straden",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2018,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 44.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kategorie": "Rotweine Niederösterreich",
+    "typ": "rotwein",
+    "weine": [
+      {
+        "name": "Rubin Carnuntum (ZW) 2019",
+        "weingut": "Weingut Grassl, Göttlesbrunn",
+        "rebsorte": "Zweigelt",
+        "jahrgang": 2019,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 32.0
+          }
+        ]
+      },
+      {
+        "name": "Redmont (ZW, BF, ME) 2019",
+        "weingut": "Weingut Markowitsch, Göttlesbrunn",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2019,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 39.0
+          }
+        ]
+      },
+      {
+        "name": "St. Laurent 'Holzspur' 2018",
+        "weingut": "Weingut Reinisch, Tattendorf",
+        "rebsorte": "St. Laurent",
+        "jahrgang": 2018,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 49.0
+          }
+        ]
+      },
+      {
+        "name": "St. Laurent Grande Reserve 1999",
+        "weingut": "Weingut Reinisch, Tattendorf",
+        "rebsorte": "St. Laurent",
+        "jahrgang": 1999,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 89.0
+          }
+        ]
+      },
+      {
+        "name": "Pinot Noir Grande Reserve 1999",
+        "weingut": "Weingut Reinisch, Tattendorf",
+        "rebsorte": "Pinot Noir",
+        "jahrgang": 1999,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 89.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kategorie": "Rotweine Neusiedlersee",
+    "typ": "rotwein",
+    "weine": [
+      {
+        "name": "St. Laurent 'Erwein' 2020",
+        "weingut": "Weingut Höpler, Breitenbrunn",
+        "rebsorte": "St. Laurent",
+        "jahrgang": 2020,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 35.0
+          }
+        ]
+      },
+      {
+        "name": "Tetuna Cuvée (BF, ZW, CS) 2018",
+        "weingut": "Weingut Robert Goldenits, Tadten",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2018,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 44.0
+          }
+        ]
+      },
+      {
+        "name": "Merlot 2018",
+        "weingut": "Weingut Braunstein, Purbach",
+        "rebsorte": "Merlot",
+        "jahrgang": 2018,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 39.0
+          }
+        ]
+      },
+      {
+        "name": "Oxhoft (CS, BF, ZW) 2015",
+        "weingut": "Weingut Braunstein, Purbach",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2015,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 49.0
+          }
+        ]
+      },
+      {
+        "name": "Pannobile (ZW, BF, St.L) 2017",
+        "weingut": "Weingut Heinrich, Gols",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2017,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 49.0
+          }
+        ]
+      },
+      {
+        "name": "Mephisto (SY, ME, CS) 2019",
+        "weingut": "Weingut Robert Goldenits, Tadten",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2019,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 69.0
+          }
+        ]
+      },
+      {
+        "name": "Admiral (ZW, ME, CS) 2007",
+        "weingut": "Weingut Pöckl, Mönchhof",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2007,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 69.0
+          }
+        ]
+      },
+      {
+        "name": "Salzberg (BF, ME) 2012",
+        "weingut": "Weingut Heinrich, Gols",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2012,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 99.0
+          }
+        ]
+      },
+      {
+        "name": "Salzberg (BF, ME) 2017",
+        "weingut": "Weingut Heinrich, Gols",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2017,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 99.0
+          }
+        ]
+      },
+      {
+        "name": "Batonnage (BF, CS, ME) 2015",
+        "weingut": "the Wild Boys of Batonnage",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2015,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 179.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kategorie": "Rotweine Leithaberg",
+    "typ": "rotwein",
+    "weine": [
+      {
+        "name": "Blaufränkisch 'Reserve' 2013",
+        "weingut": "Weingut Grenzhof Fiedler, Mörbisch",
+        "rebsorte": "Blaufränkisch",
+        "jahrgang": 2013,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 39.0
+          }
+        ]
+      },
+      {
+        "name": "Blaufränkisch 'Julia' 2013",
+        "weingut": "Weingut Höpler, Breitenbrunn",
+        "rebsorte": "Blaufränkisch",
+        "jahrgang": 2013,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 39.0
+          }
+        ]
+      },
+      {
+        "name": "Blauburgunder 'Reserve' 2005",
+        "weingut": "Weingut Mariell, Großhöflein",
+        "rebsorte": "Blauburgunder",
+        "jahrgang": 2005,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 49.0
+          }
+        ]
+      },
+      {
+        "name": "Schützner Stein (ME) 2018",
+        "weingut": "Weingut Prieler, Schützen/Gebirge",
+        "rebsorte": "Merlot",
+        "jahrgang": 2018,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 44.0
+          }
+        ]
+      },
+      {
+        "name": "Eichkogel Cuvée (ZW, BF) 2018",
+        "weingut": "Weingut Kollwentz, Großhöflein",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2018,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 49.0
+          }
+        ]
+      },
+      {
+        "name": "K7 Cuvée (BF, SY, ME) 2015",
+        "weingut": "Weingut Höpler, Breitenbrunn",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2015,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 49.0
+          }
+        ]
+      },
+      {
+        "name": "Solitaire (BF, ME, CS) 2013",
+        "weingut": "Weingut Feiler-Artinger, Rust",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2013,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 49.0
+          }
+        ]
+      },
+      {
+        "name": "Solitaire (BF, ME, CS) 2017",
+        "weingut": "Weingut Feiler-Artinger, Rust",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2017,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 49.0
+          }
+        ]
+      },
+      {
+        "name": "Steinzeiler (BF, CS, ZW) 2008",
+        "weingut": "Weingut Kollwentz, Großhöflein",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2008,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 79.0
+          }
+        ]
+      },
+      {
+        "name": "Steinzeiler (BF, ZW, CS) 2011",
+        "weingut": "Weingut Kollwentz, Großhöflein",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2011,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 99.0
+          }
+        ]
+      },
+      {
+        "name": "Steinzeiler (BF, ZW, CS) 2012",
+        "weingut": "Weingut Kollwentz, Großhöflein",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2012,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 99.0
+          }
+        ]
+      },
+      {
+        "name": "Blaufränkisch 'Goldberg' 2002",
+        "weingut": "Weingut Prieler, Schützen am Gebirge",
+        "rebsorte": "Blaufränkisch",
+        "jahrgang": 2002,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 99.0
+          }
+        ]
+      },
+      {
+        "name": "Blaufränkisch 'Mariental' 2001",
+        "weingut": "Weingut Triebaumer, Rust",
+        "rebsorte": "Blaufränkisch",
+        "jahrgang": 2001,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 99.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kategorie": "Rotweine Mittelburgenland",
+    "typ": "rotwein",
+    "weine": [
+      {
+        "name": "Cuvée Paulus (CS, ME, ZW) 2017",
+        "weingut": "Weingut Lehmer, Horitschon",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2017,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 49.0
+          }
+        ]
+      },
+      {
+        "name": "Quattro Cuvée (BF, CS, ME, ZW) 2018",
+        "weingut": "Weingut Gager, Deutschkreutz",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2018,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 49.0
+          }
+        ]
+      },
+      {
+        "name": "Patron Cuvée (ME, CS) 2005",
+        "weingut": "Weingut Amminger, Horitschon",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2005,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 49.0
+          }
+        ]
+      },
+      {
+        "name": "Das Phantom (BF, CS, ME, SY) 2020",
+        "weingut": "Weingut K & K Kirnbauer, Deutschkreutz",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2020,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 49.0
+          }
+        ]
+      },
+      {
+        "name": "Christania Cuvée (BF, CS, ME) 2006",
+        "weingut": "Weingut Bauer-Pöltl, Unterpetersdorf",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2006,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 59.0
+          }
+        ]
+      },
+      {
+        "name": "Potio Magica 'der Zaubertrank' (BF) 2000",
+        "weingut": "Winzerkeller Neckenmarkt",
+        "rebsorte": "Blaufränkisch",
+        "jahrgang": 2000,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 69.0
+          }
+        ]
+      },
+      {
+        "name": "In Signo Leonis (BF, ZW, CS) 2002",
+        "weingut": "Weingut Bayer, Neckenmarkt",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2002,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 79.0
+          }
+        ]
+      },
+      {
+        "name": "Cuvée 'G' 2017",
+        "weingut": "Weingut Gesellmann, Deutschkreutz",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2017,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 89.0
+          }
+        ]
+      },
+      {
+        "name": "Cuvée 'Forever' 2002 (CS, ME, CF)",
+        "weingut": "Weingut K & K Kirnbauer, Deutschkreutz",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2002,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 129.0
+          }
+        ]
+      },
+      {
+        "name": "Cuvée 'Forever' 2017 (CS, ME, CF)",
+        "weingut": "Weingut K & K Kirnbauer, Deutschkreutz",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2017,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 129.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kategorie": "Rotweine Eisenberg",
+    "typ": "rotwein",
+    "weine": [
+      {
+        "name": "Blaufränkisch 'Limitation' 2005",
+        "weingut": "Weingut Unger, Deutsch-Schützen",
+        "rebsorte": "Blaufränkisch",
+        "jahrgang": 2005,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 39.0
+          }
+        ]
+      },
+      {
+        "name": "Blaufränkisch 'Reserve' 2008",
+        "weingut": "Weingut Krutzler, Deutsch-Schützen",
+        "rebsorte": "Blaufränkisch",
+        "jahrgang": 2008,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 39.0
+          }
+        ]
+      },
+      {
+        "name": "Perwolff (BF) 2006",
+        "weingut": "Weingut Krutzler, Deutsch-Schützen",
+        "rebsorte": "Blaufränkisch",
+        "jahrgang": 2006,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 86.0
+          }
+        ]
+      },
+      {
+        "name": "Perwolff (BF) 2008",
+        "weingut": "Weingut Krutzler, Deutsch-Schützen",
+        "rebsorte": "Blaufränkisch",
+        "jahrgang": 2008,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 86.0
+          }
+        ]
+      },
+      {
+        "name": "Perwolff (BF) 2018",
+        "weingut": "Weingut Krutzler, Deutsch-Schützen",
+        "rebsorte": "Blaufränkisch",
+        "jahrgang": 2018,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 74.0
+          }
+        ]
+      },
+      {
+        "name": "Perwolff (BF) 2019",
+        "weingut": "Weingut Krutzler, Deutsch-Schützen",
+        "rebsorte": "Blaufränkisch",
+        "jahrgang": 2019,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 74.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kategorie": "Weine Deutschland",
+    "typ": "international",
+    "weine": [
+      {
+        "name": "Riesling 'Halgans' 2017",
+        "weingut": "Weingut Emrich-Schönleber, Nahe",
+        "rebsorte": "Riesling",
+        "jahrgang": 2017,
+        "farbe": "weiss",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 49.0
+          }
+        ]
+      },
+      {
+        "name": "Grauburgunder 'Ihringer Winklerberg' 2018",
+        "weingut": "Weingut Dr. Heger, Baden",
+        "rebsorte": "Grauburgunder",
+        "jahrgang": 2018,
+        "farbe": "weiss",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 49.0
+          }
+        ]
+      },
+      {
+        "name": "Riesling 'Schellenbrunnen' GG 2016",
+        "weingut": "Weingut Heitlinger, Baden",
+        "rebsorte": "Riesling",
+        "jahrgang": 2016,
+        "farbe": "weiss",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 44.0
+          }
+        ]
+      },
+      {
+        "name": "Pinot Noir 'Königsbecher' GG 2015",
+        "weingut": "Weingut Heitlinger, Baden",
+        "rebsorte": "Pinot Noir",
+        "jahrgang": 2015,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 49.0
+          }
+        ]
+      },
+      {
+        "name": "Riesling 'Bockenauer Felseneck' GG 2018",
+        "weingut": "Weingut Schäfer Fröhlich, Pfalz",
+        "rebsorte": "Riesling",
+        "jahrgang": 2018,
+        "farbe": "weiss",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 89.0
+          }
+        ]
+      },
+      {
+        "name": "Riesling 'Kupfergrube' Reserve 2015",
+        "weingut": "Weingut Gut Hermannsberg, Nahe",
+        "rebsorte": "Riesling",
+        "jahrgang": 2015,
+        "farbe": "weiss",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 79.0
+          }
+        ]
+      },
+      {
+        "name": "Spätburgunder 'Vorderer Winklerberg' GG 2013",
+        "weingut": "Weingut Dr. Heger, Baden",
+        "rebsorte": "Spätburgunder",
+        "jahrgang": 2013,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 79.0
+          }
+        ]
+      },
+      {
+        "name": "Riesling 'Halenberg' GG 2020",
+        "weingut": "Weingut Emrich-Schönleber, Nahe",
+        "rebsorte": "Riesling",
+        "jahrgang": 2020,
+        "farbe": "weiss",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 69.0
+          }
+        ]
+      },
+      {
+        "name": "Riesling 'Kostheim Weiß Erd' GG 2020",
+        "weingut": "Weingut Künstler, Rheingau",
+        "rebsorte": "Riesling",
+        "jahrgang": 2020,
+        "farbe": "weiss",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 49.0
+          }
+        ]
+      },
+      {
+        "name": "Riesling 'Hochheim Hölle' GG 2020",
+        "weingut": "Weingut Künstler, Rheingau",
+        "rebsorte": "Riesling",
+        "jahrgang": 2020,
+        "farbe": "weiss",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 59.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kategorie": "Weine Italien",
+    "typ": "international",
+    "weine": [
+      {
+        "name": "Chianti Classico Riserva 2019",
+        "weingut": "Tenuta Tignanello, Firenze",
+        "rebsorte": "Sangiovese",
+        "jahrgang": 2019,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 49.0
+          }
+        ]
+      },
+      {
+        "name": "Amarone della Valpolicella 2016",
+        "weingut": "Tenuta Pietro dal Cero",
+        "rebsorte": "Corvina",
+        "jahrgang": 2016,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 69.0
+          }
+        ]
+      },
+      {
+        "name": "Le Serre Nuove (ME, CS, CF, PV) 2004",
+        "weingut": "Tenuta dell Ornellaia, Bolgheri",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2004,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 79.0
+          }
+        ]
+      },
+      {
+        "name": "Le Serre Nuove (ME, CS, CF, PV) 2022",
+        "weingut": "Tenuta dell Ornellaia, Bolgheri",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2022,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 79.0
+          }
+        ]
+      },
+      {
+        "name": "Römigberg (CS) 2016",
+        "weingut": "Weingut Lageder, Alto Adige",
+        "rebsorte": "Cabernet Sauvignon",
+        "jahrgang": 2016,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 89.0
+          }
+        ]
+      },
+      {
+        "name": "Brunello di Montalcino 'Rennina' 2000",
+        "weingut": "Tenuta Angelo Gaja, Montalcino",
+        "rebsorte": "Sangiovese",
+        "jahrgang": 2000,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 139.0
+          }
+        ]
+      },
+      {
+        "name": "Per Sempre 2016",
+        "weingut": "Tenuta Tua Rita, Toscana",
+        "rebsorte": null,
+        "jahrgang": 2016,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 199.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kategorie": "Weine Frankreich",
+    "typ": "international",
+    "weine": [
+      {
+        "name": "Pouilly-Fumé 'Les Duchesses' 2021",
+        "weingut": "Laporte, Saint-Satur",
+        "rebsorte": "Sauvignon Blanc",
+        "jahrgang": 2021,
+        "farbe": "weiss",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 69.0
+          }
+        ]
+      },
+      {
+        "name": "Riesling Grand Cru 'Altenberg de Bergheim' 2016",
+        "weingut": "Gustav Lorentz, Bergheim",
+        "rebsorte": "Riesling",
+        "jahrgang": 2016,
+        "farbe": "weiss",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 69.0
+          }
+        ]
+      },
+      {
+        "name": "Beaune 1er Cru 2018",
+        "weingut": "Clos de la Chapelle, Burgund",
+        "rebsorte": "Pinot Noir",
+        "jahrgang": 2018,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 69.0
+          }
+        ]
+      },
+      {
+        "name": "Chablis Grand Cru 'Les Blanchots' 2018",
+        "weingut": "Laroche, Chablis",
+        "rebsorte": "Chardonnay",
+        "jahrgang": 2018,
+        "farbe": "weiss",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 79.0
+          }
+        ]
+      },
+      {
+        "name": "Pommard 1er Cru 'Les Chanlins' 2018",
+        "weingut": "Clos de la Chapelle, Burgund",
+        "rebsorte": "Pinot Noir",
+        "jahrgang": 2018,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 109.0
+          }
+        ]
+      },
+      {
+        "name": "Chassagne-Montrachet 1er Cru 'En Virondot' 2018",
+        "weingut": "Morey, Burgund",
+        "rebsorte": "Chardonnay",
+        "jahrgang": 2018,
+        "farbe": "weiss",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 109.0
+          }
+        ]
+      },
+      {
+        "name": "Volnay 1er Cru 'Clos de la Chapelle' 2017",
+        "weingut": "Clos de la Chapelle, Burgund",
+        "rebsorte": "Pinot Noir",
+        "jahrgang": 2017,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 129.0
+          }
+        ]
+      },
+      {
+        "name": "Corton Bressandes Grand Cru 2017",
+        "weingut": "Clos de la Chapelle, Burgund",
+        "rebsorte": "Pinot Noir",
+        "jahrgang": 2017,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 169.0
+          }
+        ]
+      },
+      {
+        "name": "Corton Charlemagne Grand Cru 2019",
+        "weingut": "Clos de la Chapelle, Burgund",
+        "rebsorte": "Chardonnay",
+        "jahrgang": 2019,
+        "farbe": "weiss",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 199.0
+          }
+        ]
+      },
+      {
+        "name": "Château Smith Haut Lafitte Blanc 2018",
+        "weingut": "Château Smith Haut Lafitte, Pessac",
+        "rebsorte": "Sauvignon Blanc",
+        "jahrgang": 2018,
+        "farbe": "weiss",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 169.0
+          }
+        ]
+      },
+      {
+        "name": "Domaine de Chevalier Blanc 2016",
+        "weingut": "Domaine de Chevalier, Pessac",
+        "rebsorte": "Sauvignon Blanc",
+        "jahrgang": 2016,
+        "farbe": "weiss",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 169.0
+          }
+        ]
+      },
+      {
+        "name": "Chambertin Grand Cru 'Clos de Bèze' 2017",
+        "weingut": "Louis Jadot, Burgund",
+        "rebsorte": "Pinot Noir",
+        "jahrgang": 2017,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 350.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kategorie": "Weine aller Welt",
+    "typ": "international",
+    "weine": [
+      {
+        "name": "Sauvignon Blanc 2022",
+        "weingut": "Cloudy Bay, Marlborough",
+        "rebsorte": "Sauvignon Blanc",
+        "jahrgang": 2022,
+        "farbe": "weiss",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 49.0
+          }
+        ]
+      },
+      {
+        "name": "Shiraz 'Rymill' 2004",
+        "weingut": "Rymill Winery, Coonawarra",
+        "rebsorte": "Shiraz",
+        "jahrgang": 2004,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 49.0
+          }
+        ]
+      },
+      {
+        "name": "Pinot Noir 'Résonance' 2017",
+        "weingut": "Découverte Vineyard, Oregon",
+        "rebsorte": "Pinot Noir",
+        "jahrgang": 2017,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 69.0
+          }
+        ]
+      },
+      {
+        "name": "Castell del Remei '1780' 1999",
+        "weingut": "Castell del Remei, Penelles-Lleida",
+        "rebsorte": null,
+        "jahrgang": 1999,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 69.0
+          }
+        ]
+      },
+      {
+        "name": "Floresta Cuvée 1999",
+        "weingut": "Santa Rita, Maipo Valley",
+        "rebsorte": null,
+        "jahrgang": 1999,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 69.0
+          }
+        ]
+      },
+      {
+        "name": "Cabernet Sauvignon 1991",
+        "weingut": "Beringer, Napa Valley",
+        "rebsorte": "Cabernet Sauvignon",
+        "jahrgang": 1991,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 69.0
+          }
+        ]
+      },
+      {
+        "name": "Cuvée Classique 1999",
+        "weingut": "Rupert & Rothschild",
+        "rebsorte": "Cuvée",
+        "jahrgang": 1999,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 69.0
+          }
+        ]
+      },
+      {
+        "name": "Kopar 'Villany Cuvée' (CS, ME, CF) 2002",
+        "weingut": "Gere, Villany",
+        "rebsorte": "Cuvée",
+        "jahrgang": 2002,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 69.0
+          }
+        ]
+      },
+      {
+        "name": "Pinot Noir 'Belle Clos' 2007",
+        "weingut": "Clark & Telephone Vineyard",
+        "rebsorte": "Pinot Noir",
+        "jahrgang": 2007,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 89.0
+          }
+        ]
+      },
+      {
+        "name": "Ridge 'Zinfandel' 1995",
+        "weingut": "Weingut Ridge, Kalifornien",
+        "rebsorte": "Zinfandel",
+        "jahrgang": 1995,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 99.0
+          }
+        ]
+      },
+      {
+        "name": "Cabernet Sauvignon 2019",
+        "weingut": "Weingut Joseph Phelps, Napa Valley",
+        "rebsorte": "Cabernet Sauvignon",
+        "jahrgang": 2019,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 99.0
+          }
+        ]
+      },
+      {
+        "name": "Cabernet Franc 2002",
+        "weingut": "Gere, Villany",
+        "rebsorte": "Cabernet Franc",
+        "jahrgang": 2002,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 119.0
+          }
+        ]
+      },
+      {
+        "name": "Cabernet Sauvignon 2000",
+        "weingut": "Gere, Villany",
+        "rebsorte": "Cabernet Sauvignon",
+        "jahrgang": 2000,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 119.0
+          }
+        ]
+      },
+      {
+        "name": "Insignia 2018",
+        "weingut": "Weingut Joseph Phelps, Napa Valley",
+        "rebsorte": null,
+        "jahrgang": 2018,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 299.0
+          }
+        ]
+      },
+      {
+        "name": "DAOU 'Soul of a Lion' 2018",
+        "weingut": "Daou Vineyards, Paso Robles",
+        "rebsorte": null,
+        "jahrgang": 2018,
+        "farbe": "rot",
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 249.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kategorie": "Sekt (Flaschen)",
+    "typ": "sekt",
+    "weine": [
+      {
+        "name": "Schilchersekt",
+        "weingut": "Glatz, Wagerberg",
+        "rebsorte": "Schilcher",
+        "jahrgang": null,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 39.0
+          }
+        ]
+      },
+      {
+        "name": "S'Uhudlerfrizzante",
+        "weingut": "Glatz, Wagerberg",
+        "rebsorte": "Uhudler",
+        "jahrgang": null,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 39.0
+          }
+        ]
+      },
+      {
+        "name": "Muskatellersekt",
+        "weingut": "Harkamp, Flamberg",
+        "rebsorte": "Muskateller",
+        "jahrgang": null,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 39.0
+          }
+        ]
+      },
+      {
+        "name": "Rosé",
+        "weingut": "Loimer, Kamptal",
+        "rebsorte": "Rosé",
+        "jahrgang": null,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 39.0
+          }
+        ]
+      },
+      {
+        "name": "Blanc de Blanc Große Reserve",
+        "weingut": "Tement, Berghausen",
+        "rebsorte": null,
+        "jahrgang": null,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 59.0
+          }
+        ]
+      },
+      {
+        "name": "Grande Reserve Brut Nature (zero dosage)",
+        "weingut": "Loimer, Kamptal",
+        "rebsorte": null,
+        "jahrgang": null,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 59.0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "kategorie": "Champagner",
+    "typ": "champagner",
+    "weine": [
+      {
+        "name": "Brut Reserve",
+        "weingut": "Charles Heidsieck",
+        "rebsorte": null,
+        "jahrgang": null,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 69.0
+          }
+        ]
+      },
+      {
+        "name": "Rosé",
+        "weingut": "Charles Heidsieck",
+        "rebsorte": null,
+        "jahrgang": null,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 79.0
+          }
+        ]
+      },
+      {
+        "name": "Roederer Brut Nature (zero dosage)",
+        "weingut": "Louis Roederer, Reims",
+        "rebsorte": null,
+        "jahrgang": null,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 99.0
+          }
+        ]
+      },
+      {
+        "name": "Roederer Rosé 2014",
+        "weingut": "Louis Roederer, Reims",
+        "rebsorte": null,
+        "jahrgang": 2014,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 159.0
+          }
+        ]
+      },
+      {
+        "name": "Dom Ruinart",
+        "weingut": "Ruinart, Reims",
+        "rebsorte": null,
+        "jahrgang": null,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 199.0
+          }
+        ]
+      },
+      {
+        "name": "Dom Pérignon 2008",
+        "weingut": "Moët & Chandon, Epernay",
+        "rebsorte": null,
+        "jahrgang": 2008,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 299.0
+          }
+        ]
+      },
+      {
+        "name": "Roederer Cristall 2012",
+        "weingut": "Louis Roederer, Reims",
+        "rebsorte": null,
+        "jahrgang": 2012,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 399.0
+          }
+        ]
+      },
+      {
+        "name": "Krug Rosé Champagne",
+        "weingut": "Krug, Champagne",
+        "rebsorte": null,
+        "jahrgang": null,
+        "groessen": [
+          {
+            "menge": "0,75l",
+            "preis": 399.0
+          }
+        ]
+      }
+    ]
+  }
+]
