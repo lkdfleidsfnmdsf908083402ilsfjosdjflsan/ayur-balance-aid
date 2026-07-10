@@ -62,6 +62,9 @@ const KUEHLHAUS_REIHEN: Record<number, number> = {
 const KUECHE_REIHEN: Record<number, number> = {
   1: 2, 2: 2, 3: 2, 4: 3, 5: 3, 6: 3,
 };
+// AD (Privatlager Andreas Drexler): Regal mit Reihen/Fächern.
+// Standard-Layout wie ein Kühlhaus — hier zentral anpassbar, falls abweichend.
+const AD_REIHEN: Record<number, number> = { ...KUEHLHAUS_REIHEN };
 
 type Step =
   | 'scan_choice'
@@ -76,6 +79,8 @@ type Step =
   | 'kuehlhaus_nr'
   | 'reihe'
   | 'fach'
+  | 'ad_reihe'
+  | 'ad_fach'
   | 'kueche_reihe'
   | 'kueche_schublade'
   | 'saving'
@@ -374,6 +379,28 @@ export function WeinScannerView() {
     }
   };
 
+  // Flasche entnehmen (delta -1) oder nachlegen (delta +1). Bei 0 wird der
+  // Bestandseintrag gelöscht. Persistiert nach Supabase und aktualisiert den State.
+  const adjustBottles = async (wine: WineEntry, delta: number) => {
+    if (!wine.id) return;
+    const current = wine.anzahl_flaschen ?? 1;
+    const next = current + delta;
+    try {
+      if (next <= 0) {
+        await weinTable().delete().eq('id', wine.id);
+        setWines((prev) => prev.filter((w) => w.id !== wine.id));
+      } else {
+        await weinTable().update({ anzahl_flaschen: next }).eq('id', wine.id);
+        setWines((prev) =>
+          prev.map((w) => (w.id === wine.id ? { ...w, anzahl_flaschen: next } : w))
+        );
+      }
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Aktualisierung fehlgeschlagen';
+      setError('Bestand konnte nicht aktualisiert werden: ' + msg);
+    }
+  };
+
   const loadWines = async () => {
     setLoading(true);
     setError(null);
@@ -413,6 +440,7 @@ export function WeinScannerView() {
   const lagerLabel = (w: WineEntry) => {
     if (w.lagerort === 'kuehlhaus') return `KH${w.kuehlhaus_nr ?? '?'} R${w.reihe}/F${w.fach}`;
     if (w.lagerort === 'kueche') return `Küche R${w.reihe}/S${w.fach}`;
+    if (w.lagerort === 'ad') return `AD R${w.reihe}/F${w.fach}`;
     if (w.lagerort === 'bar') return 'Bar';
     if (w.lagerort === 'restaurant') return 'Restaurant';
     return w.lagerort || '—';
@@ -421,6 +449,7 @@ export function WeinScannerView() {
   const locationSummary = () => {
     if (storageType === 'kuehlhaus') return `Kühlhaus ${kuehlhausNr} · R${reihe} · F${fach}`;
     if (storageType === 'kueche') return `Küche Kühlfach · R${reihe} · S${fach}`;
+    if (storageType === 'ad') return `AD · R${reihe} · F${fach}`;
     if (storageType === 'bar') return 'Bar';
     return 'Restaurant';
   };
@@ -992,6 +1021,12 @@ export function WeinScannerView() {
                     label: 'Restaurant',
                     next: () => saveEntry(buildEntry('restaurant')),
                   },
+                  {
+                    key: 'ad',
+                    icon: Wine,
+                    label: 'AD (Privat)',
+                    next: () => setStep('ad_reihe'),
+                  },
                 ].map((s) => (
                   <Button
                     key={s.key}
@@ -1025,7 +1060,7 @@ export function WeinScannerView() {
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex gap-3">
-                {[1, 2].map((nr) => (
+                {[1, 2, 3].map((nr) => (
                   <Button
                     key={nr}
                     variant="outline"
@@ -1098,6 +1133,53 @@ export function WeinScannerView() {
                 label={`${KUEHLHAUS_REIHEN[reihe]} Fächer verfügbar`}
               />
               <Button variant="ghost" className="w-full" onClick={() => setStep('reihe')}>
+                <ArrowLeft className="h-4 w-4 mr-2" /> Zurück
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {step === 'ad_reihe' && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-center">🍷 AD — Reihe wählen</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <NumberGrid
+                items={Object.keys(AD_REIHEN).map((r) => ({ value: Number(r) }))}
+                onSelect={(r) => {
+                  setReihe(r);
+                  setStep('ad_fach');
+                }}
+              />
+              <Button
+                variant="ghost"
+                className="w-full"
+                onClick={() => setStep('storage_type')}
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" /> Zurück
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {step === 'ad_fach' && reihe && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-center">AD · R{reihe} — Fach</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <NumberGrid
+                items={Array.from({ length: AD_REIHEN[reihe] }, (_, i) => ({
+                  value: i + 1,
+                }))}
+                onSelect={(f) => {
+                  setFach(f);
+                  saveEntry(buildEntry('ad', { reihe, fach: f }));
+                }}
+                label={`${AD_REIHEN[reihe]} Fächer verfügbar`}
+              />
+              <Button variant="ghost" className="w-full" onClick={() => setStep('ad_reihe')}>
                 <ArrowLeft className="h-4 w-4 mr-2" /> Zurück
               </Button>
             </CardContent>
@@ -1292,7 +1374,9 @@ export function WeinScannerView() {
               </Card>
             )}
 
-            {listView === 'overview' && <StorageOverview wines={wines} />}
+            {listView === 'overview' && (
+              <StorageOverview wines={wines} onAdjustBottles={adjustBottles} />
+            )}
 
             {listView === 'import' && (
               <VivinoCellarImport

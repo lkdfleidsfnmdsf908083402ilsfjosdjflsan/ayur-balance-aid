@@ -14,12 +14,12 @@ ALTER TABLE public.wein_lager
   ADD COLUMN IF NOT EXISTS kuehlhaus_nr INT,
   ADD COLUMN IF NOT EXISTS barcode TEXT;
 
--- Constraint: kuehlhaus_nr darf nur 1 oder 2 sein, wenn lagerort = 'kuehlhaus'
+-- Constraint: kuehlhaus_nr darf nur 1, 2 oder 3 sein, wenn lagerort = 'kuehlhaus'
 ALTER TABLE public.wein_lager
   DROP CONSTRAINT IF EXISTS wein_lager_kuehlhaus_nr_check;
 ALTER TABLE public.wein_lager
   ADD CONSTRAINT wein_lager_kuehlhaus_nr_check
-  CHECK (kuehlhaus_nr IS NULL OR kuehlhaus_nr IN (1, 2));
+  CHECK (kuehlhaus_nr IS NULL OR kuehlhaus_nr IN (1, 2, 3));
 
 -- Index für schnellen Barcode-Lookup. Nicht UNIQUE: derselbe Wein kann
 -- in mehreren Lagerorten mehrfach erfasst sein.
@@ -32,6 +32,6 @@ CREATE INDEX IF NOT EXISTS idx_wein_lager_position
   ON public.wein_lager (lagerort, kuehlhaus_nr, reihe, fach);
 
 COMMENT ON COLUMN public.wein_lager.kuehlhaus_nr IS
-  'Nur belegt wenn lagerort = ''kuehlhaus''. Werte: 1 oder 2.';
+  'Nur belegt wenn lagerort = ''kuehlhaus''. Werte: 1, 2 oder 3.';
 COMMENT ON COLUMN public.wein_lager.barcode IS
   'EAN-13/EAN-8/UPC vom Etikett. Genutzt als Cache-Key bei wiederholten Scans.';
