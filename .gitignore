@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Secrets / lokale Umgebung (niemals committen)
+.env
+.env.*
+!.env.example
+
+# Supabase CLI-Maschinenstatus
+supabase/.temp/

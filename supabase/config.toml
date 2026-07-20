@@ -3,9 +3,6 @@ project_id = "gplyfkjmzlueerxhtotu"
 [functions.register-with-invitation]
 verify_jwt = false
 
-[functions.create-test-users]
-verify_jwt = false
-
 [functions.send-reminder-email]
 enabled = true
 verify_jwt = true

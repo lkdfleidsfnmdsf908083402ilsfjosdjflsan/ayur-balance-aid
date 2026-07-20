@@ -305,10 +305,17 @@ export function ErstanamnseView() {
   // ─── PDF Export ─────────────────────────────────────
 
   function handleExportPdf() {
-    const v = (k: string) => form[k] || '';
+    // Sicherheit: alle Werte HTML-escapen, bevor sie in das exportierte
+    // Dokument interpoliert werden. Anamnese-Freitextfelder (beschwerden,
+    // diagnose, medikamente, …) sind gespeicherte Nutzereingaben und dürfen
+    // nicht als HTML/JS im same-origin-Fenster ausgeführt werden (XSS).
+    const esc = (s: unknown) =>
+      String(s ?? '').replace(/[&<>"']/g, (c) =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] as string));
+    const v = (k: string) => esc(form[k] || '');
     const yn = (k: string) => form[k] === true ? 'Ja' : form[k] === false ? 'Nein' : '—';
-    const allergien = [1,2,3,4,5].map(i => form[`allergie_${i}`]).filter(Boolean).join(', ');
-    const unvertr = [1,2,3,4,5].map(i => form[`unvertr_${i}`]).filter(Boolean).join(', ');
+    const allergien = esc([1,2,3,4,5].map(i => form[`allergie_${i}`]).filter(Boolean).join(', '));
+    const unvertr = esc([1,2,3,4,5].map(i => form[`unvertr_${i}`]).filter(Boolean).join(', '));
     const psychChecked = PSYCH_CHECKBOXES.filter(c => form[c.key]).map(c => c.label).join(', ');
 
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Erstanamnese – ${v('familienname')}, ${v('vorname')}</title>
