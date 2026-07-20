@@ -55,7 +55,7 @@ interface NavItem {
   id: string;
   labelKey: string;
   icon: LucideIcon;
-  requiredRole?: 'admin' | 'abteilungsleiter' | 'mitarbeiter' | 'ceo' | 'advisor';
+  requiredRole?: 'admin' | 'abteilungsleiter' | 'mitarbeiter' | 'ceo' | 'advisor' | 'medical';
 }
 
 interface NavGroup {
@@ -63,7 +63,7 @@ interface NavGroup {
   labelKey: string;
   icon: LucideIcon;
   items: NavItem[];
-  requiredRole?: 'admin' | 'abteilungsleiter' | 'mitarbeiter' | 'ceo' | 'advisor';
+  requiredRole?: 'admin' | 'abteilungsleiter' | 'mitarbeiter' | 'ceo' | 'advisor' | 'medical';
 }
 
 type NavEntry = NavItem | NavGroup;
@@ -99,7 +99,7 @@ const navStructure: NavEntry[] = [
   { id: 'kampagnen', labelKey: 'nav.kampagnen', icon: Users, requiredRole: 'admin' },
   { id: 'menue-weinbegleitung', labelKey: 'Menü & Weinbegleitung', icon: Wine },
   { id: 'weinscanner', labelKey: 'Weinscanner', icon: ScanLine },
-  { id: 'erstanamnese', labelKey: 'Erstanamnese', icon: Stethoscope },
+  { id: 'erstanamnese', labelKey: 'Erstanamnese', icon: Stethoscope, requiredRole: 'medical' },
   { 
     id: 'abteilung-kpis',
     labelKey: 'nav.departmentKpis',
@@ -176,13 +176,24 @@ export function Sidebar({ activeView, onViewChange }: SidebarProps) {
     window.location.href = '/auth';
   };
 
-  const hasRole = (requiredRole?: 'admin' | 'abteilungsleiter' | 'mitarbeiter' | 'ceo' | 'advisor') => {
+  const hasRole = (requiredRole?: 'admin' | 'abteilungsleiter' | 'mitarbeiter' | 'ceo' | 'advisor' | 'medical') => {
     if (!requiredRole) return true;
 
     // Admin sieht alles
     if (userRole === 'admin') return true;
 
-    // CEO: alles außer admin-only
+    // Gesundheitsdaten ('medical') sind ausschließlich für admin + medical.
+    if (requiredRole === 'medical') {
+      return userRole === 'medical';
+    }
+
+    // Medizinisches/Spa-Personal: normale Mitarbeiter-Ansichten (Anamnese-Items
+    // werden bereits durch die 'medical'-Prüfung oben freigegeben).
+    if (userRole === 'medical') {
+      return requiredRole === 'mitarbeiter';
+    }
+
+    // CEO: alles außer admin-only (und keine Gesundheitsdaten, s. o.)
     if (userRole === 'ceo') {
       return requiredRole !== 'admin';
     }

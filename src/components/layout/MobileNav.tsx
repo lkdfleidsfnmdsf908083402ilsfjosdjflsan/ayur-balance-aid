@@ -50,7 +50,7 @@ interface NavItem {
   id: string;
   labelKey: string;
   icon: LucideIcon;
-  requiredRole?: 'admin' | 'abteilungsleiter' | 'mitarbeiter' | 'ceo' | 'advisor';
+  requiredRole?: 'admin' | 'abteilungsleiter' | 'mitarbeiter' | 'ceo' | 'advisor' | 'medical';
 }
 
 interface NavGroup {
@@ -58,7 +58,7 @@ interface NavGroup {
   labelKey: string;
   icon: LucideIcon;
   items: NavItem[];
-  requiredRole?: 'admin' | 'abteilungsleiter' | 'mitarbeiter' | 'ceo' | 'advisor';
+  requiredRole?: 'admin' | 'abteilungsleiter' | 'mitarbeiter' | 'ceo' | 'advisor' | 'medical';
 }
 
 type NavEntry = NavItem | NavGroup;
@@ -87,7 +87,7 @@ const navStructure: NavEntry[] = [
   { id: 'kampagnen', labelKey: 'nav.kampagnen', icon: Users, requiredRole: 'admin' },
   { id: 'menue-weinbegleitung', labelKey: 'Menü & Weinbegleitung', icon: Wine },
   { id: 'weinscanner', labelKey: 'Weinscanner', icon: ScanLine },
-  { id: 'erstanamnese', labelKey: 'Erstanamnese', icon: Stethoscope },
+  { id: 'erstanamnese', labelKey: 'Erstanamnese', icon: Stethoscope, requiredRole: 'medical' },
   {
     id: 'abteilung-kpis',
     labelKey: 'nav.departmentKpis',
@@ -168,9 +168,12 @@ export function MobileNav() {
     window.location.href = '/auth';
   };
 
-  const hasRole = (requiredRole?: 'admin' | 'abteilungsleiter' | 'mitarbeiter' | 'ceo' | 'advisor') => {
+  const hasRole = (requiredRole?: 'admin' | 'abteilungsleiter' | 'mitarbeiter' | 'ceo' | 'advisor' | 'medical') => {
     if (!requiredRole) return true;
     if (userRole === 'admin') return true;
+    // Gesundheitsdaten ('medical') ausschließlich für admin + medical
+    if (requiredRole === 'medical') return userRole === 'medical';
+    if (userRole === 'medical') return requiredRole === 'mitarbeiter';
     if (userRole === 'ceo') return requiredRole !== 'admin';
     if (userRole === 'advisor') return requiredRole !== 'admin' && requiredRole !== 'ceo';
     if (userRole === 'abteilungsleiter') return requiredRole === 'abteilungsleiter' || requiredRole === 'mitarbeiter';

@@ -25,6 +25,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isAbteilungsleiter: boolean;
   isMitarbeiter: boolean;
+  isMedical: boolean;
   isCeo: boolean;
   isAdvisor: boolean;
   isReadonly: boolean;
@@ -134,6 +135,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isAdmin = userRole === 'admin';
   const isAbteilungsleiter = userRole === 'abteilungsleiter' || userRole === 'admin';
   const isMitarbeiter = userRole === 'mitarbeiter';
+  // Medizinisches/Spa-Personal: Zugriff auf Gesundheitsdaten (Erstanamnese)
+  const isMedical = userRole === 'medical';
   const isCeo = userRole === 'ceo';
   const isAdvisor = userRole === 'advisor';
 
@@ -161,6 +164,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isAdmin,
         isAbteilungsleiter,
         isMitarbeiter,
+        isMedical,
         isCeo,
         isAdvisor,
         isReadonly,
