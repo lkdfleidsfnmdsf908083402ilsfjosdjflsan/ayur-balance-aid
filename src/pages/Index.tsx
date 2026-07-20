@@ -38,6 +38,8 @@ import { TokenVerwaltungView } from '@/components/views/TokenVerwaltungView';
 import { MenueWeinbegleitungView } from "@/components/views/MenueWeinbegleitungView";
 import { WeinScannerView } from "@/components/views/WeinScannerView";
 import { KampagnenView } from '@/components/views/KampagnenView';
+import { SocialAgentView } from '@/components/views/SocialAgentView';
+import { MedienBibliothekView } from '@/components/views/MedienBibliothekView';
 import { VerwaltungsTrackerView } from '@/components/views/VerwaltungsTrackerView';
 import { useFinanceStore } from '@/store/financeStore';
 import { useAuth } from '@/hooks/useAuth';
@@ -158,6 +160,10 @@ const Index = () => {
         return <WeinScannerView />;
       case 'kampagnen':
         return <KampagnenView />;
+      case 'social-agent':
+        return <SocialAgentView />;
+      case 'social-medien':
+        return <MedienBibliothekView />;
       case 'verwaltung':
           return <VerwaltungsTrackerView />; 
         case 'revenue-intelligence':                          

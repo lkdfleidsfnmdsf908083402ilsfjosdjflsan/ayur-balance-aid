@@ -1,4 +1,7 @@
-project_id = "gplyfkjmzlueerxhtotu"
+# Projekt "Supabase - Mandira-KPIs" (West EU / Ireland).
+# Korrigiert 2026-07-19: hier stand zuvor gplyfkjmzlueerxhtotu — ein Projekt, auf das
+# weder die App (VITE_SUPABASE_URL) noch der verlinkte CLI zeigen.
+project_id = "zxyvfdvmyftefrkoaave"
 
 [functions.register-with-invitation]
 verify_jwt = false
@@ -16,6 +19,28 @@ entrypoint = "./functions/send-reminder-email/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/send-reminder-email/*.html" ]
+
+# verify_jwt=true weist nur Requests ganz ohne gültiges JWT ab — der öffentliche
+# Anon-Key ist ein gültiges JWT. Die echte Aufrufer-Prüfung (Nutzer-Identität +
+# Admin-Rolle bzw. Service-Role-Key des Cron-Workers) macht die Function selbst.
+[functions.social-publish]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/social-publish/index.ts"
+
+# Gleiche Regel wie bei social-publish: verify_jwt=true ist nur die erste Hürde,
+# die echte Aufrufer-Prüfung (Admin-Rolle bzw. Service-Role-Key des Cron-Workers)
+# steckt in der Function selbst (_shared/aufrufer.ts) — beide rufen die
+# Anthropic-API auf und dürfen nicht mit dem bloßen Anon-Key auslösbar sein.
+[functions.social-trend-scan]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/social-trend-scan/index.ts"
+
+[functions.social-generate-post]
+enabled = true
+verify_jwt = true
+entrypoint = "./functions/social-generate-post/index.ts"
 
 [functions.create-calendar-event]
 enabled = true

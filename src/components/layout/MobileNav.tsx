@@ -37,6 +37,8 @@ import {
   Wine,
   Stethoscope,
   ScanLine,
+  Megaphone,
+  Clapperboard,
 } from 'lucide-react';
 import { MandiraLogo } from '@/components/MandiraLogo';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -85,6 +87,8 @@ const navStructure: NavEntry[] = [
   { id: 'influencer', labelKey: 'nav.influencer', icon: Star, requiredRole: 'ceo' },
   { id: 'token-verwaltung', labelKey: 'nav.tokenVerwaltung', icon: Key, requiredRole: 'admin' },
   { id: 'kampagnen', labelKey: 'nav.kampagnen', icon: Users, requiredRole: 'admin' },
+  { id: 'social-agent', labelKey: 'Social Media Agent', icon: Megaphone, requiredRole: 'admin' },
+  { id: 'social-medien', labelKey: 'Medien-Bibliothek', icon: Clapperboard, requiredRole: 'admin' },
   { id: 'menue-weinbegleitung', labelKey: 'Menü & Weinbegleitung', icon: Wine },
   { id: 'weinscanner', labelKey: 'Weinscanner', icon: ScanLine },
   { id: 'erstanamnese', labelKey: 'Erstanamnese', icon: Stethoscope },
